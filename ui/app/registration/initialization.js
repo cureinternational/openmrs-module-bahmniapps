@@ -5,24 +5,43 @@ angular.module('bahmni.registration').factory('initialization',
         function ($rootScope, $q, configurations, authenticator, appService, spinner, preferences, locationService, mergeService, $translate) {
             var getConfigs = function () {
                 var configNames = ['encounterConfig', 'patientAttributesConfig', 'identifierTypesConfig', 'addressLevels', 'genderMap', 'relationshipTypeConfig', 'relationshipTypeMap', 'loginLocationToVisitTypeMapping', 'helpDeskNumber', 'quickLogoutComboKey', 'contextCookieExpirationTimeInMinutes'];
-                return configurations.load(configNames).then(function () {
-                    var mandatoryPersonAttributes = appService.getAppDescriptor().getConfigValue("mandatoryPersonAttributes");
-                    var patientAttributeTypes = new Bahmni.Common.Domain.AttributeTypeMapper().mapFromOpenmrsAttributeTypes(configurations.patientAttributesConfig(), mandatoryPersonAttributes, {}, $rootScope.currentUser.userProperties.defaultLocale);
-                    $rootScope.regEncounterConfiguration = angular.extend(new Bahmni.Registration.RegistrationEncounterConfig(), configurations.encounterConfig());
-                    $rootScope.encounterConfig = angular.extend(new EncounterConfig(), configurations.encounterConfig());
-                    $rootScope.patientConfiguration = new Bahmni.Registration.PatientConfig(patientAttributeTypes.attributeTypes,
-                    configurations.identifierTypesConfig(), appService.getAppDescriptor().getConfigValue("patientInformation"));
-                    $rootScope.regEncounterConfiguration.loginLocationToVisitTypeMap = configurations.loginLocationToVisitTypeMapping();
+                return configurations.load(configNames)
+                    .then(loadPatientAttributeTypes)
+                    .then(function (patientAttributeTypes) {
+                        $rootScope.regEncounterConfiguration = angular.extend(new Bahmni.Registration.RegistrationEncounterConfig(), configurations.encounterConfig());
+                        $rootScope.encounterConfig = angular.extend(new EncounterConfig(), configurations.encounterConfig());
+                        $rootScope.patientConfiguration = new Bahmni.Registration.PatientConfig(patientAttributeTypes.attributeTypes,
+                        configurations.identifierTypesConfig(), appService.getAppDescriptor().getConfigValue("patientInformation"));
+                        $rootScope.regEncounterConfiguration.loginLocationToVisitTypeMap = configurations.loginLocationToVisitTypeMapping();
 
-                    $rootScope.addressLevels = configurations.addressLevels();
-                    $rootScope.fieldValidation = appService.getAppDescriptor().getConfigValue("fieldValidation");
-                    $rootScope.genderMap = configurations.genderMap();
-                    $rootScope.helpDeskNumber = configurations.helpDeskNumber();
-                    Bahmni.Common.Util.GenderUtil.translateGender($rootScope.genderMap, $translate);
-                    $rootScope.relationshipTypeMap = configurations.relationshipTypeMap();
-                    $rootScope.relationshipTypes = configurations.relationshipTypes();
-                    $rootScope.quickLogoutComboKey = configurations.quickLogoutComboKey() || 'Escape';
-                    $rootScope.cookieExpiryTime = configurations.contextCookieExpirationTimeInMinutes() || 0;
+                        $rootScope.addressLevels = configurations.addressLevels();
+                        $rootScope.fieldValidation = appService.getAppDescriptor().getConfigValue("fieldValidation");
+                        $rootScope.genderMap = configurations.genderMap();
+                        $rootScope.helpDeskNumber = configurations.helpDeskNumber();
+                        Bahmni.Common.Util.GenderUtil.translateGender($rootScope.genderMap, $translate);
+                        $rootScope.relationshipTypeMap = configurations.relationshipTypeMap();
+                        $rootScope.relationshipTypes = configurations.relationshipTypes();
+                        $rootScope.quickLogoutComboKey = configurations.quickLogoutComboKey() || 'Escape';
+                        $rootScope.cookieExpiryTime = configurations.contextCookieExpirationTimeInMinutes() || 0;
+                    });
+            };
+
+            var loadPatientAttributeTypes = function () {
+                var mandatoryPersonAttributes = appService.getAppDescriptor().getConfigValue("mandatoryPersonAttributes");
+                var patientAttributeTypes = new Bahmni.Common.Domain.AttributeTypeMapper().mapFromOpenmrsAttributeTypes(configurations.patientAttributesConfig(), mandatoryPersonAttributes, {}, $rootScope.currentUser.userProperties.defaultLocale);
+
+                return Promise.all(patientAttributeTypes.attributeTypes.map(function (attribute) {
+                    if (attribute.format !== "org.openmrs.Location") {
+                        return Promise.resolve(attribute);
+                    }
+                    var locationTags = appService.getAppDescriptor().getConfigValue(attribute.name, []);
+                    return locationService.getAllByTag(locationTags, "ANY").then(function (response) {
+                        return Object.assign({}, attribute, {answers: response.data.results});
+                    });
+                })).then(function (attributeTypes) {
+                    return {
+                        attributeTypes: attributeTypes
+                    };
                 });
             };
 
