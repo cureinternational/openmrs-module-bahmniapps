@@ -81,7 +81,11 @@ describe("PatientsListController", function () {
 
             getAppDescriptor = jasmine.createSpyObj('getAppDescriptor', ['getExtensions', 'getConfigValue', 'formatUrl']);
             getAppDescriptor.getExtensions.and.returnValue(appExtensions);
-            getAppDescriptor.getConfigValue.and.returnValue({"recentPatientsDuration": 14});
+            getAppDescriptor.getConfigValue.and.returnValue({
+                "recentPatientsDuration": 14,
+                "tabularViewIgnoreHeadingsList": ["display", "uuid", "image", "$$hashKey", "activeVisitUuid", "hasBeenAdmitted", "forwardUrl", "programUuid", "enrollment"],
+                "identifierHeading": ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"]
+            });
             getAppDescriptor.formatUrl.and.returnValue("formattedUrl");
             _appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
             _appService.getAppDescriptor.and.returnValue(getAppDescriptor);
@@ -130,7 +134,7 @@ describe("PatientsListController", function () {
                 scope.$apply(setUp);
 
                 expect(scope.search.searchType).toEqual({ name : 'All active patients', display : 'All active patients', handler : 'emrapi.sqlSearch.activePatients', forwardUrl : undefined, targetedTab : null, id : 'bahmni.clinical.patients.allPatients', params : undefined, refreshTime : '10', view : 'tile',
-                tabularViewHeadingOrder : [], dateColumns : [], tabularViewIgnoreHeadingsList : [], showPrint : false, printHtmlLocation : null, searchColumns : undefined, additionalParams : undefined, translationKey : undefined, patientCount : '...', linkColumn : undefined, links : undefined});
+                tabularViewHeadingOrder : [  ], dateColumns : [  ], ignoredTabularViewHeadings : [  ], showPrint : false, printHtmlLocation : null, additionalParams : undefined, searchColumns : undefined, translationKey : undefined, linkColumn : undefined, links : undefined, templateUrl : null, patientCount : '...' });
                 expect(_patientService.findPatients).toHaveBeenCalled();
 
                 findPatientsPromise.callThenCallBack({data: patients});
@@ -174,6 +178,22 @@ describe("PatientsListController", function () {
 
 
         });
+
+    describe("isHeadingOfDateColumn", function () {
+        beforeEach(function () {
+            scope.$apply(setUp);
+        });
+
+        it("should return true if the heading is a date column", function () {
+            scope.search.searchType = {
+                dateColumns: ["date"]
+            };
+            var heading = "date";
+            var isDateColumn = scope.isHeadingOfDateColumn(heading);
+            expect(isDateColumn).toBeTruthy();
+        });
+
+    });
 
         describe("patientCount",function(){
             beforeEach(function(){
@@ -270,8 +290,8 @@ describe("PatientsListController", function () {
 
             it('should print headings which are filtered from ignore headings list', function(){
                 scope.search.activePatients = [{emr_id : 'emr_Id123', treatment : 'treatment_id', uuid : '23279927', forwardUrl: 'forwardUrl',programUuid: 'programUuid',enrollment: 'enrollmentUuid', DQ_COLUMN_TITLE_ACTION: 'action url'}];
-                scope.ignoredTabularViewHeadingsConfig = ["display", "uuid", "image", "activeVisitUuid", "forwardUrl", "hasBeenAdmitted", "programUuid", "enrollment"];
-                scope.identifierHeadingsConfig = ["ID", "identifier", "DQ_COLUMN_TITLE_ACTION"];
+                scope.ignoredTabularViewHeadingsConfig = ["display", "uuid", "image", "$$hashKey", "activeVisitUuid", "hasBeenAdmitted", "forwardUrl", "programUuid", "enrollment"];
+                scope.identifierHeadingsConfig = ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"];
                 scope.getHeadings();
                 expect(scope.activeHeaders).toEqual([ 
                     { name : 'emr_id', sortInfo : 'emr_id' }, 
@@ -282,8 +302,8 @@ describe("PatientsListController", function () {
 
             it('should print headings which are filtered from ignore headings list and print headings list', function(){
                 scope.search.activePatients = [{emr_id : 'emr_Id123', treatment : 'treatment_id', uuid : '23279927', forwardUrl: 'forwardUrl', DQ_COLUMN_TITLE_ACTION: 'action url'}];
-                scope.ignoredTabularViewHeadingsConfig = ["display", "uuid", "image", "activeVisitUuid", "forwardUrl", "hasBeenAdmitted", "programUuid", "enrollment"];
-                scope.identifierHeadingsConfig = ["ID", "identifier", "DQ_COLUMN_TITLE_ACTION"];
+                scope.ignoredTabularViewHeadingsConfig = ["display", "uuid", "image", "$$hashKey", "activeVisitUuid", "hasBeenAdmitted", "forwardUrl", "programUuid", "enrollment"];
+                scope.identifierHeadingsConfig = ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"];
                 var headings = scope.getPrintableHeadings();
                 expect(headings).toEqual([ 
                     { name : 'emr_id', sortInfo : 'emr_id' }, 
@@ -307,7 +327,7 @@ describe("PatientsListController", function () {
             it("should accept the link column from the config, when respective config present", function () {
                 // var search = {searchType: {linkColumn: "Status"}};
                 scope.search = {searchType: {linkColumn: "Status"}};
-                scope.identifierHeadingsConfig = ["ID", "identifier", "DQ_COLUMN_TITLE_ACTION"];
+                scope.identifierHeadingsConfig = ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"];
                 var heading = "Status";
                 var headingOfLinkColumn = scope.isHeadingOfLinkColumn(heading);
                 expect(headingOfLinkColumn).toBeTruthy()
@@ -315,7 +335,7 @@ describe("PatientsListController", function () {
 
             it("should accept the default link column, when nothing specified in the config", function () {
                 scope.search = {searchType: {}};
-                scope.identifierHeadingsConfig = ["ID", "identifier", "DQ_COLUMN_TITLE_ACTION"];
+                scope.identifierHeadingsConfig = ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"];
                 // scope.$apply(setUp);
                 var heading = "identifier";
                 var headingOfLinkColumn = scope.isHeadingOfLinkColumn(heading);
@@ -324,7 +344,7 @@ describe("PatientsListController", function () {
 
             it("should not have a link on the column, when no match for heading found in config and default column list", function () {
                 scope.search = {searchType: {}};
-                scope.identifierHeadingsConfig = ["ID", "identifier", "DQ_COLUMN_TITLE_ACTION"];
+                scope.identifierHeadingsConfig = ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"];
                 // scope.$apply(setUp);
                 var heading = "RandomColumn";
                 var headingOfLinkColumn = scope.isHeadingOfLinkColumn(heading);
@@ -333,7 +353,7 @@ describe("PatientsListController", function () {
         });
 
         it("should indicate if specified column in a link", function () {
-            scope.identifierHeadingsConfig = ["ID", "identifier", "DQ_COLUMN_TITLE_ACTION"];
+            scope.identifierHeadingsConfig = ["ID", "Id", "id", "identifier", "DQ_COLUMN_TITLE_ACTION"];
             scope.search.searchType = {
                 "id": "bahmni.clinical.patients.all",
                 "extensionPointId": "org.bahmni.patient.search",
