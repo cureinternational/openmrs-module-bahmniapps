@@ -8,7 +8,7 @@ import PropTypes from "prop-types";
 
 const PatientListContent = ({ patientMedicationDetails, handleOnClick }) => {
   const { administered_date_time, administered_drug_name, medication_administration_performer_uuid, medication_administration_uuid } = patientMedicationDetails;
-  const acknowledgementRequiredText = (<FormattedMessage id="AKNOWLEDGE_BUTTON" defaultMessage="Acknowledge" />);
+  const acknowledgementRequiredText = (<FormattedMessage id="ACKNOWLEDGE_BUTTON" defaultMessage="Acknowledge" />);
   const [providerNotes, setProviderNotes] = useState("");
 
   function acknowledgeMedication() {
@@ -28,8 +28,8 @@ const PatientListContent = ({ patientMedicationDetails, handleOnClick }) => {
         <div className="notes">
           <TextArea
             className="patient-list-text-area"
-            labelText={<Title text="Note" isRequired />}
-            placeholder="Enter Notes"
+            labelText={<Title text={<FormattedMessage id="NOTE" defaultMessage="Note" />} isRequired={true} />}
+            placeholder={<FormattedMessage id="ENTER_NOTES" defaultMessage="Enter Notes" />}
             rows={1}
             required
             value={providerNotes}
