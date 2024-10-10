@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, screen, getByTestId, waitFor } from "@testing-library/react";
+import { render, fireEvent, screen, waitFor, getByTestId } from "@testing-library/react";
 import { AddAllergy } from "./AddAllergy";
 import { IntlProvider } from "react-intl";
 import {
@@ -277,6 +277,7 @@ describe("AddAllergy", () => {
 
   it("should save allergies successfully and set isSaveSuccess to true", async () => {
     const { container } = render(
+      <IntlProvider locale="en">
       <AddAllergy
         onClose={onClose}
         onSave={onSave}
@@ -286,6 +287,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
       />
+      </IntlProvider>
     );
     saveAllergiesAPICall.mockResolvedValueOnce({ status: 201 });
     searchAllergen();
@@ -311,6 +313,7 @@ describe("AddAllergy", () => {
 
   it("should set isSaveSuccess to false if saveAllergiesAPICall fails", async () => {
     const { container } = render(
+      <IntlProvider locale="en">
       <AddAllergy
         onClose={onClose}
         onSave={onSave}
@@ -320,6 +323,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
       />
+      </IntlProvider> 
     );
     searchAllergen();
     selectAllergen();
@@ -338,6 +342,6 @@ describe("AddAllergy", () => {
       severity: { uuid: "162301AAAAAA"},
       comment: "",
     }, "patient#1");
-    
+
   });
 });

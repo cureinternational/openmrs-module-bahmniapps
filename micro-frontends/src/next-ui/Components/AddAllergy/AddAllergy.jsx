@@ -1,10 +1,16 @@
 import { Close24 } from "@carbon/icons-react";
-import { ArrowLeft } from "@carbon/icons-react/next";
-import { RadioButton, RadioButtonGroup, TextArea } from "carbon-components-react";
+import "./AddAllergy.scss";
+import "../../../styles/common.scss";
 import { isEmpty } from "lodash";
+import {
+  RadioButton,
+  RadioButtonGroup,
+  TextArea,
+} from "carbon-components-react";
+import { FormattedMessage, useIntl } from "react-intl";
+import { ArrowLeft } from "@carbon/icons-react/next";
 import propTypes from "prop-types";
 import React, { Fragment, useEffect } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
 import "../../../styles/common.scss";
 import {
   saveAllergiesAPICall
