@@ -13,6 +13,7 @@ import {
 import { ViewAllergiesAndReactions } from "../../Components/ViewAllergiesAndReactions/ViewAllergiesAndReactions";
 import { I18nProvider } from "../../Components/i18n/I18nProvider";
 import { NotificationCarbon } from "bahmni-carbon-ui";
+import { allergyError, getErrorKey } from "../../errorMessages";
 
 /** NOTE: for reasons known only to react2angular,
  * any functions passed in as props will be undefined at the start, even ones inside other objects
