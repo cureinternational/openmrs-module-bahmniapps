@@ -4,7 +4,7 @@ describe("ManageProgramController", function () {
 
     var scope, messageService, i = 0, programService, _provide, deferred, q, _spinner,
         retrospectiveEntryService, listOfPatientPrograms, programAttributeTypes, allPrograms,
-        controller, rootScope, confirmBox, state;
+        controller, rootScope, confirmBox, state, translate;
 
     var setUp = function () {
         return controller('ManageProgramController', {
@@ -12,7 +12,8 @@ describe("ManageProgramController", function () {
             $scope: scope,
             $rootScope: rootScope,
             q: q,
-            confirmBox: confirmBox
+            confirmBox: confirmBox,
+            $translate: translate
         });
     };
 
@@ -28,6 +29,11 @@ describe("ManageProgramController", function () {
             deferred = q.defer();
             deferred.resolve(null);
             return deferred.promise;
+        });
+
+        translate = jasmine.createSpyObj('$translate', ['instant']);
+        translate.instant.and.callFake(function (key) {
+            return key;
         });
 
         programService.getPatientPrograms.and.callFake(function () {
@@ -70,7 +76,8 @@ describe("ManageProgramController", function () {
         $provide.value('spinner', _spinner);
         $provide.value('messagingService', messageService);
         $provide.value('retrospectiveEntryService', retrospectiveEntryService);
-        $provide.value('$stateParams', {configName: "default"});
+        $provide.value('$stateParams', { configName: "default" });
+        $provide.value('$translate', translate);
     }));
 
     beforeEach(inject(function ($controller, $rootScope, $q) {
