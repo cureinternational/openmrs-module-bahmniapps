@@ -26,6 +26,11 @@
                             <i ng-if="::patient[iconAttributeConfig.attrName] && patient[iconAttributeConfig.attrName].value.toString() === iconAttributeConfig.attrValue" class="ipd-indication custom-icon-style" ng-class="iconAttributeConfig.icon" ng-style="{{iconAttributeConfig.iconStyle}}"></i>
                         </div>
                      </td>
+                     <td>
+                        <div class="navigation-url-container" ng-if="navigationUrl">
+                            <a href="{{navigationUrl}}" target="_blank" class="navigation-url">Registration</a>
+                        </div>
+                     </td>
                 </tr>
                 <tr ng-if="::showBirthDate" >
                     <td class="name">{{ 'DOB_LABEL' | translate }}</td>

@@ -34,6 +34,7 @@
             'configurations', '$q', 'visitService', 'appService',
             function (patientService, spinner, $sce, $rootScope, $stateParams, $window, $translate, configurations, $q, visitService, appService) {
                 var controller = function ($scope) {
+                    $scope.navigationUrl = appService.getAppDescriptor().getConfigValue('navigationUrl');
                     $scope.isProviderRelationship = function (relationship) {
                         return _.includes($rootScope.relationshipTypeMap.provider, relationship.relationshipType.aIsToB);
                     };
