@@ -399,5 +399,6 @@
   "GENDER_KEY": "Gender:",
   "AGE_KEY": "Age:",
   "DATE_OF_BIRTH_LABEL": "Date of Birth:",
-  "REQUESTED_BY_KEY": "Requested by"
+  "REQUESTED_BY_KEY": "Requested by",
+  "NAVIGATION_LINK" : "Registration"
 }
