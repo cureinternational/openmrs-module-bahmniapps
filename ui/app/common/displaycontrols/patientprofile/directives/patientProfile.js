@@ -38,7 +38,7 @@
                     $scope.isProviderRelationship = function (relationship) {
                         return _.includes($rootScope.relationshipTypeMap.provider, relationship.relationshipType.aIsToB);
                     };
-                    console.log("Demo Test : ", $stateParams.configName);
+
                     $scope.configName = $stateParams.configName || Bahmni.Common.Constants.defaultExtensionName;
                     $scope.openPatientDashboard = function (patientUuid) {
                         $window.open("../clinical/#/" + $scope.configName + "/patient/" + patientUuid + "/dashboard");
