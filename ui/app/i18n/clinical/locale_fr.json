@@ -366,5 +366,5 @@
     "PROGRAM_DELETE_POPUP_MESSAGE_KEY": "Êtes-vous sûr de vouloir supprimer {{ programName }} ?",
     "PROGRAM_DELETE_POPUP_CANCEL_KEY": "Annuler",
     "PROGRAM_DELETE_POPUP_DELETE_KEY": "Supprimer",
-    "NAVIGATION_LINK" : "Inscription"
+    "NAVIGATION_URL" : "Inscription"
 }
