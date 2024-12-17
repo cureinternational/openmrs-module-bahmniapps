@@ -365,6 +365,5 @@
     "OPD_BUTTON": "OPD",
     "PROGRAM_DELETE_POPUP_MESSAGE_KEY": "Êtes-vous sûr de vouloir supprimer {{ programName }} ?",
     "PROGRAM_DELETE_POPUP_CANCEL_KEY": "Annuler",
-    "PROGRAM_DELETE_POPUP_DELETE_KEY": "Supprimer",
-    "NAVIGATION_URL" : "Inscription"
+    "PROGRAM_DELETE_POPUP_DELETE_KEY": "Supprimer"
 }
