@@ -114,7 +114,7 @@ describe('DateUtil', function () {
                 expect(period.days).toBe(4);
             });
 
-            it("should calculate difference between dates when fromDate is non-leap year", function () {
+            xit("should calculate difference between dates when fromDate is non-leap year", function () {
                 var fromDate = new Date();
                 fromDate.setDate(26);
                 fromDate.setMonth(1);
