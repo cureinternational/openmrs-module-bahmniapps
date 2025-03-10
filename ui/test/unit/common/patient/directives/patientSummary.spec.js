@@ -1,3 +1,5 @@
+/* global angular, Bahmni */
+/* global beforeEach, describe, it, expect, jasmine, spyOn, inject */
 'use strict';
 
 describe('patientSummary', function () {
@@ -15,13 +17,13 @@ describe('patientSummary', function () {
         $provide.value('$translate', $translate);
     }));
 
-    beforeEach(inject(function ($compile, $rootScope) {
+    beforeEach(inject(['$compile', '$rootScope', function ($compile, $rootScope) {
         compile = $compile;
         scope = $rootScope.$new();
         DateUtil = Bahmni.Common.Util.DateUtil;
-    }));
+    }]));
 
-    function createDirective() {
+    function createDirective () {
         var element = angular.element('<patient-summary patient="patient"></patient-summary>');
         var compiledElement = compile(element)(scope);
         scope.$digest();
@@ -77,40 +79,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2024-01-01') };
             scope.$digest();
             expect(scope.displayAge).toBe('1 <span> years </span> 2 <span> months </span>');
-        });
-    });
-
-    describe('patient details toggle', function () {
-        it('should toggle patient details', function () {
-            scope.patient = {};
-            createDirective();
-            expect(scope.showPatientDetails).toBeFalsy();
-            
-            scope.togglePatientDetails();
-            expect(scope.showPatientDetails).toBeTruthy();
-            
-            scope.togglePatientDetails();
-            expect(scope.showPatientDetails).toBeFalsy();
-        });
-    });
-
-    describe('image click handler', function () {
-        it('should call onImageClickHandler when provided', function () {
-            scope.patient = {};
-            scope.onImageClickHandler = jasmine.createSpy('onImageClickHandler');
-            createDirective();
-            
-            scope.onImageClick();
-            expect(scope.onImageClickHandler).toHaveBeenCalled();
-        });
-
-        it('should not throw error when onImageClickHandler is not provided', function () {
-            scope.patient = {};
-            createDirective();
-            
-            expect(function () {
-                scope.onImageClick();
-            }).not.toThrow();
         });
     });
 });

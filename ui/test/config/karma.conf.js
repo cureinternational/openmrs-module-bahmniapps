@@ -8,7 +8,8 @@ module.exports = function (config) {
         singleRun: true,
         files: [
             {pattern: 'test/data/*.json', watched: true, served: true, included: false},
-            {pattern: 'app/images/*', included: false, served: true},
+            {pattern: 'app/images/**/*', watched: false, included: false, served: true},
+            {pattern: 'app/images/blank-user.gif', watched: false, included: false, served: true},
             'app/components/q/q.js',
             'app/components/angular/angular.js',
             // mock out all the micro-frontends
@@ -77,7 +78,7 @@ module.exports = function (config) {
             'test/unit/**/*.js',
             "test/unit/common/util/dateTimeFormatter.spec.js"
         ],
-        exclude:[
+        exclude: [
             'app/components/moment/src/**/*.js',
             'app/components/moment/meteor/**/*.js',
             'app/components/jquery/src/**/*.js',
@@ -96,8 +97,8 @@ module.exports = function (config) {
             'app/reports/**/*.js': ['coverage'],
             'app/bedmanagement/**/*.js': ['coverage'],
             'app/ot/**/*.js': ['coverage'],
-            'app/common/displaycontrols/**/views/*.html':['ng-html2js'],
-            'app/common/concept-set/views/*.html':['ng-html2js'],
+            'app/common/displaycontrols/**/views/*.html': ['ng-html2js'],
+            'app/common/concept-set/views/*.html': ['ng-html2js'],
             'app/common/uicontrols/**/views/*.html': ['ng-html2js'],
             'app/clinical/**/**/*.html': ['ng-html2js']
         },
@@ -117,8 +118,9 @@ module.exports = function (config) {
             prependPrefix: '..',
             moduleName: 'ngHtml2JsPreprocessor'
         },
-        proxies:{
-            '/images/blank-user.gif' :'/base/app/images/blank-user.gif'
+        proxies: {
+            '/images/blank-user.gif': '/base/app/images/blank-user.gif',
+            '../images/blank-user.gif': '/base/app/images/blank-user.gif'
         }
     });
 };
