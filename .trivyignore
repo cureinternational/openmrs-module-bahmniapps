@@ -72,3 +72,5 @@ CVE-2024-38355 #Installed version 2.1.1 Fixed Version 2.5.1, 4.6.2 socket.io: Un
 CVE-2024-45590 #body-parser: Denial of Service Vulnerability in body-parser https://avd.aquasec.com/nvd/cve-2024-45590
 CVE-2024-45296 path-to-regexp: Backtracking regular expressions cause ReDoS https://avd.aquasec.com/nvd/cve-2024-45296
 CVE-2024-21538
+GHSA-vjh7-7g9h-fjfh  # elliptic vulnerability
+CVE-2024-52798       # path-to-regexp vulnerability
