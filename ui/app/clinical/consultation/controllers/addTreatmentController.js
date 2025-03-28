@@ -855,46 +855,7 @@ angular.module('bahmni.clinical')
                 }
             };
 
-            var validateTreatmentPrerequisites = function () {
-                var prerequisites = {
-                    isValid: true,
-                    messages: []
-                };
-
-                // Patient Weight Check
-                if ($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
-                    if (!$scope.obs || $scope.obs.length == 0 || (($scope.currentEpoch - $scope.obs[0].observationDateTime) / 1000 > $scope.addTreatmentWithPatientWeight.duration)) {
-                        prerequisites.isValid = false;
-                        prerequisites.messages.push($translate.instant("ENTER_PATIENT_WEIGHT_ERROR"));
-                    }
-                }
-
-                // Diagnosis Check
-                if ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order')) {
-                    if (!$scope.confirmedDiagnoses || $scope.confirmedDiagnoses.length == 0) {
-                        prerequisites.isValid = false;
-                        prerequisites.messages.push($translate.instant("ENTER_DIAGNOSIS_ERROR"));
-                    }
-                }
-
-                // Show combined error message if both checks fail
-                if (!prerequisites.isValid) {
-                    prerequisites.messages.push($translate.instant("PATIENT_WEIGHT_AND_DIAGNOSIS_ERROR"));
-                }
-
-                return prerequisites.isValid;
-            };
-
-            var checkPrerequisitesAndSetFlag = function () {
-                if (!validateTreatmentPrerequisites()) {
-                    $scope.addToNewTreatment = false;
-                } else {
-                    $scope.addToNewTreatment = true;
-                }
-            };
-
             $scope.verifyAdd = function (treatment) {
-                // Early validation is now moved to page load, so this can be simplified
                 return $scope.addForm.$valid && $scope.calculateDose(treatment);
             };
 
@@ -906,54 +867,47 @@ angular.module('bahmni.clinical')
 
                 mergeActiveAndScheduledWithDiscontinuedOrders();
 
-                $scope.treatmentConfig = treatmentConfig;
+                $scope.treatmentConfig = treatmentConfig; // $scope.treatmentConfig used only in UI
                 var medicationConfig = appService.getAppDescriptor().getConfigForPage('medication') || {};
                 $scope.addTreatmentWithPatientWeight = appService.getAppDescriptor().getConfigValue('addTreatmentWithPatientWeight') || {};
                 $scope.addTreatmentWithDiagnosis = appService.getAppDescriptor().getConfigValue('addTreatmentWithDiagnosis') || {};
 
-                // Initialize obs and confirmedDiagnoses arrays
-                $scope.obs = [];
-                $scope.confirmedDiagnoses = [];
+                var patientWeightPromise = $q.resolve();
+                var diagnosisPromise = $q.resolve();
 
-                var observationsFetched = false;
-                var diagnosesFetched = false;
-
-                // Patient Weight Observation Fetch
                 if ($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
-                    observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, null, null).then(function (response) {
+                    patientWeightPromise = observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, null, null).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
                         $scope.obs = response.data;
-                        observationsFetched = true;
 
-                        // Validate prerequisites only after both observations and diagnoses are fetched
-                        if (observationsFetched && diagnosesFetched) {
-                            checkPrerequisitesAndSetFlag();
-                        }
+                        $scope.patientWeightError = !$scope.obs || $scope.obs.length === 0 ||
+                            (($scope.currentEpoch - (($scope.obs[0] && $scope.obs[0].observationDateTime) || 0)) / 1000 > $scope.addTreatmentWithPatientWeight.duration);
                     });
                 }
 
-                // Diagnosis Fetch
                 if ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order')) {
-                    diagnosisService.getPatientDiagnosis($scope.patient.uuid).then(function (response) {
+                    diagnosisPromise = diagnosisService.getPatientDiagnosis($scope.patient.uuid).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
                         $scope.confirmedDiagnoses = response.data.filter(function (diagnosis) {
                             return diagnosis.order === $scope.addTreatmentWithDiagnosis.order && diagnosis.diagnosisStatusConcept === null;
                         });
-                        diagnosesFetched = true;
 
-                        // Validate prerequisites only after both observations and diagnoses are fetched
-                        if (observationsFetched && diagnosesFetched) {
-                            checkPrerequisitesAndSetFlag();
-                        }
+                        $scope.diagnosisError = !$scope.confirmedDiagnoses || $scope.confirmedDiagnoses.length === 0;
                     });
                 }
 
-                // If no fetch is needed but config exists, still validate
-                if (!$scope.addTreatmentWithPatientWeight.hasOwnProperty('duration') &&
-                    !$scope.addTreatmentWithDiagnosis.hasOwnProperty('order')) {
-                    checkPrerequisitesAndSetFlag();
-                }
+                // Consolidate error messages after both promises resolve
+                $q.all([patientWeightPromise, diagnosisPromise]).then(function () {
+                    if ($scope.patientWeightError && $scope.diagnosisError) {
+                        messagingService.showMessage("error", $translate.instant("PATIENT_WEIGHT_AND_DIAGNOSIS_ERROR"));
+                    } else if ($scope.patientWeightError) {
+                        messagingService.showMessage("error", $translate.instant("ENTER_PATIENT_WEIGHT_ERROR"));
+                    } else if ($scope.diagnosisError) {
+                        messagingService.showMessage("error", $translate.instant("ENTER_DIAGNOSIS_ERROR"));
+                    }
+                });
 
+                $scope.addToNewTreatment = true;
                 showRulesInMedication(medicationConfig);
                 setContinuousMedicationRoutes(medicationConfig);
             };

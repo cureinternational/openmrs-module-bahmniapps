@@ -1,35 +1,29 @@
 describe('AddTreatmentController', function () {
-    var $controller, $rootScope, $scope, mockDependencies;
+    var $controller, $rootScope, $scope, $q, messagingService, observationsService, diagnosisService, $translate;
 
     beforeEach(module('bahmni.clinical'));
 
-    beforeEach(inject(function (_$controller_, _$rootScope_) {
+    beforeEach(inject(function (_$controller_, _$rootScope_, _$q_, _messagingService_, _observationsService_, _diagnosisService_, _$translate_) {
         $controller = _$controller_;
         $rootScope = _$rootScope_;
         $scope = $rootScope.$new();
+        $q = _$q_;
+        messagingService = _messagingService_;
+        observationsService = _observationsService_;
+        diagnosisService = _diagnosisService_;
+        $translate = _$translate_;
 
-        mockDependencies = {
-            contextChangeHandler: jasmine.createSpyObj('contextChangeHandler', ['add']),
-            treatmentConfig: { /* mock treatmentConfig methods */ },
-            drugService: jasmine.createSpyObj('drugService', ['getSetMembersOfConcept', 'search']),
-            clinicalAppConfigService: jasmine.createSpyObj('clinicalAppConfigService', ['getTreatmentActionLink']),
-            appService: jasmine.createSpyObj('appService', ['getAppDescriptor']),
-            visitService: jasmine.createSpyObj('visitService', ['search']),
-            orderSetService: jasmine.createSpyObj('orderSetService', ['getOrderSetsByQuery']),
-            $state: { params: { patientUuid: 'test-patient-uuid' } },
-            $translate: jasmine.createSpy('$translate'),
-            spinner: jasmine.createSpyObj('spinner', ['forPromise']),
-            $timeout: jasmine.createSpy('$timeout'),
-            $window: jasmine.createSpyObj('$window', ['scrollTo']),
-            ngDialog: jasmine.createSpyObj('ngDialog', ['open', 'close']),
-            observationsService: jasmine.createSpyObj('observationsService', ['fetch']),
-            diagnosisService: jasmine.createSpyObj('diagnosisService', ['getPatientDiagnosis'])
-        };
+        spyOn(messagingService, 'showMessage');
+        spyOn(observationsService, 'fetch').and.returnValue($q.resolve({ data: [] }));
+        spyOn(diagnosisService, 'getPatientDiagnosis').and.returnValue($q.resolve({ data: [] }));
 
         $controller('AddTreatmentController', {
             $scope: $scope,
-            $rootScope: $rootScope,
-            ...mockDependencies
+            $q: $q,
+            messagingService: messagingService,
+            observationsService: observationsService,
+            diagnosisService: diagnosisService,
+            $translate: $translate
         });
     }));
 
@@ -52,6 +46,58 @@ describe('AddTreatmentController', function () {
     it('should handle context change correctly', function () {
         var result = $scope.incompleteDrugOrders();
         expect(result).toBe(false); // Adjust based on actual logic
+    });
+
+    it('should show combined error message when both patient weight and diagnosis are invalid', function () {
+        $scope.addTreatmentWithPatientWeight = { duration: 3600 };
+        $scope.addTreatmentWithDiagnosis = { order: 'primary' };
+
+        observationsService.fetch.and.returnValue($q.resolve({ data: [] }));
+        diagnosisService.getPatientDiagnosis.and.returnValue($q.resolve({ data: [] }));
+
+        $scope.init();
+        $rootScope.$apply();
+
+        expect(messagingService.showMessage).toHaveBeenCalledWith('error', $translate.instant('PATIENT_WEIGHT_AND_DIAGNOSIS_ERROR'));
+    });
+
+    it('should show patient weight error message when only patient weight is invalid', function () {
+        $scope.addTreatmentWithPatientWeight = { duration: 3600 };
+        $scope.addTreatmentWithDiagnosis = { order: 'primary' };
+
+        observationsService.fetch.and.returnValue($q.resolve({ data: [] }));
+        diagnosisService.getPatientDiagnosis.and.returnValue($q.resolve({ data: [{ order: 'primary' }] }));
+
+        $scope.init();
+        $rootScope.$apply();
+
+        expect(messagingService.showMessage).toHaveBeenCalledWith('error', $translate.instant('ENTER_PATIENT_WEIGHT_ERROR'));
+    });
+
+    it('should show diagnosis error message when only diagnosis is invalid', function () {
+        $scope.addTreatmentWithPatientWeight = { duration: 3600 };
+        $scope.addTreatmentWithDiagnosis = { order: 'primary' };
+
+        observationsService.fetch.and.returnValue($q.resolve({ data: [{ observationDateTime: new Date().getTime() }] }));
+        diagnosisService.getPatientDiagnosis.and.returnValue($q.resolve({ data: [] }));
+
+        $scope.init();
+        $rootScope.$apply();
+
+        expect(messagingService.showMessage).toHaveBeenCalledWith('error', $translate.instant('ENTER_DIAGNOSIS_ERROR'));
+    });
+
+    it('should not show any error message when both patient weight and diagnosis are valid', function () {
+        $scope.addTreatmentWithPatientWeight = { duration: 3600 };
+        $scope.addTreatmentWithDiagnosis = { order: 'primary' };
+
+        observationsService.fetch.and.returnValue($q.resolve({ data: [{ observationDateTime: new Date().getTime() }] }));
+        diagnosisService.getPatientDiagnosis.and.returnValue($q.resolve({ data: [{ order: 'primary' }] }));
+
+        $scope.init();
+        $rootScope.$apply();
+
+        expect(messagingService.showMessage).not.toHaveBeenCalled();
     });
 
     // Add more tests to cover all branches...
