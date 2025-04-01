@@ -35,7 +35,7 @@ describe('patientSummary', function () {
             '</div>');
     }]));
 
-    function createDirective() {
+    function createDirective () {
         element = angular.element('<patient-summary patient="patient"></patient-summary>');
         compiledElement = compile(element)(scope);
 
@@ -54,22 +54,22 @@ describe('patientSummary', function () {
             spyOn(DateUtil, 'diffInYearsMonthsDays').and.callFake(function (birthDate) {
                 // Return specific values based on the birthDate to match our test assertions
                 if (birthDate.getTime() === new Date('2020-01-01').getTime()) {
-                    return { years: 5, months: 0, days: 0 };
+                    return {years: 5, months: 0, days: 0};
                 } else if (birthDate.getTime() === new Date('2020-01-10').getTime()) {
-                    return { years: 5, months: 2, days: 0 };
+                    return {years: 5, months: 2, days: 0};
                 } else if (birthDate.getTime() === new Date('2020-02-15').getTime()) {
                     // The test expects to see months even when they are 0
                     // The directive will only include months if the value is truthy
                     // So we'll update our mock to return something that will match the test's expected output
-                    return { years: 5, months: 0, days: 23 };
+                    return {years: 5, months: 0, days: 23};
                 } else if (birthDate.getTime() === new Date('2024-09-15').getTime()) {
-                    return { years: 0, months: 5, days: 25 };
+                    return {years: 0, months: 5, days: 25};
                 } else if (birthDate.getTime() === new Date('2025-03-01').getTime()) {
-                    return { years: 0, months: 0, days: 9 };
+                    return {years: 0, months: 0, days: 9};
                 } else if (birthDate.getTime() === new Date('2024-01-01').getTime()) {
-                    return { years: 1, months: 2, days: 0 };
+                    return {years: 1, months: 2, days: 0};
                 }
-                return { years: 0, months: 0, days: 0 };
+                return {years: 0, months: 0, days: 0};
             });
         });
 

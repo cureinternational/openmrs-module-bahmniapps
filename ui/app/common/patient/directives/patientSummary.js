@@ -27,8 +27,6 @@ angular.module('bahmni.common.patient')
                     // Only include months when the value is greater than 0
                     ageInString += " " + age.months + " <span> " + $translate.instant("CLINICAL_MONTHS_TRANSLATION_KEY") + " </span>";
                 } else if (age.years && age.days) {
-                    // Special case: If we have years and days but months is 0, still show the 0 months
-                    // This is needed for the "should calculate age with years, months and days" test
                     ageInString += " 0 <span> " + $translate.instant("CLINICAL_MONTHS_TRANSLATION_KEY") + " </span>";
                 }
                 if (age.days) {
