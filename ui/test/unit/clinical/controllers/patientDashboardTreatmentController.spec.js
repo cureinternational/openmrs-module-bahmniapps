@@ -1,7 +1,6 @@
 'use strict';
 
 describe("PatientDashboardTreatmentController", function () {
-
     beforeEach(module('bahmni.clinical'));
 
     var scope, ngDialog, treatmentService;
@@ -32,7 +31,7 @@ describe("PatientDashboardTreatmentController", function () {
         scope.patient = {
             uuid: "patient uuid"
         };
-        $rootScope.facilityLocation = { "name" : "Bahmni", "attributes" : []};
+        $rootScope.facilityLocation = { "name": "Bahmni", "attributes": [] };
 
         ngDialog = jasmine.createSpyObj('ngDialog', ['open']);
         treatmentService = jasmine.createSpyObj('treatmentService', ['sharePrescriptions']);
@@ -52,7 +51,7 @@ describe("PatientDashboardTreatmentController", function () {
         });
     })
     )
-    ;
+        ;
 
     describe("The controller is loaded", function () {
         it("should setup the scope", function () {
@@ -63,15 +62,15 @@ describe("PatientDashboardTreatmentController", function () {
     describe("Should fetch configuration", function () {
         it("should fetch dashboard params", function () {
             var expected = {};
-            _.extend(expected, treatmentConfigParams.dashboardConfig || {}, {patientUuid: "patient uuid", isEmailPresent: false}, {prescriptionEmailToggle: undefined});
+            _.extend(expected, treatmentConfigParams.dashboardConfig || {}, { patientUuid: "patient uuid", isEmailPresent: false }, { prescriptionEmailToggle: undefined });
             expect(expected).toEqual(scope.dashboardConfig);
         });
 
         it("should fetch summary page params", function () {
             var expected = {};
-            _.extend(expected, treatmentConfigParams.expandedViewConfig || {}, {patientUuid: "patient uuid", isEmailPresent: false}, {prescriptionEmailToggle: undefined});
+            _.extend(expected, treatmentConfigParams.expandedViewConfig || {}, { patientUuid: "patient uuid", isEmailPresent: false }, { prescriptionEmailToggle: undefined });
             expect(expected).toEqual(scope.expandedViewConfig);
         });
     });
 })
-;
+    ;
