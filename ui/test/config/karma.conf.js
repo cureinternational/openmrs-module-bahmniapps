@@ -8,7 +8,8 @@ module.exports = function (config) {
         singleRun: true,
         files: [
             { pattern: 'test/data/*.json', watched: true, served: true, included: false },
-            { pattern: 'app/images/*', included: false, served: true },
+            { pattern: 'app/images/**/*', watched: false, included: false, served: true },
+            { pattern: 'app/images/blank-user.gif', watched: false, included: false, served: true },
             'app/components/q/q.js',
             'app/components/angular/angular.js',
             // mock out all the micro-frontends
