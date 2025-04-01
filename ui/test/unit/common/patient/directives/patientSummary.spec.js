@@ -24,7 +24,6 @@ describe('patientSummary', function () {
         // Assign the injected $sce service to the outer $sce variable
         $sce = _$sce_;
 
-        // Mock the template
         _$templateCache_.put('../common/patient/header/views/patientSummary.html',
             '<div class="patient-details">' +
             '<span ng-bind-html="displayAge"></span>' +
@@ -35,14 +34,12 @@ describe('patientSummary', function () {
             '</div>');
     }]));
 
-    function createDirective() {
+    function createDirective () {
         element = angular.element('<patient-summary patient="patient"></patient-summary>');
         compiledElement = compile(element)(scope);
 
-        // Force digest cycle to ensure the directive initializes properly
         scope.$digest();
 
-        // Get the isolate scope from the directive
         var isolateScope = compiledElement.isolateScope();
 
         return isolateScope;
@@ -52,15 +49,11 @@ describe('patientSummary', function () {
         beforeEach(function () {
             spyOn(DateUtil, 'now').and.returnValue(new Date('2025-03-10'));
             spyOn(DateUtil, 'diffInYearsMonthsDays').and.callFake(function (birthDate) {
-                // Return specific values based on the birthDate to match our test assertions
                 if (birthDate.getTime() === new Date('2020-01-01').getTime()) {
                     return { years: 5, months: 0, days: 0 };
                 } else if (birthDate.getTime() === new Date('2020-01-10').getTime()) {
                     return { years: 5, months: 2, days: 0 };
                 } else if (birthDate.getTime() === new Date('2020-02-15').getTime()) {
-                    // The test expects to see months even when they are 0
-                    // The directive will only include months if the value is truthy
-                    // So we'll update our mock to return something that will match the test's expected output
                     return { years: 5, months: 0, days: 23 };
                 } else if (birthDate.getTime() === new Date('2024-09-15').getTime()) {
                     return { years: 0, months: 5, days: 25 };
@@ -77,7 +70,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: null };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -88,7 +80,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2020-01-01') };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -99,7 +90,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2020-01-10') };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -110,7 +100,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2020-02-15') };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -121,7 +110,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2024-09-15') };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -132,7 +120,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2025-03-01') };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -143,16 +130,13 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: new Date('2020-01-01') };
             var isolateScope = createDirective();
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
             expect($sce.getTrustedHtml(isolateScope.displayAge)).toBe('5 <span> years </span>');
 
-            // Update the patient
             isolateScope.patient = { birthdate: new Date('2024-01-01') };
 
-            // Force the calculation to run again
             isolateScope.computeAgeDisplay();
             scope.$digest();
 
@@ -186,7 +170,6 @@ describe('patientSummary', function () {
             var isolateScope = createDirective();
             isolateScope.onImageClickHandler = undefined;
 
-            // This should not throw an error
             expect(function () {
                 isolateScope.onImageClick();
             }).not.toThrow();
@@ -206,8 +189,6 @@ describe('patientSummary', function () {
             scope.patient = { birthdate: 'not-a-date' };
             var isolateScope = createDirective();
 
-            // We don't need to explicitly test the result since we're just verifying
-            // that no error is thrown
             expect(function () {
                 isolateScope.computeAgeDisplay();
             }).not.toThrow();

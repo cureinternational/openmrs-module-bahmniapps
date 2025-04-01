@@ -41,10 +41,8 @@ angular.module('bahmni.common.patient')
                 $scope.displayAge = $sce.trustAsHtml($scope.calculateAge($scope.patient.birthdate));
             };
 
-            // Initialize with current patient if available
             $scope.computeAgeDisplay();
 
-            // Watch for future changes
             $scope.$watch('patient', function () {
                 $scope.computeAgeDisplay();
             }, true);
