@@ -33,6 +33,42 @@ angular.module('bahmni.adt')
                 });
             };
 
+            // Utility to extract numeric and string parts for sorting
+            function parseBedNumber (bedNumber) {
+                if (!bedNumber) return {num: Number.MAX_SAFE_INTEGER, str: ''};
+                var match = bedNumber.match(/(\d+)|([a-zA-Z]+)/g);
+                if (!match) return {num: Number.MAX_SAFE_INTEGER, str: bedNumber};
+                var num = parseInt(match[0], 10);
+                return {
+                    num: isNaN(num) ? Number.MAX_SAFE_INTEGER : num,
+                    str: bedNumber.toString().toLowerCase()
+                };
+            }
+
+            $scope.getSortedTableDetails = function () {
+                return ($scope.tableDetails || []).slice().sort(function (a, b) {
+                    // 1. Sort by numeric part of bed_number (Bed)
+                    var aBed = parseBedNumber(a['Bed']);
+                    var bBed = parseBedNumber(b['Bed']);
+                    if (aBed.num !== bBed.num) {
+                        return aBed.num - bBed.num;
+                    }
+                    // 2. If numeric part is same, sort by string part (e.g., 101A, 101B)
+                    if (aBed.str !== bBed.str) {
+                        return aBed.str.localeCompare(bBed.str);
+                    }
+                    // 3. Fallback to bed_id if available
+                    if (a['bed_id'] && b['bed_id'] && a['bed_id'] !== b['bed_id']) {
+                        return a['bed_id'] - b['bed_id'];
+                    }
+                    // 4. Fallback to Ward name
+                    if (a['Ward'] && b['Ward'] && a['Ward'] !== b['Ward']) {
+                        return ('' + a['Ward']).localeCompare('' + b['Ward']);
+                    }
+                    return 0;
+                });
+            };
+
             var getTableDetails = function () {
                 var params = {
                     q: "emrapi.sqlGet.wardsListDetails",
