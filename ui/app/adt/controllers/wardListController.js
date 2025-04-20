@@ -35,36 +35,77 @@ angular.module('bahmni.adt')
 
             // Utility to extract numeric and string parts for sorting
             function parseBedNumber (bedNumber) {
-                if (!bedNumber) return {num: Number.MAX_SAFE_INTEGER, str: ''};
-                var match = bedNumber.match(/(\d+)|([a-zA-Z]+)/g);
-                if (!match) return {num: Number.MAX_SAFE_INTEGER, str: bedNumber};
-                var num = parseInt(match[0], 10);
+                if (bedNumber === null || bedNumber === undefined) {
+                    return { num: Number.MAX_SAFE_INTEGER, str: '', isNonNumericString: false, isEmpty: false, isNull: true };
+                }
+                if (bedNumber === '') {
+                    return { num: Number.MAX_SAFE_INTEGER, str: '', isNonNumericString: false, isEmpty: true, isNull: false };
+                }
+
+                var bedStr = bedNumber.toString().toLowerCase();
+                var match = bedStr.match(/^(\d+)/); // Match leading digits
+                var numPart = match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
+                // True if it doesn't start with a digit AND cannot be parsed as a number entirely (e.g., 'A', 'ZZZ')
+                var isNonNumericString = !match && isNaN(parseInt(bedStr, 10));
+
                 return {
-                    num: isNaN(num) ? Number.MAX_SAFE_INTEGER : num,
-                    str: bedNumber.toString().toLowerCase()
+                    num: numPart,
+                    str: bedStr,
+                    isNonNumericString: isNonNumericString,
+                    isEmpty: false,
+                    isNull: false
                 };
             }
 
             $scope.getSortedTableDetails = function () {
                 return ($scope.tableDetails || []).slice().sort(function (a, b) {
-                    // 1. Sort by numeric part of bed_number (Bed)
                     var aBed = parseBedNumber(a['Bed']);
                     var bBed = parseBedNumber(b['Bed']);
-                    if (aBed.num !== bBed.num) {
-                        return aBed.num - bBed.num;
+
+                    // 1. Handle null (always last)
+                    if (aBed.isNull !== bBed.isNull) {
+                        return aBed.isNull ? 1 : -1;
                     }
-                    // 2. If numeric part is same, sort by string part (e.g., 101A, 101B)
-                    if (aBed.str !== bBed.str) {
+                    // 2. Handle empty string (before null, after others)
+                    if (aBed.isEmpty !== bBed.isEmpty) {
+                        return aBed.isEmpty ? 1 : -1;
+                    }
+                    // 3. Handle Non-Numeric vs Numeric/Alphanumeric (Non-numeric comes after)
+                    if (aBed.isNonNumericString !== bBed.isNonNumericString) {
+                        return aBed.isNonNumericString ? 1 : -1;
+                    }
+
+                    // At this point, a and b are of the same type (both numeric/alphanumeric, both non-numeric, both empty, or both null)
+
+                    // 4. If both are Non-Numeric, sort alphabetically
+                    if (aBed.isNonNumericString) { // && bBed.isNonNumericString is implied
                         return aBed.str.localeCompare(bBed.str);
                     }
-                    // 3. Fallback to bed_id if available
-                    if (a['bed_id'] && b['bed_id'] && a['bed_id'] !== b['bed_id']) {
-                        return a['bed_id'] - b['bed_id'];
+
+                    // 5. If both are Numeric/Alphanumeric
+                    if (!aBed.isNonNumericString && !aBed.isEmpty && !aBed.isNull) { // && same for bBed is implied
+                        // Sort by numeric part first
+                        if (aBed.num !== bBed.num) {
+                            return aBed.num - bBed.num;
+                        }
+                        // Then by full string part (e.g., 101A vs 101B)
+                        if (aBed.str !== bBed.str) {
+                            return aBed.str.localeCompare(bBed.str);
+                        }
                     }
-                    // 4. Fallback to Ward name
+
+                    // Fallbacks: Trigger if primary criteria (Bed number and type) are identical
+                    // Test expects Ward before Bed ID
+                    // 6. Fallback to Ward name
                     if (a['Ward'] && b['Ward'] && a['Ward'] !== b['Ward']) {
                         return ('' + a['Ward']).localeCompare('' + b['Ward']);
                     }
+
+                    // 7. Fallback to bed_id
+                    if (a['bed_id'] && b['bed_id'] && a['bed_id'] !== b['bed_id']) {
+                        return Number(a['bed_id']) - Number(b['bed_id']);
+                    }
+
                     return 0;
                 });
             };
