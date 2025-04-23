@@ -92,24 +92,11 @@ describe('WardListController', function () {
 
         it('should use bed_id as fallback when bed numbers are the same', function () {
             var sorted = scope.getSortedTableDetails();
-            // Filter for '101' beds and check their bed_id order based on the sorting logic (numeric, then bed_id, then Ward)
+            // Filter for '101' beds and check their bed_id order based on the sorting logic (numeric, then bed_id)
             var bed101Rows = sorted.filter(function (row) { return row.Bed === '101'; });
             var bedIds = bed101Rows.map(function (row) { return row.bed_id; });
-            // Expected order: bed_id 2 (Ward A), bed_id 8 (Ward A), bed_id 7 (Ward B)
-            expect(bedIds).toEqual([2, 8, 7]);
-        });
-
-        it('should use Ward as fallback when bed_id is the same', function () {
-            // Add a row with the same bed_id (2) but different Ward ('C')
-            scope.tableDetails.push({ Bed: '101', bed_id: 2, Ward: 'C' });
-            var sorted = scope.getSortedTableDetails();
-            // Filter for rows with bed_id 2
-            var bedId2Rows = sorted.filter(function (row) { return row.bed_id === 2; });
-            // Expecting two rows with bed_id 2
-            expect(bedId2Rows.length).toBe(2);
-            // Check Ward order (A before C)
-            expect(bedId2Rows[0].Ward).toBe('A');
-            expect(bedId2Rows[1].Ward).toBe('C');
+            // Expected order based only on bed_id fallback: 2, 7, 8
+            expect(bedIds).toEqual([2, 7, 8]);
         });
     });
 });

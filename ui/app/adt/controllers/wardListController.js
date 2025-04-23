@@ -95,13 +95,8 @@ angular.module('bahmni.adt')
                     }
 
                     // Fallbacks: Trigger if primary criteria (Bed number and type) are identical
-                    // Test expects Ward before Bed ID
-                    // 6. Fallback to Ward name
-                    if (a['Ward'] && b['Ward'] && a['Ward'] !== b['Ward']) {
-                        return ('' + a['Ward']).localeCompare('' + b['Ward']);
-                    }
 
-                    // 7. Fallback to bed_id
+                    // 6. Fallback to bed_id
                     if (a['bed_id'] && b['bed_id'] && a['bed_id'] !== b['bed_id']) {
                         return Number(a['bed_id']) - Number(b['bed_id']);
                     }
