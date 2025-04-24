@@ -34,74 +34,94 @@ angular.module('bahmni.adt')
             };
 
             // Utility to extract numeric and string parts for sorting
-            function parseBedNumber (bedNumber) {
-                if (bedNumber === null || bedNumber === undefined) {
-                    return { num: Number.MAX_SAFE_INTEGER, str: '', isNonNumericString: false, isEmpty: false, isNull: true };
+            function parseBedNumber (bedNumber) { // Ensure space before parentheses
+                // Use angular.isUndefined for checking undefined
+                if (bedNumber === null || angular.isUndefined(bedNumber)) {
+                    return { prefix: '', num: Number.MAX_SAFE_INTEGER, str: '', type: 'null' };
                 }
-                if (bedNumber === '') {
-                    return { num: Number.MAX_SAFE_INTEGER, str: '', isNonNumericString: false, isEmpty: true, isNull: false };
+                var bedStr = bedNumber.toString(); // Keep original case for string part if needed later, but compare lowercase
+                if (bedStr === '') {
+                    return { prefix: '', num: Number.MAX_SAFE_INTEGER, str: '', type: 'empty' };
                 }
 
-                var bedStr = bedNumber.toString().toLowerCase();
-                var match = bedStr.match(/^(\d+)/); // Match leading digits
-                var numPart = match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
-                // True if it doesn't start with a digit AND cannot be parsed as a number entirely (e.g., 'A', 'ZZZ')
-                var isNonNumericString = !match && isNaN(parseInt(bedStr, 10));
+                var lowerCaseStr = bedStr.toLowerCase();
 
+                // 1. Check for purely numeric (possibly with suffix)
+                var numericMatch = lowerCaseStr.match(/^(\d+)(.*)$/);
+                if (numericMatch && !isNaN(parseInt(numericMatch[1], 10))) {
+                    // It starts with a number
+                    return {
+                        prefix: '', // No prefix for purely numeric start
+                        num: parseInt(numericMatch[1], 10),
+                        str: lowerCaseStr, // Full string for secondary sort if numbers are equal
+                        type: 'numeric'
+                    };
+                }
+
+                // 2. Check for alphanumeric pattern (e.g., A-1, B#10, CubeF-20)
+                // Allows letters, hyphens, hashes at the start, followed by numbers
+                var alphanumericMatch = lowerCaseStr.match(/^([a-z\s\-_#]+)(\d+)$/);
+                if (alphanumericMatch) {
+                    return {
+                        prefix: alphanumericMatch[1], // The non-numeric part (e.g., "a-", "b#")
+                        num: parseInt(alphanumericMatch[2], 10), // The numeric part
+                        str: lowerCaseStr,
+                        type: 'alphanumeric'
+                    };
+                }
+
+                // 3. Otherwise, treat as a non-numeric string
                 return {
-                    num: numPart,
-                    str: bedStr,
-                    isNonNumericString: isNonNumericString,
-                    isEmpty: false,
-                    isNull: false
+                    prefix: lowerCaseStr, // Use the whole string as prefix for comparison
+                    num: Number.MAX_SAFE_INTEGER,
+                    str: lowerCaseStr,
+                    type: 'nonNumericString'
                 };
             }
 
             $scope.getSortedTableDetails = function () {
                 return ($scope.tableDetails || []).slice().sort(function (a, b) {
+                    // Sort directly by Bed number
                     var aBed = parseBedNumber(a['Bed']);
                     var bBed = parseBedNumber(b['Bed']);
 
-                    // 1. Handle null (always last)
-                    if (aBed.isNull !== bBed.isNull) {
-                        return aBed.isNull ? 1 : -1;
-                    }
-                    // 2. Handle empty string (before null, after others)
-                    if (aBed.isEmpty !== bBed.isEmpty) {
-                        return aBed.isEmpty ? 1 : -1;
-                    }
-                    // 3. Handle Non-Numeric vs Numeric/Alphanumeric (Non-numeric comes after)
-                    if (aBed.isNonNumericString !== bBed.isNonNumericString) {
-                        return aBed.isNonNumericString ? 1 : -1;
+                    // Define sort order for types: numeric < alphanumeric < nonNumericString < empty < null
+                    const typeOrder = { 'numeric': 1, 'alphanumeric': 2, 'nonNumericString': 3, 'empty': 4, 'null': 5 };
+
+                    // 1. Sort: Bed Number (by type, then value)
+                    if (aBed.type !== bBed.type) {
+                        return typeOrder[aBed.type] - typeOrder[bBed.type];
                     }
 
-                    // At this point, a and b are of the same type (both numeric/alphanumeric, both non-numeric, both empty, or both null)
-
-                    // 4. If both are Non-Numeric, sort alphabetically
-                    if (aBed.isNonNumericString) { // && bBed.isNonNumericString is implied
-                        return aBed.str.localeCompare(bBed.str);
-                    }
-
-                    // 5. If both are Numeric/Alphanumeric
-                    if (!aBed.isNonNumericString && !aBed.isEmpty && !aBed.isNull) { // && same for bBed is implied
-                        // Sort by numeric part first
-                        if (aBed.num !== bBed.num) {
+                    // Types are the same, sort based on value within the type
+                    switch (aBed.type) {
+                    case 'numeric': // Set indentation to 20 spaces
+                    case 'alphanumeric': // Set indentation to 20 spaces
+                        // Compare prefix first (for alphanumeric, prefix is ''; for numeric)
+                        if (aBed.prefix !== bBed.prefix) { // Set indentation to 24 spaces
+                            return aBed.prefix.localeCompare(bBed.prefix);
+                        }
+                        // Prefixes are same, compare numeric part
+                        if (aBed.num !== bBed.num) { // Set indentation to 24 spaces
                             return aBed.num - bBed.num;
                         }
-                        // Then by full string part (e.g., 101A vs 101B)
-                        if (aBed.str !== bBed.str) {
-                            return aBed.str.localeCompare(bBed.str);
-                        }
+                        // Numbers are same, compare full string as fallback (e.g., 10A vs 10B)
+                        return aBed.str.localeCompare(bBed.str); // Set indentation to 24 spaces
+                    case 'nonNumericString': // Set indentation to 20 spaces
+                        // Simple string comparison for non-numeric strings
+                        return aBed.str.localeCompare(bBed.str); // Set indentation to 24 spaces
+                    case 'empty': // Set indentation to 20 spaces
+                    case 'null': // Set indentation to 20 spaces
+                        return 0; // Nulls/empties of the same type are equal // Set indentation to 24 spaces
                     }
 
-                    // Fallbacks: Trigger if primary criteria (Bed number and type) are identical
-
-                    // 6. Fallback to bed_id
+                    // 2. Fallback: bed_id (if Bed number and type are identical)
                     if (a['bed_id'] && b['bed_id'] && a['bed_id'] !== b['bed_id']) {
+                        // Ensure bed_id exists before comparing
                         return Number(a['bed_id']) - Number(b['bed_id']);
                     }
 
-                    return 0;
+                    return 0; // Objects are identical for sorting purposes
                 });
             };
 
