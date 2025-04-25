@@ -52,18 +52,14 @@ describe('WardListController', function () {
 
     describe('getSortedTableDetails', function () {
         beforeEach(function () {
-            // Ensure ward is set *before* controller initialization
             scope.ward = { ward: { name: 'ward1' } };
 
-            // Initialize the controller before each test in this suite
             controller('WardListController', {
                 $scope: scope,
                 queryService: queryService,
                 appService: appService
             });
 
-            // Set test data directly on scope.tableDetails after initialization
-            // This overwrites any data potentially fetched by the controller's internal getTableDetails call
             scope.tableDetails = [
                 { Bed: '101', bed_id: 2, Ward: 'A' },
                 { Bed: '101A', bed_id: 3, Ward: 'A' },
@@ -104,7 +100,6 @@ describe('WardListController', function () {
         });
 
         it('should handle natural sorting for alphanumeric and non-numeric strings', function () {
-            // Override tableDetails for this specific test
             scope.tableDetails = [
                 { Bed: 'A-10', Ward: 'TestWard', bed_id: 1 },
                 { Bed: 'B11', Ward: 'TestWard', bed_id: 2 },
@@ -149,17 +144,14 @@ describe('WardListController', function () {
 
         it('should sort missing or invalid bed numbers last', function () {
             var sorted = scope.getSortedTableDetails();
-            // Check the last two items based on Bed sort order only
             expect(sorted[sorted.length - 1].Bed).toBe(null);
             expect(sorted[sorted.length - 2].Bed).toBe('');
         });
 
         it('should use bed_id as fallback when Bed number is the same', function () {
             var sorted = scope.getSortedTableDetails();
-            // Filter for '101' beds and check their bed_id order based on Bed sort only
             var bed101Rows = sorted.filter(function (row) { return row.Bed === '101'; });
             var bedIds = bed101Rows.map(function (row) { return row.bed_id; });
-            // Expected order based on bed_id fallback when Bed is identical
             expect(bedIds).toEqual([2, 7, 8]);
         });
     });
