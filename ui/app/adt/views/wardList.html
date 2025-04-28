@@ -11,7 +11,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="row in tableDetails | filter:searchTextFilter">
+                <tr ng-repeat="row in getSortedTableDetails() | filter:searchTextFilter">
                 <td ng-repeat="heading in tableHeadings" ng-if="heading != 'hiddenAttributes'">
                     <div ng-if="heading != 'Diagnosis' && heading != 'Id'">
                         {{row[heading]}}
