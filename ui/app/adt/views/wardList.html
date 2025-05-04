@@ -14,15 +14,9 @@
                     <tr ng-repeat="row in getSortedTableDetails() | filter:searchTextFilter">
                     <td ng-repeat="heading in tableHeadings" ng-if="heading != 'hiddenAttributes'">
                         <a ng-if="heading === 'Name'"
-                            ng-href="../clinical/#/default/patient/{{row['hiddenAttributes'].patientUuid}}/dashboard?currentTab=DASHBOARD_TAB_GENERAL_KEY"
-                            target="_blank">
+                            ng-href="{{getPatientDashboardURL(row['hiddenAttributes'].patientUuid)}}"
+                            target="_blank"> 
                             {{row[heading]}}
-                            <span
-                                ng-if="::(row[iconAttributeConfig.attrName] === iconAttributeConfig.attrValue && heading === 'Name')"
-                                class="icons-container">
-                                <i class="ipd-indication" ng-class="iconAttributeConfig.icon"
-                                    ng-style="{{iconAttributeConfig.iconStyle}}"></i>
-                            </span>
                         </a>
                         <div ng-if="heading !== 'Name' && heading !== 'Diagnosis' && heading !== 'Id'">
                             {{row[heading]}}
