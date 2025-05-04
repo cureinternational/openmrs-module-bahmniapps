@@ -21,7 +21,7 @@ angular.module('bahmni.adt')
                     var configName = $scope.configName || $stateParams.configName || Bahmni.Common.Constants.defaultExtensionName || 'default';
                     var linkTemplate = $scope.patientDashboardLink;
 
-                    if (typeof linkTemplate !== 'string' || !linkTemplate) {
+                    if (!angular.isString(linkTemplate) || !linkTemplate) {
                         return '#';
                     }
 
