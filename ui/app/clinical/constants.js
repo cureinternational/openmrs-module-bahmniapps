@@ -69,6 +69,8 @@ Bahmni.Clinical.Constants = (function () {
         concepts: concepts,
         otherActiveDrugOrders: "Other Active DrugOrders",
         dispensePrivilege: "bahmni:clinical:dispense",
+        prescribeMedicationPrivilege: "bahmni:clinical:prescribeMedication",
+        stopMedicationPrivilege: "bahmni:clinical:stopMedication",
         mandatoryVisitConfigUrl: "config/visitMandatoryTab.json",
         defaultExtensionName: "default",
         bacteriologyConstants: bacteriologyConstants,
