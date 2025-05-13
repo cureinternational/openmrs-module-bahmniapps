@@ -11,6 +11,7 @@ angular.module('bahmni.clinical')
             var activeDrugOrdersList = [];
             var prescribedDrugOrders = [];
             $scope.dispensePrivilege = Bahmni.Clinical.Constants.dispensePrivilege;
+            $scope.stopMedicationPrivilege = Bahmni.Clinical.Constants.stopMedicationPrivilege;
             $scope.scheduledDate = DateUtil.getDateWithoutTime(DateUtil.addDays(DateUtil.now(), 1));
             $scope.allMedicinesInPrescriptionAvailableForIPD = appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD") !== null ? appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD") : true;
             $scope.printPrescriptionFeature = appService.getAppDescriptor().getConfigValue("printPrescriptionFeature");
