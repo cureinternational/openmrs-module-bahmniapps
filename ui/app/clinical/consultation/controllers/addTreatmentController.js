@@ -18,7 +18,7 @@ angular.module('bahmni.clinical')
             $scope.cdssEnabled = false;
             $scope.clearButtonClicked = false;
             $scope.conceptSource = localStorage.getItem("conceptSource") || "";
-
+            $scope.prescribeMedicationPrivilege = Bahmni.Clinical.Constants.prescribeMedicationPrivilege;
             $scope.allMedicinesInPrescriptionAvailableForIPD = appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD") !== null ? appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD") : true;
             var currentVisitType;
             if ($scope.allMedicinesInPrescriptionAvailableForIPD) {
