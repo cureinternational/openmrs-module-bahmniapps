@@ -543,6 +543,43 @@ describe("SurgicalBlockMapper", function () {
         ]
         var diagnosisInfo = surgicalBlockMapper.mapPrimaryDiagnoses(diagnosisObs);
         expect(diagnosisInfo).toEqual('Hemarthrosis hand');
-    })
+    });
+
+    it('Should ensure unique identifiers are preserved during mapping', function () {
+        var surgicalBlock = {};
+        surgicalBlock.surgicalAppointments = [{
+            id: 11, 
+            uuid: "appointmentUuid", 
+            voided: false, 
+            patient: {uuid: "patientUuid"}, 
+            _uniqueId: "appointment_123456789_abc123",
+            surgicalAppointmentAttributes: []
+        }];
+
+        var mappedToUISurgicalBlock = surgicalBlockMapper.map(surgicalBlock, appointmentAttributeTypes, surgeonList);
+
+        expect(mappedToUISurgicalBlock.surgicalAppointments[0]._uniqueId).toBe("appointment_123456789_abc123");
+    });
+
+    it('Should clean unique identifiers when mapping UI to domain', function () {
+        var surgicalBlockUI = {
+            id: "1",
+            uuid: "blockUuid",
+            provider: { uuid: "providerUuid" },
+            location: { uuid: "locationUuid" },
+            startDatetime: new Date(),
+            endDatetime: new Date(),
+            surgicalAppointments: [{
+                id: "11",
+                uuid: "appointmentUuid",
+                _uniqueId: "appointment_123456789_abc123",
+                surgicalAppointmentAttributes: uiSurgicalAppointmentAttributes
+            }]
+        };
+
+        var mappedToOpenmrsSurgicalBlock = surgicalBlockMapper.mapSurgicalBlockUIToDomain(surgicalBlockUI);
+
+        expect(mappedToOpenmrsSurgicalBlock.surgicalAppointments[0]._uniqueId).toBeUndefined();
+    });
 });
 

@@ -109,6 +109,11 @@ angular.module('bahmni.ot')
                 }
             };
 
+            var generateUniqueId = function () {
+                // Generate a unique identifier using timestamp and random number
+                return 'appointment_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            };
+
             var addOrUpdateTheSurgicalAppointment = function (surgicalAppointment) {
                 if (surgicalAppointment.sortWeight >= 0) {
                     var existingAppointment = _.find($scope.surgicalForm.surgicalAppointments, function (appointment) {
@@ -119,6 +124,10 @@ angular.module('bahmni.ot')
                     existingAppointment.surgicalAppointmentAttributes = surgicalAppointment.surgicalAppointmentAttributes;
                     existingAppointment.isBeingEdited = false;
                 } else {
+                    // Add unique identifier for new appointments to avoid ng-repeat duplicates
+                    if (!surgicalAppointment._uniqueId) {
+                        surgicalAppointment._uniqueId = generateUniqueId();
+                    }
                     surgicalAppointment.sortWeight = $scope.surgicalForm.surgicalAppointments.length;
                     $scope.surgicalForm.surgicalAppointments.push(surgicalAppointment);
                 }
