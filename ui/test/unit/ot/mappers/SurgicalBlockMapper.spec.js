@@ -270,16 +270,14 @@ describe("SurgicalBlockMapper", function () {
                 "name": "estTimeHours"
             },
             "value": 0
-        },
-        "anaesthetist": {
+        }, "anaesthetist": {
             "id": 105,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde9429e-3f81-11e7-97ea-0800274a5156",
                 "name": "anaesthetist"
             },
             "value": "Anaesthetist"
-        },
-        "otherSurgeon": {
+        }, "otherSurgeon": {
             "id": 106,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde8faf8-3f81-11e7-97ea-0800274a5156",
@@ -293,56 +291,49 @@ describe("SurgicalBlockMapper", function () {
                     "display": "Hilana Alkharouf"
                 }
             }
-        },
-        "surgicalAssistant": {
+        }, "surgicalAssistant": {
             "id": 107,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde92009-3f81-11e7-97ea-0800274a5156",
                 "name": "surgicalAssistant"
             },
             "value": null
-        },
-        "procedure": {
+        }, "procedure": {
             "id": 108,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde7e794-3f81-11e7-97ea-0800274a5156",
                 "name": "procedure"
             },
             "value": "procedure"
-        },
-        "scrubNurse": {
+        }, "scrubNurse": {
             "id": 109,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde96224-3f81-11e7-97ea-0800274a5156",
                 "name": "scrubNurse"
             },
             "value": "scrub nurse"
-        },
-        "estTimeMinutes": {
+        }, "estTimeMinutes": {
             "id": 110,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde85c99-3f81-11e7-97ea-0800274a5156",
                 "name": "estTimeMinutes"
             },
             "value": 30
-        },
-        "circulatingNurse": {
+        }, "circulatingNurse": {
             "id": 111,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde9821c-3f81-11e7-97ea-0800274a5156",
                 "name": "circulatingNurse"
             },
             "value": "circulating nurse"
-        },
-        "cleaningTime": {
+        }, "cleaningTime": {
             "id": 112,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde8c614-3f81-11e7-97ea-0800274a5156",
                 "name": "cleaningTime"
             },
             "value": 15
-        },
-        "notes": {
+        }, "notes": {
             "id": 113,
             "surgicalAppointmentAttributeType": {
                 "uuid": "bde8c614-3f81-11e7-97ea-0800274a5156",
@@ -399,16 +390,8 @@ describe("SurgicalBlockMapper", function () {
         surgicalBlock.endDatetime = "2017-05-25T18:00:00.000+0530";
         surgicalBlock.provider = {uuid: "providerUuid"};
         surgicalBlock.location = {uuid: "locationUuid"};
-        surgicalBlock.surgicalAppointments = [{id: "11",
-            uuid: "appointmentUuid",
-            status: undefined,
-            notes: undefined,
-            voided: false,
-            patient: {uuid: "patientUuid"},
-            sortWeight: 0,
-            actualStartDatetime: "2017-05-25T10:00:00.000+0530",
-            actualEndDatetime: "2017-05-25T12:00:00.000+0530",
-            surgicalAppointmentAttributes: openmrsSurgicalAppointmentAttributes}];
+        surgicalBlock.surgicalAppointments = [{id: "11", uuid: "appointmentUuid",status: undefined,
+            notes : undefined, voided: false, patient: {uuid: "patientUuid"}, sortWeight: 0, actualStartDatetime: "2017-05-25T10:00:00.000+0530", actualEndDatetime: "2017-05-25T12:00:00.000+0530", surgicalAppointmentAttributes: openmrsSurgicalAppointmentAttributes}];
 
         var surgicalForm = {};
         surgicalForm.id = 10;
@@ -447,8 +430,7 @@ describe("SurgicalBlockMapper", function () {
                     "name": "surgicalAssistant"
                 },
                 "value": "Dr. yaya"
-            },
-            "procedure": {
+            }, "procedure": {
                 "id": 108,
                 "surgicalAppointmentAttributeType": {
                     "uuid": "bde7e794-3f81-11e7-97ea-0800274a5156",
@@ -459,6 +441,8 @@ describe("SurgicalBlockMapper", function () {
         };
 
         var mappedAttributes = surgicalBlockMapper.mapAttributes(attributes, appointmentAttributeTypes);
+
+
         expect(_.keys(mappedAttributes).length).toBe(10);
         expect(mappedAttributes.cleaningTime.value).toBe(15);
         expect(mappedAttributes.estTimeMinutes.value).toBe(0);
@@ -478,31 +462,31 @@ describe("SurgicalBlockMapper", function () {
     });
 
     it('should map primary Diagnosis', function () {
-        const diagnosisObs = [
+        const diagnosisObs =[
             {
                 "uuid": "3936e653-aa98-4f55-a6d8-1fe20834f9bf",
                 "display": "Coded Diagnosis: Hemarthrosis hand",
                 "concept": {
                     "uuid": "81c7149b-3f10-11e4-adec-0800271c1b75",
-                    "display": "Coded Diagnosis"
+                    "display": "Coded Diagnosis",
                 },
                 "obsDatetime": "2023-10-17T01:27:03.000+0530",
                 "accessionNumber": null,
                 "obsGroup": {
                     "uuid": "0e8b32d7-59ab-4950-b4e8-fb85e2bab5f1",
-                    "display": "Visit Diagnoses: Confirmed, Primary, Hemarthrosis hand, 0e8b32d7-59ab-4950-b4e8-fb85e2bab5f1, false"
+                    "display": "Visit Diagnoses: Confirmed, Primary, Hemarthrosis hand, 0e8b32d7-59ab-4950-b4e8-fb85e2bab5f1, false",
                 },
                 "valueCodedName": null,
                 "groupMembers": null,
                 "comment": null,
                 "location": {
                     "uuid": "0fbbeaf4-f3ea-11ed-a05b-0242ac120002",
-                    "display": "CURE Ethiopia"
+                    "display": "CURE Ethiopia",
                 },
                 "order": null,
                 "encounter": {
                     "uuid": "c463dfa2-b957-48a4-b48b-f581bcabb47b",
-                    "display": "Consultation 10/17/2023"
+                    "display": "Consultation 10/17/2023",
                 },
                 "voided": false,
                 "value": {
@@ -523,7 +507,7 @@ describe("SurgicalBlockMapper", function () {
                     },
                     "conceptClass": {
                         "uuid": "8d4918b0-c2cc-11de-8d13-0010c6dffd0f",
-                        "display": "Diagnosis"
+                        "display": "Diagnosis",
                     },
                     "set": false,
                     "version": null,
@@ -531,19 +515,19 @@ describe("SurgicalBlockMapper", function () {
                     "names": [
                         {
                             "uuid": "1cf38f1c-6fd3-4ef5-8728-880bbb1b4deb",
-                            "display": "Hemarthrosis hand"
+                            "display": "Hemarthrosis hand",
                         }
                     ],
                     "descriptions": [
                         {
                             "uuid": "cfe4b845-5acd-4152-a29d-b77a42b92023",
-                            "display": "Hemarthrosis hand"
+                            "display": "Hemarthrosis hand",
                         }
                     ],
                     "mappings": [
                         {
                             "uuid": "c08ee0bc-8fed-4b49-8690-b6594e24e37d",
-                            "display": "ICD 10 - WHO: M25.049 (Hemarthrosis hand)"
+                            "display": "ICD 10 - WHO: M25.049 (Hemarthrosis hand)",
                         }
                     ],
                     "answers": [],
@@ -564,10 +548,10 @@ describe("SurgicalBlockMapper", function () {
     it('Should ensure unique identifiers are preserved during mapping', function () {
         var surgicalBlock = {};
         surgicalBlock.surgicalAppointments = [{
-            id: 11,
-            uuid: "appointmentUuid",
-            voided: false,
-            patient: {uuid: "patientUuid"},
+            id: 11, 
+            uuid: "appointmentUuid", 
+            voided: false, 
+            patient: {uuid: "patientUuid"}, 
             _uniqueId: "appointment_123456789_abc123",
             surgicalAppointmentAttributes: []
         }];
@@ -577,3 +561,4 @@ describe("SurgicalBlockMapper", function () {
         expect(mappedToUISurgicalBlock.surgicalAppointments[0]._uniqueId).toBe("appointment_123456789_abc123");
     });
 });
+
