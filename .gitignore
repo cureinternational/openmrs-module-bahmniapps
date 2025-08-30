@@ -32,3 +32,5 @@ ui/common.background.min.js
 
 micro-frontends/node_modules
 ui/app/micro-frontends-dist
+
+ui/yarn.lock
