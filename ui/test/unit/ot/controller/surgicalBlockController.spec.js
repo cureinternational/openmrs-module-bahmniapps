@@ -89,7 +89,7 @@ describe("surgicalBlockController", function () {
             "value": {
                 "id": 47,
                 "person": {
-                    id:"patientUuid",
+                    id: "patientUuid",
                     display: "Eman"
                 }
             }
@@ -183,7 +183,6 @@ describe("surgicalBlockController", function () {
         }
     };
 
-
     var q = jasmine.createSpyObj('$q', ['all']);
     var state = jasmine.createSpyObj('$state', ['go']);
     var spinner = jasmine.createSpyObj('spinner', ['forPromise', 'then', 'catch']);
@@ -201,49 +200,49 @@ describe("surgicalBlockController", function () {
             return ["provider1", "provider2"];
         }
         if (value === 'calendarView') {
-            return {dayViewStart: '08:00', dayViewEnd: '18:00', dayViewSplit: '60'}
+            return {dayViewStart: '08:00', dayViewEnd: '18:00', dayViewSplit: '60'};
         }
         return value;
     });
 
-    var appointmentAttributeTypes ={data: {results: [
-                {
-                    "uuid": "bde7e794-3f81-11e7-97ea-0800274a5156",
-                    "name": "procedure"
-                },
-                {
-                    "uuid": "bde80e15-3f81-11e7-97ea-0800274a5156",
-                    "name": "estTimeHours"
-                },
-                {
-                    "uuid": "bde85c99-3f81-11e7-97ea-0800274a5156",
-                    "name": "estTimeMinutes"
-                },
-                {
-                    "uuid": "bde8c614-3f81-11e7-97ea-0800274a5156",
-                    "name": "cleaningTime"
-                },
-                {
-                    "uuid": "bde8faf8-3f81-11e7-97ea-0800274a5156",
-                    "name": "otherSurgeon"
-                },
-                {
-                    "uuid": "bde92009-3f81-11e7-97ea-0800274a5156",
-                    "name": "surgicalAssistant"
-                },
-                {
-                    "uuid": "bde9429e-3f81-11e7-97ea-0800274a5156",
-                    "name": "anaesthetist"
-                },
-                {
-                    "uuid": "bde96224-3f81-11e7-97ea-0800274a5156",
-                    "name": "scrubNurse"
-                },
-                {
-                    "uuid": "bde9821c-3f81-11e7-97ea-0800274a5156",
-                    "name": "circulatingNurse"
-                }
-            ]}};
+    var appointmentAttributeTypes = {data: {results: [
+        {
+            "uuid": "bde7e794-3f81-11e7-97ea-0800274a5156",
+            "name": "procedure"
+        },
+        {
+            "uuid": "bde80e15-3f81-11e7-97ea-0800274a5156",
+            "name": "estTimeHours"
+        },
+        {
+            "uuid": "bde85c99-3f81-11e7-97ea-0800274a5156",
+            "name": "estTimeMinutes"
+        },
+        {
+            "uuid": "bde8c614-3f81-11e7-97ea-0800274a5156",
+            "name": "cleaningTime"
+        },
+        {
+            "uuid": "bde8faf8-3f81-11e7-97ea-0800274a5156",
+            "name": "otherSurgeon"
+        },
+        {
+            "uuid": "bde92009-3f81-11e7-97ea-0800274a5156",
+            "name": "surgicalAssistant"
+        },
+        {
+            "uuid": "bde9429e-3f81-11e7-97ea-0800274a5156",
+            "name": "anaesthetist"
+        },
+        {
+            "uuid": "bde96224-3f81-11e7-97ea-0800274a5156",
+            "name": "scrubNurse"
+        },
+        {
+            "uuid": "bde9821c-3f81-11e7-97ea-0800274a5156",
+            "name": "circulatingNurse"
+        }
+    ]}};
 
     var surgeonList = {data: {results: [{uuid: "uuid1", person: {display: "provider1"}}, {uuid: "uuid2", person: {display: "provider2"}}]}};
     surgicalAppointmentService.getSurgeons.and.callFake(function () {
@@ -261,7 +260,6 @@ describe("surgicalBlockController", function () {
 
     q.all.and.returnValue(specUtil.simplePromise([surgeonList, allTags, appointmentAttributeTypes]));
 
-
     beforeEach(function () {
         module('bahmni.ot');
         inject(function ($controller, $rootScope, _surgicalAppointmentHelper_, _surgicalBlockHelper_) {
@@ -271,16 +269,15 @@ describe("surgicalBlockController", function () {
             surgicalBlockHelper = _surgicalBlockHelper_;
         });
     });
-
-    //This function converts a date into locale specific date
-    var toDateString = function(dateValue){
-        //dateValue expected in the format -> 2017-08-18 20:00:00
-        return moment(dateValue,"YYYY-MM-DD HH:mm:ss").format();
+    // This function converts a date into locale specific date
+    var toDateString = function (dateValue) {
+        // dateValue expected in the format -> 2017-08-18 20:00:00
+        return moment(dateValue, "YYYY-MM-DD HH:mm:ss").format();
     };
 
-    var toDate = function(dateValue){
-        //dateValue expected in the format -> 2017-08-18 20:00:00
-        return moment(dateValue,"YYYY-MM-DD HH:mm:ss").toDate();
+    var toDate = function (dateValue) {
+        // dateValue expected in the format -> 2017-08-18 20:00:00
+        return moment(dateValue, "YYYY-MM-DD HH:mm:ss").toDate();
     };
 
     var createController = function () {
@@ -400,7 +397,6 @@ describe("surgicalBlockController", function () {
         done();
     });
 
-
     it("should update a valid surgical form", function (done) {
         var surgicalBlock = {};
         surgicalBlock.id = 10;
@@ -444,7 +440,6 @@ describe("surgicalBlockController", function () {
         expect(scope.getPatientName(surgicalAppointment)).toEqual("Ad hasan ( I02345 )");
         surgicalAppointment.patient.value = "Ad hasan Mohammed";
         expect(scope.getPatientName(surgicalAppointment)).toEqual("Ad hasan Mohammed");
-
     });
 
     it("should go to home page", function () {
@@ -517,7 +512,6 @@ describe("surgicalBlockController", function () {
         var newSurgicalAppointment = {id: "12", patient: {uuid: "patientUuid2"}, notes: "need more assistants and blood", sortWeight: 1, surgicalAppointmentAttributes: defaultSurgicalAppointmentAttributes};
 
         scope.surgicalForm.surgicalAppointments = [{id: "11", patient: {uuid: "patientUuid"}, notes: "need more assistants", sortWeight: 0, surgicalAppointmentAttributes: uiSurgicalAppointmentAttributes}, newSurgicalAppointment];
-
 
         var clonedSurgicalAppointment = _.cloneDeep(newSurgicalAppointment);
         clonedSurgicalAppointment.surgicalAppointmentAttributes.estTimeHours.value = "1";
@@ -634,7 +628,7 @@ describe("surgicalBlockController", function () {
     it("should update the sort weight of surgical appointments with the index of the appointment", function () {
         createController();
         scope.surgicalForm = {};
-        scope.surgicalForm.surgicalAppointments = [{id:3, sortWeight:1},{id:1, sortWeight:0}, {id:2, sortWeight:2}];
+        scope.surgicalForm.surgicalAppointments = [{id: 3, sortWeight: 1}, {id: 1, sortWeight: 0}, {id: 2, sortWeight: 2}];
 
         scope.updateSortWeight(scope.surgicalForm);
 
@@ -697,20 +691,20 @@ describe("surgicalBlockController", function () {
             showClose: true,
             className: 'ngdialog-theme-default ng-dialog-adt-popUp',
             scope: scope,
-            data: { surgicalAppointment: surgicalAppointment, surgicalForm:  scope.surgicalForm, updateAvailableBlockDurationFn: jasmine.any(Function)}
+            data: { surgicalAppointment: surgicalAppointment, surgicalForm: scope.surgicalForm, updateAvailableBlockDurationFn: jasmine.any(Function)}
         }));
     });
 
     it('should disable the cancel block button when surgical block has completed appointments', function () {
         createController();
-        scope.surgicalForm = {id: 1, surgicalAppointments: [ {id:1, status: 'COMPLETED'}, {id:2, status:'CANCELLED'}]};
+        scope.surgicalForm = {id: 1, surgicalAppointments: [{id: 1, status: 'COMPLETED'}, {id: 2, status: 'CANCELLED'}]};
 
-        expect(scope.cancelDisabled()).toEqual({id:1, status: 'COMPLETED'});
+        expect(scope.cancelDisabled()).toEqual({id: 1, status: 'COMPLETED'});
     });
 
     it('should disable the cancel block button when surgical block is not saved', function () {
         createController();
-        scope.surgicalForm = {surgicalAppointments: [ {id:1, status: 'COMPLETED'}, {id:2, status:'CANCELLED'}]};
+        scope.surgicalForm = {surgicalAppointments: [{id: 1, status: 'COMPLETED'}, {id: 2, status: 'CANCELLED'}]};
 
         expect(scope.cancelDisabled()).toBeTruthy();
     });
@@ -733,7 +727,7 @@ describe("surgicalBlockController", function () {
 
     it("should remove isBeingEdited field for other appointments which are not selected", function () {
         createController();
-        scope.surgicalForm = {uuid: "someUUID", startDatetime:new Date("Mon Jul 03 2017 09:00:00 GMT+0530 (IST)"), endDatetime:new Date("Mon Jul 03 2017 15:00:00 GMT+0530 (IST)")};
+        scope.surgicalForm = {uuid: "someUUID", startDatetime: new Date("Mon Jul 03 2017 09:00:00 GMT+0530 (IST)"), endDatetime: new Date("Mon Jul 03 2017 15:00:00 GMT+0530 (IST)")};
         var surgicalAppointment = {
             id: 12,
             patient: {uuid: "patientUuid"},
@@ -765,7 +759,6 @@ describe("surgicalBlockController", function () {
         expect(scope.configuredSurgeryAttributeNames.length).toBe(2);
         expect(scope.configuredSurgeryAttributeNames[0]).toBe('procedure');
         expect(scope.configuredSurgeryAttributeNames[1]).toBe('surgicalAssistant');
-
     });
 
     describe('isSurgeryAttributesConfigurationAvailableAndValid', function () {
@@ -773,7 +766,6 @@ describe("surgicalBlockController", function () {
             createController();
             scope.configuredSurgeryAttributeNames = ["procedure", "surgicalAssistant"];
             expect(scope.isSurgeryAttributesConfigurationAvailableAndValid()).toBeTruthy();
-
         });
 
         it('should return false if "surgeryAttributes" configuration is not defined', function () {
@@ -837,192 +829,4 @@ describe("surgicalBlockController", function () {
 
         expect(_.isEqual(expectedAttributes, finalAttributes)).toBeTruthy();
     });
-
-    // DIAGNOSTIC TEST - Disabled for production build
-    // This test was used to validate our ngRepeat:dupes fix is working
-    /*
-    it("should detect $$hashKey conflicts when objects have identical content in surgicalAppointments array", function () {
-        createController();
-        
-        // Create two identical surgical appointments (same content, different references)
-        var appointment1 = {
-            id: undefined,
-            patient: {uuid: "patientUuid1", display: "Patient One"},
-            notes: "Surgery notes",
-            surgicalAppointmentAttributes: _.cloneDeep(defaultSurgicalAppointmentAttributes)
-        };
-        
-        var appointment2 = {
-            id: undefined,
-            patient: {uuid: "patientUuid1", display: "Patient One"}, 
-            notes: "Surgery notes",
-            surgicalAppointmentAttributes: _.cloneDeep(defaultSurgicalAppointmentAttributes)
-        };
-
-        scope.surgicalForm = {
-            startDatetime: new Date(2017, 1, 30, 1, 0),
-            endDatetime: new Date(2017, 1, 30, 4, 0),
-            surgicalAppointments: []
-        };
-
-        // Add first appointment
-        scope.addSurgicalAppointment(appointment1);
-        expect(scope.surgicalForm.surgicalAppointments.length).toBe(1);
-        
-        // Add second identical appointment
-        scope.addSurgicalAppointment(appointment2);
-        expect(scope.surgicalForm.surgicalAppointments.length).toBe(2);
-
-        // Check if Angular assigns $$hashKey
-        var hashKeys = scope.surgicalForm.surgicalAppointments.map(function(apt) {
-            return apt.$$hashKey;
-        });
-
-        // Verify that $$hashKey is present and unique for each object
-        expect(hashKeys[0]).toBeDefined();
-        expect(hashKeys[1]).toBeDefined();
-        expect(hashKeys[0]).not.toEqual(hashKeys[1]);
-    });
-    */
-
-    // DIAGNOSTIC TEST - Disabled for production build  
-    // it("should replicate $$hashKey conflicts when adding identical surgical appointments", function () {
-        // createController();
-        
-        // // Create identical surgical appointments with same content
-        // var identicalAppointment1 = {
-        //     patient: {uuid: "patientUuid1", display: "Patient Name"},
-        //     notes: "Same notes",
-        //     surgicalAppointmentAttributes: _.cloneDeep(defaultSurgicalAppointmentAttributes)
-        // };
-        
-        // var identicalAppointment2 = {
-        //     patient: {uuid: "patientUuid1", display: "Patient Name"}, 
-        //     notes: "Same notes",
-        //     surgicalAppointmentAttributes: _.cloneDeep(defaultSurgicalAppointmentAttributes)
-        // };
-
-        // scope.surgicalForm = {
-        //     startDatetime: new Date(2017, 1, 30, 1, 0),
-        //     endDatetime: new Date(2017, 1, 30, 6, 0),
-        //     surgicalAppointments: []
-        // };
-
-        // // Simulate Angular adding $$hashKey (this happens automatically in real Angular)
-        // // We'll manually add it to replicate the issue
-        // scope.surgicalForm.surgicalAppointments.push(identicalAppointment1);
-        // scope.surgicalForm.surgicalAppointments.push(identicalAppointment2);
-        
-        // // Simulate Angular's automatic $$hashKey generation
-        // scope.$digest();
-        
-        // // In real Angular, identical objects get same $$hashKey causing conflicts
-        // var appointment1HashKey = scope.surgicalForm.surgicalAppointments[0].$$hashKey;
-        // var appointment2HashKey = scope.surgicalForm.surgicalAppointments[1].$$hashKey;
-        
-        // console.log("Appointment 1 $$hashKey:", appointment1HashKey);
-        // console.log("Appointment 2 $$hashKey:", appointment2HashKey);
-        
-        // // This test should show if $$hashKey conflicts exist
-        // expect(appointment1HashKey).toBeDefined();
-        // expect(appointment2HashKey).toBeDefined();
-        
-        // // Log the issue for verification
-        // if (appointment1HashKey === appointment2HashKey) {
-        //     console.log("$$hashKey CONFLICT DETECTED! Both appointments have same $$hashKey:", appointment1HashKey);
-        // } else {
-        //     console.log("No $$hashKey conflict detected");
-        // }
-    // });
-
-    // DIAGNOSTIC TEST - Disabled for production build
-    // it("should demonstrate the problem with ng-repeat when objects have identical content", function () {
-        // createController();
-        
-        // // Create surgical appointments with identical content but no unique identifiers
-        // var appointment1 = {
-        //     patient: {uuid: "samePatientUuid", display: "Same Patient"},
-        //     notes: "Identical notes",
-        //     sortWeight: -1, // -1 means new appointment
-        //     surgicalAppointmentAttributes: _.cloneDeep(defaultSurgicalAppointmentAttributes)
-        // };
-        
-        // var appointment2 = _.cloneDeep(appointment1); // Exact clone
-        
-        // scope.surgicalForm = {
-        //     startDatetime: new Date(2017, 1, 30, 1, 0),
-        //     endDatetime: new Date(2017, 1, 30, 8, 0),
-        //     surgicalAppointments: []
-        // };
-
-        // // Add appointments using the controller method
-        // scope.addSurgicalAppointment(appointment1);
-        // scope.addSurgicalAppointment(appointment2);
-        
-        // expect(scope.surgicalForm.surgicalAppointments.length).toBe(2);
-        
-        // // Check if objects are considered equal by Angular
-        // var obj1 = scope.surgicalForm.surgicalAppointments[0];
-        // var obj2 = scope.surgicalForm.surgicalAppointments[1];
-        
-        // // Remove Angular-added properties for comparison
-        // var cleanObj1 = _.omit(obj1, ['$$hashKey', 'sortWeight', 'isDirty', 'isBeingEdited']);
-        // var cleanObj2 = _.omit(obj2, ['$$hashKey', 'sortWeight', 'isDirty', 'isBeingEdited']);
-        
-        // // This should be true, indicating identical content
-        // expect(_.isEqual(cleanObj1, cleanObj2)).toBeTruthy();
-        
-        // console.log("Objects have identical content:", _.isEqual(cleanObj1, cleanObj2));
-        // console.log("Object 1 $$hashKey:", obj1.$$hashKey);
-        // console.log("Object 2 $$hashKey:", obj2.$$hashKey);
-        
-        // // This is the core issue: Angular may assign same $$hashKey to identical objects
-        // if (obj1.$$hashKey && obj2.$$hashKey && obj1.$$hashKey === obj2.$$hashKey) {
-        //     console.log("ISSUE CONFIRMED: Identical $$hashKey detected!", obj1.$$hashKey);
-        // }
-    // });
-
-    // DIAGNOSTIC TEST - Disabled for production build
-    // it("should verify the current behavior without unique identifiers", function () {
-        // createController();
-        
-        // // Test with completely identical appointment data
-        // var baseAppointment = {
-        //     patient: {uuid: "testPatient", display: "Test Patient"},
-        //     notes: "Test notes",
-        //     surgicalAppointmentAttributes: _.cloneDeep(defaultSurgicalAppointmentAttributes)
-        // };
-        
-        // scope.surgicalForm = {
-        //     startDatetime: new Date(2017, 1, 30, 1, 0),
-        //     endDatetime: new Date(2017, 1, 30, 10, 0),
-        //     surgicalAppointments: []
-        // };
-
-        // // Add the same appointment multiple times
-        // scope.addSurgicalAppointment(_.cloneDeep(baseAppointment));
-        // scope.addSurgicalAppointment(_.cloneDeep(baseAppointment));
-        // scope.addSurgicalAppointment(_.cloneDeep(baseAppointment));
-        
-        // expect(scope.surgicalForm.surgicalAppointments.length).toBe(3);
-        
-        // // Check for unique identifiers (should not exist before fix)
-        // var hasUniqueIds = scope.surgicalForm.surgicalAppointments.every(function(apt) {
-        //     return apt._uniqueId !== undefined;
-        // });
-        
-        // // This should be false before implementing the fix
-        // expect(hasUniqueIds).toBeFalsy();
-        
-        // console.log("Appointments have unique IDs:", hasUniqueIds);
-        // console.log("All appointments:", scope.surgicalForm.surgicalAppointments.map(function(apt, index) {
-        //     return {
-        //         index: index,
-        //         hasUniqueId: !!apt._uniqueId,
-        //         hashKey: apt.$$hashKey,
-        //         sortWeight: apt.sortWeight
-        //     };
-        // }));
-    // });
-
 });
