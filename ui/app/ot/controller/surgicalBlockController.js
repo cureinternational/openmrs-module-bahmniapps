@@ -19,6 +19,9 @@ angular.module('bahmni.ot')
                             $scope.surgicalForm = new Bahmni.OT.SurgicalBlockMapper().map(response.data, $scope.attributeTypes, $scope.surgeons);
                             $scope.surgicalForm.surgicalAppointments = surgicalAppointmentHelper.filterSurgicalAppointmentsByStatus(
                                 $scope.surgicalForm.surgicalAppointments, [Bahmni.OT.Constants.scheduled, Bahmni.OT.Constants.completed]);
+
+                            ensureAllAppointmentsHaveUniqueIds();
+
                             var selectedSurgicalAppointment = _.find($scope.surgicalForm.surgicalAppointments, function (appointment) {
                                 return appointment.id === $stateParams.surgicalAppointmentId;
                             });
@@ -110,8 +113,34 @@ angular.module('bahmni.ot')
             };
 
             var generateUniqueId = function () {
-                // Generate a unique identifier using timestamp and random number
-                return 'appointment_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                var baseId = 'appointment_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+                var isUnique = false;
+                var counter = 0;
+                var finalId = baseId;
+
+                while (!isUnique && counter < 100) { // Safety limit to prevent infinite loop
+                    var existingAppointment = _.find($scope.surgicalForm.surgicalAppointments, function (appointment) {
+                        return appointment._uniqueId === finalId;
+                    });
+
+                    if (!existingAppointment) {
+                        isUnique = true;
+                    } else {
+                        counter++;
+                        finalId = baseId + '_' + counter;
+                    }
+                }
+
+                return finalId;
+            };
+
+            var ensureAllAppointmentsHaveUniqueIds = function () {
+                _.forEach($scope.surgicalForm.surgicalAppointments, function (appointment) {
+                    if (!appointment._uniqueId) {
+                        appointment._uniqueId = generateUniqueId();
+                    }
+                });
             };
 
             var addOrUpdateTheSurgicalAppointment = function (surgicalAppointment) {
@@ -124,10 +153,18 @@ angular.module('bahmni.ot')
                     existingAppointment.surgicalAppointmentAttributes = surgicalAppointment.surgicalAppointmentAttributes;
                     existingAppointment.isBeingEdited = false;
                 } else {
-                    // Add unique identifier for new appointments to avoid ng-repeat duplicates
                     if (!surgicalAppointment._uniqueId) {
                         surgicalAppointment._uniqueId = generateUniqueId();
                     }
+
+                    var duplicateAppointment = _.find($scope.surgicalForm.surgicalAppointments, function (appointment) {
+                        return appointment._uniqueId === surgicalAppointment._uniqueId;
+                    });
+
+                    if (duplicateAppointment) {
+                        surgicalAppointment._uniqueId = generateUniqueId();
+                    }
+
                     surgicalAppointment.sortWeight = $scope.surgicalForm.surgicalAppointments.length;
                     $scope.surgicalForm.surgicalAppointments.push(surgicalAppointment);
                 }
@@ -163,6 +200,8 @@ angular.module('bahmni.ot')
             };
 
             $scope.addSurgicalAppointment = function (surgicalAppointment) {
+                var isNewAppointment = !surgicalAppointment.sortWeight || surgicalAppointment.sortWeight < 0;
+
                 if (canBeFittedInTheSurgicalBlock(surgicalAppointment)) {
                     checkIfSurgicalAppointmentIsDirty(surgicalAppointment);
                     addOrUpdateTheSurgicalAppointment(surgicalAppointment);
@@ -171,14 +210,16 @@ angular.module('bahmni.ot')
                     surgicalAppointment.isBeingEdited = false;
                     surgicalAppointment.isDirty = true;
 
-                    var appointmentIndex;
-                    _.find($scope.surgicalForm.surgicalAppointments, function (appointment, index) {
-                        appointmentIndex = index;
-                        return surgicalAppointment.sortWeight === appointment.sortWeight;
-                    });
-                    $scope.surgicalForm.surgicalAppointments[appointmentIndex] = surgicalAppointment;
-                }
-                else {
+                    if (!isNewAppointment) {
+                        var appointmentIndex;
+                        _.find($scope.surgicalForm.surgicalAppointments, function (appointment, index) {
+                            appointmentIndex = index;
+                            return surgicalAppointment.sortWeight === appointment.sortWeight;
+                        });
+
+                        $scope.surgicalForm.surgicalAppointments[appointmentIndex] = surgicalAppointment;
+                    }
+                } else {
                     messagingService.showMessage('error', "{{'OT_SURGICAL_APPOINTMENT_EXCEEDS_BLOCK_DURATION' | translate}}");
                 }
             };
