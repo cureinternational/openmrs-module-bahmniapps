@@ -32,10 +32,19 @@ angular.module('bahmni.ot').controller('moveSurgicalAppointmentController', ['$r
                         return appointment.status !== 'POSTPONED' && appointment.status !== 'CANCELLED';
                     });
 
+                    // Find the maximum sortWeight and assign maxSortWeight + 1 to avoid collisions
+                    var maxSortWeight = -1;
+                    _.forEach(validAppointments, function (appointment) {
+                        if (angular.isDefined(appointment.sortWeight) && appointment.sortWeight !== null && appointment.sortWeight > maxSortWeight) {
+                            maxSortWeight = appointment.sortWeight;
+                        }
+                    });
+                    var nextSortWeight = maxSortWeight + 1;
+
                     var destinationBlockDetails = {
                         displayName: providerName + ", " + operationTheatre + " (" + blockStartTime + " - " + blockEndTime + ")",
                         uuid: surgicalBlock.uuid,
-                        surgicalAppointment: {sortWeight: validAppointments.length}
+                        surgicalAppointment: {sortWeight: nextSortWeight}
                     };
                     return destinationBlockDetails;
                 });

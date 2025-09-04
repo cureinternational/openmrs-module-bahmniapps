@@ -55,7 +55,7 @@ Bahmni.OT.SurgicalBlockMapper = function () {
 
     var mapSurgicalAppointment = function (openMrsSurgicalAppointment, attributeTypes, surgeonsList) {
         var surgicalAppointmentAttributes = mapOpenMrsSurgicalAppointmentAttributes(openMrsSurgicalAppointment.surgicalAppointmentAttributes, surgeonsList);
-        var mappedAppointment = {
+        return {
             id: openMrsSurgicalAppointment.id,
             uuid: openMrsSurgicalAppointment.uuid,
             voided: openMrsSurgicalAppointment.voided || false,
@@ -70,13 +70,6 @@ Bahmni.OT.SurgicalBlockMapper = function () {
             surgicalAppointmentAttributes: new Bahmni.OT.SurgicalBlockMapper().mapAttributes(surgicalAppointmentAttributes, attributeTypes),
             primaryDiagnosis: mapPrimaryDiagnoses(openMrsSurgicalAppointment.patientObservations) || ""
         };
-
-        // Preserve unique identifier if it exists
-        if (openMrsSurgicalAppointment._uniqueId) {
-            mappedAppointment._uniqueId = openMrsSurgicalAppointment._uniqueId;
-        }
-
-        return mappedAppointment;
     };
 
     this.map = function (openMrsSurgicalBlock, attributeTypes, surgeonsList) {
