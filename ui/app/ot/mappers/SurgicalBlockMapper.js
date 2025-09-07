@@ -112,7 +112,6 @@ Bahmni.OT.SurgicalBlockMapper = function () {
             notes: surgicalAppointmentUI.notes,
             status: surgicalAppointmentUI.status,
             surgicalAppointmentAttributes: mapSurgicalAppointmentAttributesUIToDomain(surgicalAppointmentUI.surgicalAppointmentAttributes)
-            // Note: _uniqueId is intentionally excluded (cleaned) when mapping to domain
         };
     };
 
