@@ -162,8 +162,6 @@ angular.module('bahmni.ot')
             };
 
             $scope.addSurgicalAppointment = function (surgicalAppointment) {
-                var isNewAppointment = !surgicalAppointment.sortWeight || surgicalAppointment.sortWeight < 0;
-
                 if (canBeFittedInTheSurgicalBlock(surgicalAppointment)) {
                     checkIfSurgicalAppointmentIsDirty(surgicalAppointment);
                     addOrUpdateTheSurgicalAppointment(surgicalAppointment);
@@ -171,18 +169,9 @@ angular.module('bahmni.ot')
                     ngDialog.close();
                     surgicalAppointment.isBeingEdited = false;
                     surgicalAppointment.isDirty = true;
-
-                    if (!isNewAppointment) {
-                        var appointmentIndex;
-                        _.find($scope.surgicalForm.surgicalAppointments, function (appointment, index) {
-                            appointmentIndex = index;
-                            return surgicalAppointment.sortWeight === appointment.sortWeight;
-                        });
-
-                        $scope.surgicalForm.surgicalAppointments[appointmentIndex] = surgicalAppointment;
-                    }
                 } else {
-                    messagingService.showMessage('error', "{{'OT_SURGICAL_APPOINTMENT_EXCEEDS_BLOCK_DURATION' | translate}}");
+                    messagingService.showMessage('error', "{{'OT_SURGICAL_APPOINTMENT_EXCEEDS_BLOCK_DURATION' | translate}}"
+                    );
                 }
             };
 
