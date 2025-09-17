@@ -641,9 +641,9 @@ describe("surgicalBlockController", function () {
         var appointment1 = _.find(scope.surgicalForm.surgicalAppointments, {id: 1});
         var appointment2 = _.find(scope.surgicalForm.surgicalAppointments, {id: 2});
         var appointment3 = _.find(scope.surgicalForm.surgicalAppointments, {id: 3});
-        expect(appointment1.sortWeight).toBe(0);
-        expect(appointment3.sortWeight).toBe(1);
-        expect(appointment2.sortWeight).toBe(2);
+        expect(appointment3.sortWeight).toBe(0); // First in array gets sortWeight 0
+        expect(appointment1.sortWeight).toBe(1); // Second in array gets sortWeight 1
+        expect(appointment2.sortWeight).toBe(2); // Third in array gets sortWeight 2
     });
 
     it("should open the surgical appointment for edit when appointment id is provided in stateparams", function () {

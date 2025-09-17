@@ -127,7 +127,6 @@ angular.module('bahmni.ot')
                         }
                     });
                     surgicalAppointment.sortWeight = maxSortWeight + 1;
-                    console.log('sortWeight FIX: Assigned sortWeight', surgicalAppointment.sortWeight, 'to prevent ngRepeat duplicates. Previous max was:', maxSortWeight);
                     $scope.surgicalForm.surgicalAppointments.push(surgicalAppointment);
                 }
             };
@@ -176,20 +175,12 @@ angular.module('bahmni.ot')
             };
 
             $scope.updateSortWeight = function (surgicalBlock) {
-                var activeAppointments = _.filter(surgicalBlock && surgicalBlock.surgicalAppointments, function (appointment) {
-                    return appointment.status !== 'POSTPONED' && appointment.status !== 'CANCELLED';
-                });
-
-                var sortedActiveAppointments = _.sortBy(activeAppointments, 'sortWeight');
-
-                _.forEach(sortedActiveAppointments, function (appointment, index) {
-                    appointment.sortWeight = index;
-                });
-
-                _.forEach(surgicalBlock && surgicalBlock.surgicalAppointments, function (appointment) {
-                    if (appointment.status === 'POSTPONED' || appointment.status === 'CANCELLED') {
-                        appointment.sortWeight = null;
+                var index = 0;
+                _.map(surgicalBlock && surgicalBlock.surgicalAppointments, function (appointment) {
+                    if (appointment.status !== 'POSTPONED' && appointment.status !== 'CANCELLED') {
+                        appointment.sortWeight = index++;
                     }
+                    return appointment;
                 });
             };
 
