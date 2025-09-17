@@ -545,4 +545,3 @@ describe("SurgicalBlockMapper", function () {
         expect(diagnosisInfo).toEqual('Hemarthrosis hand');
     })
 });
-
