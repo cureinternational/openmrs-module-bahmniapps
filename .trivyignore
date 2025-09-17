@@ -74,3 +74,8 @@ CVE-2024-45296 path-to-regexp: Backtracking regular expressions cause ReDoS http
 CVE-2024-21538
 GHSA-vjh7-7g9h-fjfh  # elliptic vulnerability
 CVE-2024-52798       # path-to-regexp vulnerability
+CVE-2025-9287        # cipher-base: Cipher-base hash manipulation
+CVE-2025-7783        # form-data: Unsafe random function in form-data
+CVE-2025-6545        # pbkdf2: pbkdf2 silently returns predictable key material
+CVE-2025-6547        # pbkdf2: pbkdf2 silently returns static keys
+CVE-2025-9288        # sha.js: Missing type checks leading to hash rewind
