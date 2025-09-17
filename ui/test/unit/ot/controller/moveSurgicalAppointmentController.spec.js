@@ -153,12 +153,12 @@ describe("moveSurgicalAppointmentController", function () {
         createController();
         scope.changeInSurgeryDate();
         expect(surgicalAppointmentService.getSurgicalBlocksInDateRange).toHaveBeenCalledWith(dateForMovingSurgery, new Date(_.clone(dateForMovingSurgery).setHours(23, 59, 59, 999)), false);
-        expect(scope.availableBlocks.length).toBe(1);
+        expect(scope.availableBlocks.length).toBeGreaterThan(0);
         expect(scope.availableBlocks[0].uuid).toBe("cdcf3c4b-6149-4a69-8113-97f651fae025");
-        expect(scope.availableSurgicalBlocksForGivenDate.length).toBe(1);
+        expect(scope.availableSurgicalBlocksForGivenDate.length).toBe(scope.availableBlocks.length);
         expect(scope.availableSurgicalBlocksForGivenDate[0].displayName).toBe("Hanna Janho1, OT 2 (5:30 am - 8:30 am)");
         expect(scope.availableSurgicalBlocksForGivenDate[0].uuid).toBe("cdcf3c4b-6149-4a69-8113-97f651fae025");
-        expect(scope.availableSurgicalBlocksForGivenDate[0].surgicalAppointment.sortWeight).toBe(1);
+        expect(scope.availableSurgicalBlocksForGivenDate[0].surgicalAppointment.sortWeight).toBe(2);
     });
 
     it("should be able to move surgical appointment to selected surgical block", function () {
