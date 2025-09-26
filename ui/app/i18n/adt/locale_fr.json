@@ -80,12 +80,7 @@
     "ADT Notes": "ADT Notes",
     "Diagnosis": "Diagnostique",
     "General Ward": "Salle générale",
-    "RJF Ward": "Salle RJF",
-    "Plastic & Reconstructive Surgical Ward": "Salle de chirurgie plastique et reconstructive",
-    "MODULE_LABEL_TO_ADMIT_KEY": "Admettre",
-    "MODULE_LABEL_ADMITTED_KEY": "Admis",
-    "MODULE_LABEL_TO_DISCHARGE_KEY": "Pour sortir",
-    "MODULE_LABEL_ALL_KEY": "Tous",
+    "Private Room": "Chambre privée",
     "name": "Nom",
     "identifier": "Identifiant"
 }
