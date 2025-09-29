@@ -26,7 +26,7 @@ angular.module('bahmni.common.displaycontrol.dashboard')
                     patientUuid: $scope.patient.uuid,
                     patient: $scope.patient,
                     encounterUuid: $scope.activeEncounterUuid,
-                    showEditForActiveEncounter: dashboardConfig && dashboardConfig.showEditForActiveEncounter || false,
+                    showEditForActiveEncounter: dashboardConfig && dashboardConfig.showEditForActiveEncounter || true,
                     numberOfVisits: dashboardConfig && dashboardConfig.maximumNoOfVisits || undefined,
                     hasNoHierarchy: $scope.hasNoHierarchy,
                     currentUser: $rootScope.currentUser,
