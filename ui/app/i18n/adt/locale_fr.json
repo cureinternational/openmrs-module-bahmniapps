@@ -66,6 +66,8 @@
     "BEDMANAGEMENT_DISPOSITION_ADMIT_PATIENT": "Admission d'un patient",
     "BEDMANAGEMENT_DISPOSITION_DISCHARGE_PATIENT": "Décharge du patient",
     "BEDMANAGEMENT_DISPOSITION_TRANSFER_PATIENT": "Transfert du patient",
+    "Admit": "Admettre",
+    "Cancel": "Annuler", 
     "CARE_VIEW_LABEL": "Passer à la vue Soins",
     "IPD_WARD_LIST_SEARCH_KEY": "Recherche...",
     "Bed": "Lit",
