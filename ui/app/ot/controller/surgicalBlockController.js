@@ -168,6 +168,13 @@ angular.module('bahmni.ot')
                     ngDialog.close();
                     surgicalAppointment.isBeingEdited = false;
                     surgicalAppointment.isDirty = true;
+
+                    var appointmentIndex;
+                    _.find($scope.surgicalForm.surgicalAppointments, function (appointment, index) {
+                        appointmentIndex = index;
+                        return surgicalAppointment.sortWeight === appointment.sortWeight;
+                    });
+                    $scope.surgicalForm.surgicalAppointments[appointmentIndex] = surgicalAppointment;
                 } else {
                     messagingService.showMessage('error', "{{'OT_SURGICAL_APPOINTMENT_EXCEEDS_BLOCK_DURATION' | translate}}"
                     );
