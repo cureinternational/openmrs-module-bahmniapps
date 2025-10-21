@@ -319,6 +319,7 @@
     "PROGRAM_DELETE_REASON_PLACEHOLDER": "Raison de supprimer le programme",
     "DELETE_LABEL": "Effacer",
     "EDIT_LABEL": "Modifier",
+    "SAVE_LABEL": "Sauvegarder",
     "INVESTIGATIONS_PANELS_HEADER_LABEL": "Panneaux",
     "INVESTIGATIONS_SELECTIONS_HEADER_LABEL": "Sélection",
     "CLINICAL_GO_TO_DASHBOARD_LABEL": "Aller au tableau de bord IPD",
