@@ -103,6 +103,7 @@ describe('treatmentConfig', function () {
         injectTreatmentConfig("tbTab");
         treatmentConfig.then(function (data) {
             expect(data.durationUnits).toEqual([
+                {name: "Hour(s)", factor: 1 / 24},
                 {name: "Day(s)", factor: 1},
                 {name: "Week(s)", factor: 7},
                 {name: "Month(s)", factor: 30}

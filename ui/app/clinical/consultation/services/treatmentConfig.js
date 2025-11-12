@@ -107,13 +107,17 @@ angular.module('bahmni.clinical').factory('treatmentConfig',
 
                 var setDrugOrderOptions = function (medicationTabConfig, tabConfigName) {
                     var medicationJson = appService.getAppDescriptor().getConfigForPage('medication') || {};
+                    console.log("medicationJson: " + JSON.stringify(medicationJson));
+                    console.log("Loaded medication config:", JSON.stringify(medicationJson, null, 2));
                     var commonConfig = medicationJson.commonConfig || {};
                     var allTabConfigs = medicationJson.tabConfig || {};
                     var tabConfig = allTabConfigs[tabConfigName] || {};
+                    console.log("tabConfig for " + tabConfigName + ": " + JSON.stringify(tabConfig));
                     tabConfig.inputOptionsConfig = tabConfig.inputOptionsConfig || {};
 
                     // Backward compatibility: provide provide hardcoded duration units factors - BAH-1194
                     var defaultDurationUnitsFactors = [
+                        {name: "Hour(s)", factor: 1 / 24},
                         {name: "Day(s)", factor: 1},
                         {name: "Week(s)", factor: 7},
                         {name: "Month(s)", factor: 30}

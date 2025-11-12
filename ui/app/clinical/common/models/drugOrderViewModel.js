@@ -406,9 +406,14 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
 
     this.calculateDurationInDays = function () {
         var durationUnitFromConfig = _.find(durationUnits, function (unit) {
+            console.log("comparing duration unit from config: " + unit.name + " with " + self.durationUnit);
+            console.log("duration unit selected: " + self.durationUnit);
             return unit.name === self.durationUnit;
         });
+        console.log("durationUnitFromConfig: " + JSON.stringify(durationUnitFromConfig));
+        console.log("durationUnitFromConfig.factor: " + durationUnitFromConfig.factor);
         self.durationInDays = self.duration ? self.duration * (durationUnitFromConfig && durationUnitFromConfig.factor || 1) : Number.NaN;
+        console.log("calculated duration in days: " + self.durationInDays);
     };
 
     var quantityUnitsFrom = function (doseUnit) {
@@ -448,14 +453,20 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
             if (self.frequencyType === Bahmni.Clinical.Constants.dosingTypes.uniform) {
                 var mantissa = self.uniformDosingType.doseFraction ? self.uniformDosingType.doseFraction.value : 0;
                 var dose = self.uniformDosingType.dose ? self.uniformDosingType.dose : 0;
+                console.log("frequency per day: " + getFrequencyPerDay());
+                console.log("duration in days: " + self.durationInDays);
+                console.log("dose: " + dose);
+                console.log("mantissa: " + mantissa);
                 self.quantity = (dose + mantissa) * (self.uniformDosingType.frequency ? getFrequencyPerDay() : 0) * self.durationInDays;
             } else if (self.frequencyType === Bahmni.Clinical.Constants.dosingTypes.variable) {
                 var dose = self.variableDosingType;
                 self.quantity = (dose.morningDose + dose.afternoonDose + dose.eveningDose) * self.durationInDays;
+                console.log("calculated quantity for variable dosing: " + self.quantity);
             }
 
             if (self.quantity % 1 !== 0) {
                 self.quantity = self.quantity - (self.quantity % 1) + 1;
+                console.log("rounded quantity: " + self.quantity);
             }
         }
         if ((self.quantityEnteredViaEdit && self.quantityUnit) || self.quantityUnitEnteredManually) {
