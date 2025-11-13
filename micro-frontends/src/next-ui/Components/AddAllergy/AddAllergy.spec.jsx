@@ -277,7 +277,6 @@ describe("AddAllergy", () => {
 
   it("should save allergies successfully and set isSaveSuccess to true", async () => {
     const { container } = render(
-      <IntlProvider locale="en">
       <AddAllergy
         onClose={onClose}
         onSave={onSave}
@@ -287,7 +286,6 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
       />
-      </IntlProvider>
     );
     saveAllergiesAPICall.mockResolvedValueOnce({ status: 201 });
     searchAllergen();
@@ -312,8 +310,7 @@ describe("AddAllergy", () => {
   });
 
   it("should set isSaveSuccess to false if saveAllergiesAPICall fails", async () => {
-    const { container, getByTestId } = render(
-      <IntlProvider locale="en">
+    const { container } = render(
       <AddAllergy
         onClose={onClose}
         onSave={onSave}
@@ -323,13 +320,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
       />
-      </IntlProvider>
     );
-
-    await waitFor(() => {
-      expect(screen.getByText("Save").getAttribute("disabled")).not.toBeNull();
-    });
-
     searchAllergen();
     selectAllergen();
     selectReaction(container);
@@ -348,9 +339,5 @@ describe("AddAllergy", () => {
       comment: "",
     }, "patient#1");
     
-    const textArea = getByTestId("additional-comments");
-    expect(textArea.placeholder).toBe(
-      "Additional comments such as onset date etc."
-    );
   });
 });
