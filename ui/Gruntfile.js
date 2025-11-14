@@ -545,7 +545,7 @@ module.exports = function (grunt) {
             files: {
                 expand: true,
                 cwd: '<%= yeoman.dist %>',
-                src: ['**/*.min.*.js', '!micro-frontends-dist/**/*.js', '!lib/**/*.js'],
+                src: ['**/*.min.*.js', '!micro-frontends-dist/**/*.js', '!**/html2pdf.bundle.min.*.js'],
                 dest: '<%= yeoman.dist %>'
             }
         },
