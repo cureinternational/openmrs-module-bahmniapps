@@ -23,6 +23,7 @@ const AllergenKind = {
   DRUG: "Drug",
   FOOD: "Food",
   ENVIRONMENT: "Environment",
+  OTHER: "Other",
 };
 export function PatientAlergiesControl(props) {
   const { hostData, appService } = props;
@@ -68,7 +69,8 @@ export function PatientAlergiesControl(props) {
   const TransformAllergenData = (
     medicationAllergenData,
     foodAllergenData,
-    environmentAllergenData
+    environmentAllergenData,
+    otherAllergenData
   ) => {
     const medicationAllergens = extractAllergenData(
       medicationAllergenData,
@@ -82,11 +84,16 @@ export function PatientAlergiesControl(props) {
       foodAllergenData,
       AllergenKind.FOOD
     );
+    const otherAllergens = extractAllergenData(
+      otherAllergenData,
+      AllergenKind.OTHER
+    );
 
     return [
       ...medicationAllergens,
       ...environmentalAllergens,
       ...foodAllergens,
+      ...otherAllergens,
     ];
   };
 
@@ -150,6 +157,7 @@ export function PatientAlergiesControl(props) {
       allergyControlConceptIdMap.medicationAllergenUuid,
       allergyControlConceptIdMap.foodAllergenUuid,
       allergyControlConceptIdMap.environmentalAllergenUuid,
+      allergyControlConceptIdMap.otherAllergenUuid,
       allergyControlConceptIdMap.allergyReactionUuid,
       allergyControlConceptIdMap.allergySeverityUuid
     ];
@@ -160,13 +168,15 @@ export function PatientAlergiesControl(props) {
         medicationResponseData,
         foodResponseData,
         environmentalResponseData,
+        otherResponseData,
         reactionResponseData,
         severityResponseData
       ] = await Promise.all(urls.map((url) => fetchAllergensOrReactions(url)));
       const allergenData = TransformAllergenData(
         medicationResponseData,
         foodResponseData,
-        environmentalResponseData
+        environmentalResponseData,
+        otherResponseData
       );
       const reactionsData = TransformReactionData(reactionResponseData);
 

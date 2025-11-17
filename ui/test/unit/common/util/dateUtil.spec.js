@@ -109,7 +109,6 @@ describe('DateUtil', function () {
                 toDate.setMonth(1);
                 toDate.setFullYear(2023);
                 var period = dateUtil.diffInYearsMonthsDays(fromDate, toDate);
-
                 expect(period.years).toBe(11);
                 expect(period.months).toBe(11);
                 expect(period.days).toBe(4);
@@ -125,7 +124,6 @@ describe('DateUtil', function () {
                 toDate.setMonth(1);
                 toDate.setFullYear(2020);
                 var period = dateUtil.diffInYearsMonthsDays(fromDate, toDate);
-
                 expect(period.years).toBe(9);
                 expect(period.months).toBe(0);
                 expect(period.days).toBe(3);
