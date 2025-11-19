@@ -23,7 +23,7 @@ angular.module('bahmni.clinical')
             var currentVisitType;
             if ($scope.allMedicinesInPrescriptionAvailableForIPD) {
                 visitService.search(
-                    {patient: $state.params.patientUuid, includeInactive: false, v: "custom:(uuid,visitType,startDatetime,stopDatetime,location,encounters:(uuid))"}
+                    { patient: $state.params.patientUuid, includeInactive: false, v: "custom:(uuid,visitType,startDatetime,stopDatetime,location,encounters:(uuid))" }
                 ).then(function (response) {
                     currentVisitType = response.data.results[0].visitType.display;
                 });
@@ -403,7 +403,7 @@ angular.module('bahmni.clinical')
             $scope.add = function () {
                 var treatments = $scope.treatments;
                 if (($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration') && ($scope.obs.length == 0 ||
-                        (($scope.currentEpoch - $scope.obs[0].observationDateTime) / 1000 > $scope.addTreatmentWithPatientWeight.duration))) ||
+                    (($scope.currentEpoch - $scope.obs[0].observationDateTime) / 1000 > $scope.addTreatmentWithPatientWeight.duration))) ||
                     ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length == 0)) {
                     return;
                 }
@@ -904,38 +904,7 @@ angular.module('bahmni.clinical')
             };
 
             $scope.verifyAdd = function (treatment) {
-                if (!$scope.addTreatmentWithPatientWeight.hasOwnProperty('duration') && !$scope.addTreatmentWithDiagnosis.hasOwnProperty('order')) {
-                    return $scope.addForm.$valid && $scope.calculateDose(treatment);
-                } else {
-                    var patientWeightError = false;
-                    var diagnosisError = false;
-                    if ($scope.addTreatmentWithPatientWeight && $scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
-                        if ($scope.obs.length == 0 || (($scope.currentEpoch - $scope.obs[0].observationDateTime) / 1000 > $scope.addTreatmentWithPatientWeight.duration)) {
-                            patientWeightError = true;
-                        }
-                    }
-                    if ($scope.addTreatmentWithDiagnosis && $scope.addTreatmentWithDiagnosis.hasOwnProperty('order')) {
-                        if ($scope.confirmedDiagnoses.length == 0) {
-                            diagnosisError = true;
-                        }
-                    }
-                    if (patientWeightError && diagnosisError) {
-                        messagingService.showMessage("error", $translate.instant("PATIENT_WEIGHT_AND_DIAGNOSIS_ERROR"));
-                        $scope.clearForm();
-                        return false;
-                    } else if (patientWeightError) {
-                        messagingService.showMessage("error", $translate.instant("ENTER_PATIENT_WEIGHT_ERROR"));
-                        $scope.clearForm();
-                        return false;
-                    } else if (diagnosisError) {
-                        messagingService.showMessage("error", $translate.instant("ENTER_DIAGNOSIS_ERROR"));
-                        $scope.clearForm();
-                        return false;
-                    } else {
-                        $scope.addToNewTreatment = true;
-                        return $scope.addForm.$valid && $scope.calculateDose(treatment);
-                    }
-                }
+                return $scope.addForm.$valid && $scope.calculateDose(treatment);
             };
 
             var init = function () {
@@ -946,24 +915,46 @@ angular.module('bahmni.clinical')
 
                 mergeActiveAndScheduledWithDiscontinuedOrders();
 
-                $scope.treatmentConfig = treatmentConfig;// $scope.treatmentConfig used only in UI
+                $scope.treatmentConfig = treatmentConfig; // $scope.treatmentConfig used only in UI
                 var medicationConfig = appService.getAppDescriptor().getConfigForPage('medication') || {};
                 $scope.addTreatmentWithPatientWeight = appService.getAppDescriptor().getConfigValue('addTreatmentWithPatientWeight') || {};
                 $scope.addTreatmentWithDiagnosis = appService.getAppDescriptor().getConfigValue('addTreatmentWithDiagnosis') || {};
+
+                var patientWeightPromise = $q.resolve();
+                var diagnosisPromise = $q.resolve();
+
                 if ($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
-                    observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, null, null).then(function (response) {
+                    patientWeightPromise = observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, null, null).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
                         $scope.obs = response.data;
+
+                        $scope.patientWeightError = !$scope.obs || $scope.obs.length === 0 ||
+                            (($scope.currentEpoch - (($scope.obs[0] && $scope.obs[0].observationDateTime) || 0)) / 1000 > $scope.addTreatmentWithPatientWeight.duration);
                     });
                 }
+
                 if ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order')) {
-                    diagnosisService.getPatientDiagnosis($scope.patient.uuid).then(function (response) {
+                    diagnosisPromise = diagnosisService.getPatientDiagnosis($scope.patient.uuid).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
                         $scope.confirmedDiagnoses = response.data.filter(function (diagnosis) {
                             return diagnosis.order === $scope.addTreatmentWithDiagnosis.order && diagnosis.diagnosisStatusConcept === null;
                         });
+
+                        $scope.diagnosisError = !$scope.confirmedDiagnoses || $scope.confirmedDiagnoses.length === 0;
                     });
                 }
+
+                // Consolidate error messages after both promises resolve
+                $q.all([patientWeightPromise, diagnosisPromise]).then(function () {
+                    if ($scope.patientWeightError && $scope.diagnosisError) {
+                        messagingService.showMessage("error", $translate.instant("PATIENT_WEIGHT_AND_DIAGNOSIS_ERROR"));
+                    } else if ($scope.patientWeightError) {
+                        messagingService.showMessage("error", $translate.instant("ENTER_PATIENT_WEIGHT_ERROR"));
+                    } else if ($scope.diagnosisError) {
+                        messagingService.showMessage("error", $translate.instant("ENTER_DIAGNOSIS_ERROR"));
+                    }
+                });
+
                 $scope.addToNewTreatment = true;
                 showRulesInMedication(medicationConfig);
                 setContinuousMedicationRoutes(medicationConfig);
