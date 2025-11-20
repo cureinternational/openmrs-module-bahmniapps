@@ -19,6 +19,7 @@ angular.module('bahmni.ot')
                             $scope.surgicalForm = new Bahmni.OT.SurgicalBlockMapper().map(response.data, $scope.attributeTypes, $scope.surgeons);
                             $scope.surgicalForm.surgicalAppointments = surgicalAppointmentHelper.filterSurgicalAppointmentsByStatus(
                                 $scope.surgicalForm.surgicalAppointments, [Bahmni.OT.Constants.scheduled, Bahmni.OT.Constants.completed]);
+
                             var selectedSurgicalAppointment = _.find($scope.surgicalForm.surgicalAppointments, function (appointment) {
                                 return appointment.id === $stateParams.surgicalAppointmentId;
                             });
@@ -119,7 +120,13 @@ angular.module('bahmni.ot')
                     existingAppointment.surgicalAppointmentAttributes = surgicalAppointment.surgicalAppointmentAttributes;
                     existingAppointment.isBeingEdited = false;
                 } else {
-                    surgicalAppointment.sortWeight = $scope.surgicalForm.surgicalAppointments.length;
+                    var maxSortWeight = -1;
+                    _.forEach($scope.surgicalForm.surgicalAppointments, function (appointment) {
+                        if (angular.isDefined(appointment.sortWeight) && appointment.sortWeight !== null && appointment.sortWeight > maxSortWeight) {
+                            maxSortWeight = appointment.sortWeight;
+                        }
+                    });
+                    surgicalAppointment.sortWeight = maxSortWeight + 1;
                     $scope.surgicalForm.surgicalAppointments.push(surgicalAppointment);
                 }
             };
@@ -168,9 +175,9 @@ angular.module('bahmni.ot')
                         return surgicalAppointment.sortWeight === appointment.sortWeight;
                     });
                     $scope.surgicalForm.surgicalAppointments[appointmentIndex] = surgicalAppointment;
-                }
-                else {
-                    messagingService.showMessage('error', "{{'OT_SURGICAL_APPOINTMENT_EXCEEDS_BLOCK_DURATION' | translate}}");
+                } else {
+                    messagingService.showMessage('error', "{{'OT_SURGICAL_APPOINTMENT_EXCEEDS_BLOCK_DURATION' | translate}}"
+                    );
                 }
             };
 
