@@ -82,3 +82,8 @@ CVE-2025-6545   #pbkdf2
 CVE-2025-6547   #pbkdf2
 CVE-2025-9288   #sha.js
 CVE-2024-37890  #ws
+CVE-2025-25977 #canvg
+CVE-2025-29907 #jspdf
+CVE-2025-57810 #jspdf
+CVE-2022-21680 #marked
+CVE-2022-21681 #marked
