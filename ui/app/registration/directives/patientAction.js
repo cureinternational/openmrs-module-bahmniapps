@@ -146,19 +146,39 @@ angular.module('bahmni.registration')
                         });
                         return;
                     }
-                    spinner.forPromise($scope.visitControl.createVisitOnly(patientProfileData.patient.uuid, $rootScope.visitLocation).then(function (response) {
-                        auditLogService.log(patientProfileData.patient.uuid, "OPEN_VISIT", {visitUuid: response.data.uuid, visitType: response.data.visitType.display}, 'MODULE_LABEL_REGISTRATION_KEY');
-                        if (forwardUrl) {
-                            var updatedForwardUrl = appService.getAppDescriptor().formatUrl(forwardUrl, {'patientUuid': patientProfileData.patient.uuid});
-                            $window.location.href = updatedForwardUrl;
-                            if (showSuccessMessage) {
-                                messagingService.showMessage("info", "REGISTRATION_LABEL_SAVE_REDIRECTION");
-                            }
-                        } else {
-                            goToVisitPage(patientProfileData);
+
+                    var searchParams = {
+                        patient: patientProfileData.patient.uuid,
+                        includeInactive: false,
+                        v: "custom:(uuid,visitType,location:(uuid))"
+                    };
+
+                    spinner.forPromise(visitService.search(searchParams).then(function (response) {
+                        var results = response.data.results;
+                        var activeVisitForCurrentLoginLocation = _.filter(results, function (result) {
+                            return result.location.uuid === visitLocationUuid;
+                        });
+
+                        if (activeVisitForCurrentLoginLocation.length > 0) {
+                            messagingService.showMessage("error", "REGISTRATION_ACTIVE_VISIT_EXISTS");
+                            $scope.setSubmitSource(null);
+                            return;
                         }
-                    }, function () {
-                        $state.go('patient.edit', {patientUuid: $scope.patient.uuid});
+
+                        return $scope.visitControl.createVisitOnly(patientProfileData.patient.uuid, $rootScope.visitLocation).then(function (response) {
+                            auditLogService.log(patientProfileData.patient.uuid, "OPEN_VISIT", {visitUuid: response.data.uuid, visitType: response.data.visitType.display}, 'MODULE_LABEL_REGISTRATION_KEY');
+                            if (forwardUrl) {
+                                var updatedForwardUrl = appService.getAppDescriptor().formatUrl(forwardUrl, {'patientUuid': patientProfileData.patient.uuid});
+                                $window.location.href = updatedForwardUrl;
+                                if (showSuccessMessage) {
+                                    messagingService.showMessage("info", "REGISTRATION_LABEL_SAVE_REDIRECTION");
+                                }
+                            } else {
+                                goToVisitPage(patientProfileData);
+                            }
+                        }, function () {
+                            $state.go('patient.edit', {patientUuid: $scope.patient.uuid});
+                        });
                     }));
                 };
 
