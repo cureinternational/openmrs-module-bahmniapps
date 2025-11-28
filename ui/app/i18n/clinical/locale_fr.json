@@ -1,6 +1,7 @@
 {
     "CONSULTATION_TAB_KEY": "Consultation",
     "CONSULTATION_SHORTCUT_KEY": "c",
+    "CLINICAL_ACTIVE_VISIT_EXISTS": "Une visite active existe déjà pour ce patient à cet emplacement. Veuillez rafraîchir la page.",
     "NO_ACTIVE_PASSIVE_PROGRAMS_MESSAGE": "Pas de programmes actifs / passées pour ce patient .",
     "NO_TREATMENTS_MESSAGE": "Pas de traitements pour ce patient",
     "NO_ADMISSION_DETAILS_MESSAGE": "Pas de détails d'admission pour ce patient.",
