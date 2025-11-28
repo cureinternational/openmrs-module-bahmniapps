@@ -4,7 +4,7 @@ describe("ConsultationController", function () {
     var scope, rootScope, state, contextChangeHandler, urlHelper, location, clinicalAppConfigService,
         stateParams, appService, ngDialog, q, appDescriptor, controller, visitConfig, _window_, clinicalDashboardConfig,
         sessionService, conditionsService, encounterService, configurations, diagnosisService, messagingService, spinnerMock,
-        auditLogService, confirmBox, virtualConsultService, adhocTeleconsultationService;
+        auditLogService, confirmBox, virtualConsultService, adhocTeleconsultationService, visitService;
 
     var encounterData = {
         "bahmniDiagnoses": [],
@@ -146,7 +146,8 @@ describe("ConsultationController", function () {
             auditLogService: auditLogService,
             confirmBox: confirmBox,
             virtualConsultService: virtualConsultService,
-            adhocTeleconsultationService: adhocTeleconsultationService
+            adhocTeleconsultationService: adhocTeleconsultationService,
+            visitService: visitService
         });
     };
     var setUpServiceMocks = function () {
@@ -247,6 +248,8 @@ describe("ConsultationController", function () {
         diagnosisService = jasmine.createSpyObj('diagnosisService', ['populateDiagnosisInformation']);
         adhocTeleconsultationService = jasmine.createSpyObj('adhocTeleconsultationService', ['generateAdhocTeleconsultationLink']);
         virtualConsultService = jasmine.createSpyObj('virtualConsultService', ['launchMeeting']);
+        visitService = jasmine.createSpyObj('visitService', ['search']);
+        visitService.search.and.returnValue(specUtil.simplePromise({ data: { results: [] } }));
         encounterService.create.and.returnValue(specUtil.createFakePromise(encounterData));
         encounterService.create.and.callFake(function () {
             var deferred = Q.defer();
