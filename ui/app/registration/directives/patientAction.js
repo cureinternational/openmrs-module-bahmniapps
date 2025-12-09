@@ -69,7 +69,7 @@ angular.module('bahmni.registration')
                         var activeVisitForCurrentLoginLocation;
                         if (results) {
                             activeVisitForCurrentLoginLocation = _.filter(results, function (result) {
-                                return result.location.uuid === visitLocationUuid;
+                                return result.location.uuid === $rootScope.visitLocation;
                             });
                         }
                         self.hasActiveVisit = activeVisitForCurrentLoginLocation && (activeVisitForCurrentLoginLocation.length > 0);
