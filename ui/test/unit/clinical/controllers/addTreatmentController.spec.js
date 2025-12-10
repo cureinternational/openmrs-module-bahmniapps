@@ -150,6 +150,7 @@ describe("AddTreatmentController", function () {
         },
         frequencies: [{ name: 'Twice a day', frequencyPerDay: 2 }],
         durationUnits: [
+            { name: "Hour(s)", factor: 1 / 24 },
             { name: "Day(s)", factor: 1 },
             { name: "Week(s)", factor: 7 },
             { name: "Month(s)", factor: 30 }

@@ -114,6 +114,7 @@ angular.module('bahmni.clinical').factory('treatmentConfig',
 
                     // Backward compatibility: provide provide hardcoded duration units factors - BAH-1194
                     var defaultDurationUnitsFactors = [
+                        {name: "Hour(s)", factor: 1 / 24},
                         {name: "Day(s)", factor: 1},
                         {name: "Week(s)", factor: 7},
                         {name: "Month(s)", factor: 30}
