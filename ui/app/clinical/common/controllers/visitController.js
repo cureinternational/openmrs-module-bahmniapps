@@ -36,6 +36,11 @@ angular.module('bahmni.clinical')
             } else if ($scope.visitSummary.visitType === "IPD" && $scope.visitSummary.stopDateTime !== null) {
                 $scope.isIpdReadMode = true;
             }
+
+            var privileges = [];
+            if ($rootScope.currentUser) {
+                privileges = $rootScope.currentUser.privileges || [];
+            }
             $scope.ipdDashboard = {
                 hostData: {
                     patient: {uuid: $scope.patientUuid},
@@ -44,7 +49,8 @@ angular.module('bahmni.clinical')
                     visitSummary: $scope.visitSummary,
                     visitUuid: $scope.visitUuid,
                     isReadMode: $scope.isIpdReadMode,
-                    source: $location.search().source
+                    source: $location.search().source,
+                    privileges: privileges
                 },
                 hostApi: {
                     navigation: {
