@@ -21,7 +21,7 @@
   import "./AddAllergy.scss";
 
   export function AddAllergy(props) {
-    const { patient, provider, onClose, allergens, reaction, severityOptions, onSave, existingAllergies } = props;
+    const { patient, onClose, allergens, reaction, severityOptions, onSave, existingAllergies } = props;
     const [allergen, setAllergen] = React.useState({});
     const [reactions, setReactions] = React.useState([]);
     const [severity, setSeverity] = React.useState("");
@@ -57,7 +57,7 @@
           },
         },
         reactions: allergyReactions,
-        severity: { uuid: severity },
+        severity: severity ? { uuid: severity } : null,
         comment: notes,
       };
       const response = await saveAllergiesAPICall(payload, patient.uuid);
@@ -71,20 +71,28 @@
       onSave(isSaveSuccess);
     }, [isSaveSuccess]);
 
+    const getReactionUuidByName = (reactionObj, name) => {
+      for (const uuid in reactionObj) {
+        if (reactionObj[uuid]?.name?.toLowerCase() === name.toLowerCase()) {
+          return uuid;
+        }
+      }
+      return null;
+    };
+
     const handleKnownAllergyChange = (value) => {
       const isYes = value === "yes";
       setHasKnownAllergy(isYes);
       if (!isYes) {
-        setAllergen({ name: "No Known Allergy" });
-        setReactions([]);
-        setSeverity("");
-        setNotes("");
+        const noKnownAllergyValue = allergens.find(allergen => allergen?.name === "No Known Allergies");
+        const otherReactionUuid = getReactionUuidByName(reaction, "Other");
+        setAllergen(noKnownAllergyValue ? noKnownAllergyValue : {});
+        setReactions(otherReactionUuid ? [otherReactionUuid] : []);
+        setSeverity(null);
+        setNotes(null);
         setIsSaveEnabled(true);
       } else {
-        setAllergen({});
-        setReactions([]);
-        setSeverity("");
-        setNotes("");
+        clearForm();
         setIsSaveEnabled(false);
       }
     };
@@ -113,6 +121,7 @@
 
               {hasKnownAllergy === false ? (
                   <TextArea
+                      labelText=""
                       value="No Known Allergy"
                       disabled
                       className="no-known-allergy"
@@ -207,7 +216,6 @@
     reaction: propTypes.object.isRequired,
     onSave: propTypes.func.isRequired,
     patient: propTypes.object.isRequired,
-    provider: propTypes.object.isRequired,
     severityOptions: propTypes.array.isRequired,
     existingAllergies: propTypes.array.isRequired,
   };
