@@ -230,6 +230,7 @@ export function PatientAlergiesControl(props) {
               severityOptions={transformedSeverityData}
               patient={patient}
               provider={provider}
+              existingAllergies={allergiesAndReactions}
               data-testid={"allergies-overlay"}
               onClose={() => {
                 setShowAddAllergyPanel(false);
