@@ -98,6 +98,20 @@ export function PatientAlergiesControl(props) {
     ];
   };
 
+  const SEVERITY_RANK = {
+    severe: 1,
+    moderate: 2,
+    mild: 3
+  };
+  const DEFAULT_SEVERITY_RANK = 4;
+
+  const compareByRankThenDate = (a, b) => {
+    if (a?.severityRank !== b?.severityRank) {
+      return a?.severityRank - b?.severityRank;
+    }
+    return b?.date - a?.date;
+  };
+
   const allergiesAndReactionsForPatient = async () => {
     const allergiesAndReactions = await fetchAllergiesAndReactionsForPatient(patient.uuid);
     const allergies = allergiesAndReactions.entry;
@@ -105,23 +119,18 @@ export function PatientAlergiesControl(props) {
       const { resource } = allergy;
       const allergen = resource.reaction[0]?.substance?.coding?.[0].display;
       const severity = resource.reaction[0].severity;
+      const severityRank =  SEVERITY_RANK[severity] ?? DEFAULT_SEVERITY_RANK;
       const note = resource.note && resource.note[0].text;
       const date = new Date(resource.recordedDate);
       const provider = resource.recorder?.display;
       const reactions = resource.reaction[0]?.manifestation.map((reaction) => {
         return reaction.coding[0].display;
       });
-      return {allergen, severity, reactions, note, provider, date};
+      return {allergen, severity, severityRank, reactions, note, provider, date};
     });
-    allergiesData && allergiesData.sort((a, b) => b?.date - a?.date);
-    const filterSeverity = (severity) =>
-      allergiesData.filter((allergy) => allergy.severity === severity);
+
     allergiesData
-      ? setAllergiesAndReactions([
-          ...filterSeverity("severe"),
-          ...filterSeverity("moderate"),
-          ...filterSeverity("mild"),
-        ])
+      ? setAllergiesAndReactions([...allergiesData].sort(compareByRankThenDate))
       : setAllergiesAndReactions([]);
   };
 
