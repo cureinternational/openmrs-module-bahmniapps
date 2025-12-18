@@ -37,6 +37,7 @@
     const additionalComments = (
       intl.formatMessage({ id: "ADDITIONAL_COMMENT_ALLERGY", defaultMessage: "Additional comments such as onset date etc."})
     );
+    const NO_KNOWN_ALLERGY = "No Known Allergy";
     const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
     const [isSaveSuccess, setIsSaveSuccess] = React.useState(null);
     const clearForm = () => {
@@ -71,23 +72,13 @@
       onSave(isSaveSuccess);
     }, [isSaveSuccess]);
 
-    const getReactionUuidByName = (reactionObj, name) => {
-      for (const uuid in reactionObj) {
-        if (reactionObj[uuid]?.name?.toLowerCase() === name.toLowerCase()) {
-          return uuid;
-        }
-      }
-      return null;
-    };
-
     const handleKnownAllergyChange = (value) => {
       const isYes = value === "yes";
       setHasKnownAllergy(isYes);
       if (!isYes) {
-        const noKnownAllergyValue = allergens.find(allergen => allergen?.name === "No Known Allergies");
-        const otherReactionUuid = getReactionUuidByName(reaction, "Other");
-        setAllergen(noKnownAllergyValue ? noKnownAllergyValue : {});
-        setReactions(otherReactionUuid ? [otherReactionUuid] : []);
+        const noKnownAllergyValue = allergens.find(allergen => allergen?.name === NO_KNOWN_ALLERGY);
+        setAllergen(noKnownAllergyValue ?? {});
+        setReactions([]);
         setSeverity(null);
         setNotes(null);
         setIsSaveEnabled(true);
@@ -113,6 +104,7 @@
                       legendText="Does the patient have any known allergies?"
                       onChange={handleKnownAllergyChange}
                       orientation="horizontal"
+                      defaultSelected="yes"
                   >
                     <RadioButton labelText="Yes" value="yes" />
                     <RadioButton labelText="No" value="no" />
