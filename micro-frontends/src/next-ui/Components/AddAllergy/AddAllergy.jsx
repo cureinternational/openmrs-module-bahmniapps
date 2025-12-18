@@ -105,6 +105,7 @@
                       onChange={handleKnownAllergyChange}
                       orientation="horizontal"
                       defaultSelected="yes"
+                      className={"font-large known-allergy-radio-group"}
                   >
                     <RadioButton labelText="Yes" value="yes" />
                     <RadioButton labelText="No" value="no" />
@@ -112,12 +113,9 @@
               )}
 
               {hasKnownAllergy === false ? (
-                  <TextArea
-                      labelText=""
-                      value="No Known Allergy"
-                      disabled
-                      className="no-known-allergy"
-                  />
+                  <span className={"font-large no-known-allergy-textarea"}>
+                    <FormattedMessage id={"SELECTED_ALLERGEN"} defaultMessage={"Selected Allergen: "}/> {NO_KNOWN_ALLERGY}
+                  </span>
               ) : (
                   <>
                     {isEmpty(allergen) && (
