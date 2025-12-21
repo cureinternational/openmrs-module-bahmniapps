@@ -15,8 +15,15 @@ export const ViewAllergiesAndReactions = (props) => {
             </div>
             <div>
                 {allergies.map((allergy, index) => {
+                    const isNoKnownAllergy = allergy.allergen === "No Known Allergy";
+                    const isSevere = allergy.severity === "severe";
+                    const className = isNoKnownAllergy
+                        ? "no-known-allergy"
+                        : showTextAsAbnormal || isSevere
+                            ? "red-text"
+                            : "";
                     const title = <div key={index}
-                                       className={` allergies-row ${showTextAsAbnormal ? "red-text" : allergy.severity === "severe" ? "red-text": ""}`}>
+                                       className={`allergies-row ${className}`}>
                         <div>{allergy.allergen}</div>
                         <div>{allergy.reactions.join(", ")}</div>
                         <div className={"capitalize"}>{allergy.severity}</div>
