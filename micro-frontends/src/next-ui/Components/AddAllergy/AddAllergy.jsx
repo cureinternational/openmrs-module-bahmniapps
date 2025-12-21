@@ -40,6 +40,7 @@
     const NO_KNOWN_ALLERGY = "No Known Allergy";
     const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
     const [isSaveSuccess, setIsSaveSuccess] = React.useState(null);
+
     const clearForm = () => {
       setAllergen({});
       setReactions([]);
@@ -89,6 +90,9 @@
     };
 
     const showKnownAllergySelector = existingAllergies?.length === 0
+    const filteredAllergens = showKnownAllergySelector
+        ? allergens
+        : allergens.filter(allergen => allergen?.name !== NO_KNOWN_ALLERGY);
 
     return (
         <div className={"next-ui"}>
@@ -121,7 +125,7 @@
                     {isEmpty(allergen) && (
                         <div data-testid={"search-allergen"}>
                           <SearchAllergen
-                              allergens={allergens}
+                              allergens={filteredAllergens}
                               onChange={(allergen) => {
                                 setAllergen(allergen);
                               }}
