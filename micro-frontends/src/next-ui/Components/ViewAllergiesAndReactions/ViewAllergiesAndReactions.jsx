@@ -7,8 +7,10 @@ import { Document } from "@carbon/icons-react/next";
 import PropTypes from "prop-types";
 export const ViewAllergiesAndReactions = (props) => {
     const { allergies, showTextAsAbnormal } = props;
+
+    const NO_KNOWN_ALLERGY = "No Known Allergy";
     const hasMultipleAllergies = allergies.length > 1;
-    const hasNoKnownAllergy = allergies.some(allergy => allergy.allergen === "No Known Allergy");
+    const hasNoKnownAllergy = allergies.some(allergy => allergy.allergen === NO_KNOWN_ALLERGY);
     const shouldStrikethroughNoKnown = hasMultipleAllergies && hasNoKnownAllergy;
 
     return <div className={"next-ui"}>
@@ -19,8 +21,8 @@ export const ViewAllergiesAndReactions = (props) => {
             </div>
             <div>
                 {allergies.map((allergy, index) => {
-                    const isNoKnownAllergy = allergy.allergen === "No Known Allergy";
-                    const isSevere = allergy.severity === "severe";
+                    const isNoKnownAllergy = allergy.allergen === NO_KNOWN_ALLERGY;
+                    const isSevere = allergy.severity?.toLowerCase() === "severe";
                     const className = isNoKnownAllergy && shouldStrikethroughNoKnown
                         ? "no-known-allergy"
                             : showTextAsAbnormal || isSevere
