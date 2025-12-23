@@ -114,7 +114,7 @@
               )}
 
               {patientHasAllergies === false ? (
-                  <span className={"font-large no-known-allergy-textarea"}>{NO_KNOWN_ALLERGY}</span>
+                  <div className={"font-large no-known-allergy-textarea"}>{NO_KNOWN_ALLERGY}</div>
               ) : (
                   <>
                     {isEmpty(allergen) && (

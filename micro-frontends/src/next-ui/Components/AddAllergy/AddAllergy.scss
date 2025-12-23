@@ -20,11 +20,18 @@
 .known-allergy-radio-group {
   margin-top: 10px;
   margin-bottom: 10px;
+  .bx--label {
+    font-size: 14px;
+  }
+  .bx--radio-button__label {
+    font-size: 14px;
+  }
 }
 
 .no-known-allergy-textarea {
-  margin-bottom: 8px;
-  margin-top: 10px;
+  padding-bottom: 8px;
+  padding-top: 10px;
+  background: #fff;
 }
 
 .back-button {
