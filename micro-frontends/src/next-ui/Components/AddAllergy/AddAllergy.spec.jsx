@@ -442,7 +442,7 @@ describe("AddAllergy", () => {
     );
     const noButton = screen.getByLabelText("No");
     fireEvent.click(noButton);
-    expect(screen.getByText("Selected Allergen: No Known Allergy")).not.toBeNull();
+    expect(screen.getByText("No Known Allergy")).not.toBeNull();
     expect(screen.getByText("Save").getAttribute("disabled")).toBeNull();
   });
 

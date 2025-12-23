@@ -26,7 +26,7 @@
     const [reactions, setReactions] = React.useState([]);
     const [severity, setSeverity] = React.useState("");
     const [notes, setNotes] = React.useState("");
-    const [hasKnownAllergy, setHasKnownAllergy] = React.useState(null);
+    const [patientHasAllergies, setPatientHasAllergies] = React.useState(null);
     const intl = useIntl();
     const backToAllergenText = (
       <FormattedMessage id={"BACK_TO_ALLERGEN"} defaultMessage={"Back to Allergies"} />
@@ -75,7 +75,7 @@
 
     const handleKnownAllergyChange = (value) => {
       const isYes = value === "yes";
-      setHasKnownAllergy(isYes);
+      setPatientHasAllergies(isYes);
       if (!isYes) {
         const noKnownAllergyValue = allergens.find(allergen => allergen?.name === NO_KNOWN_ALLERGY);
         setAllergen(noKnownAllergyValue ?? {});
@@ -113,10 +113,8 @@
                   </RadioButtonGroup>
               )}
 
-              {hasKnownAllergy === false ? (
-                  <span className={"font-large no-known-allergy-textarea"}>
-                    <FormattedMessage id={"SELECTED_ALLERGEN"} defaultMessage={"Selected Allergen: "}/> {NO_KNOWN_ALLERGY}
-                  </span>
+              {patientHasAllergies === false ? (
+                  <span className={"font-large no-known-allergy-textarea"}>{NO_KNOWN_ALLERGY}</span>
               ) : (
                   <>
                     {isEmpty(allergen) && (
