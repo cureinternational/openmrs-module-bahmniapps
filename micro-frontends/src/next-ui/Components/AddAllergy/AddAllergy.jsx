@@ -90,9 +90,6 @@
     };
 
     const showKnownAllergySelector = existingAllergies?.length === 0
-    const filteredAllergens = showKnownAllergySelector
-        ? allergens
-        : allergens.filter(allergen => allergen?.name !== NO_KNOWN_ALLERGY);
 
     return (
         <div className={"next-ui"}>
@@ -125,7 +122,7 @@
                     {isEmpty(allergen) && (
                         <div data-testid={"search-allergen"}>
                           <SearchAllergen
-                              allergens={filteredAllergens}
+                              allergens={allergens.filter(allergen => allergen?.name !== NO_KNOWN_ALLERGY)}
                               onChange={(allergen) => {
                                 setAllergen(allergen);
                               }}
