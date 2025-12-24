@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, screen, waitFor, getByTestId } from "@testing-library/react";
+import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { AddAllergy } from "./AddAllergy";
 import {
   saveAllergiesAPICall
@@ -19,6 +19,11 @@ const mockAllergensData = [
   { name: "Penicillin", kind: "Medication", uuid: "162306AAAAAA" },
   { name: "Narcotic agent", kind: "Medication", uuid: "162307AAAAAA" },
 ];
+
+const mockExistingAllergies = [
+  { name: "Milk", kind: "Food", uuid: "162308AAAAAA" }
+];
+
 
 const mockReactionsData = {
   "101AA": { name: "GI Upset" },
@@ -74,6 +79,7 @@ describe("AddAllergy", () => {
         provider={provider}
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
+        existingAllergies={[mockExistingAllergies]}
         reaction={mockReactionsData}
       />
       </IntlProvider>
@@ -92,6 +98,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
@@ -110,6 +117,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
@@ -127,6 +135,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
@@ -146,6 +155,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
@@ -156,7 +166,7 @@ describe("AddAllergy", () => {
     //select allergen
     selectAllergen();
 
-    expect(() => screen.getByTestId("search-allergen")).toThrowError();
+    expect(() => screen.getByTestId("search-allergen")).toThrow();
     expect(screen.getByTestId("select-reactions")).not.toBeNull();
   });
 
@@ -171,16 +181,17 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
     searchAllergen();
     selectAllergen();
-    expect(() => screen.getByTestId("search-allergen")).toThrowError();
+    expect(() => screen.getByTestId("search-allergen")).toThrow();
     expect(screen.getByTestId("select-reactions")).not.toBeNull();
     fireEvent.click(screen.getByText("Back to Allergies"));
     expect(screen.getByTestId("search-allergen")).not.toBeNull();
-    expect(() => screen.getByTestId("select-reactions")).toThrowError();
+    expect(() => screen.getByTestId("select-reactions")).toThrow();
   });
 
   it("should render severity after allergen is selected", () => {
@@ -194,6 +205,7 @@ describe("AddAllergy", () => {
           severityOptions={mockSeverityData}
           allergens={mockAllergensData}
           reaction={mockReactionsData}
+          existingAllergies={[mockExistingAllergies]}
         />
       </IntlProvider>
     );
@@ -216,6 +228,7 @@ describe("AddAllergy", () => {
           severityOptions={mockSeverityData}
           allergens={mockAllergensData}
           reaction={mockReactionsData}
+          existingAllergies={[mockExistingAllergies]}
         />
       </IntlProvider>
     );
@@ -239,16 +252,18 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
     searchAllergen();
     selectAllergen();
     selectSeverity(container);
+    expect(screen.getByText("Severity")).not.toBeNull();
   });
 
   it("should render the textarea with the correct placeholder", async () => {
-    const { container, getByTestId } = render(
+    const { getByTestId } = render(
       <IntlProvider locale="en">
       <AddAllergy
         onClose={onClose}
@@ -258,6 +273,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
@@ -286,6 +302,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider>
     );
@@ -322,6 +339,7 @@ describe("AddAllergy", () => {
         severityOptions={mockSeverityData}
         allergens={mockAllergensData}
         reaction={mockReactionsData}
+        existingAllergies={[mockExistingAllergies]}
       />
       </IntlProvider> 
     );
@@ -342,6 +360,110 @@ describe("AddAllergy", () => {
       severity: { uuid: "162301AAAAAA"},
       comment: "",
     }, "patient#1");
+  });
 
+  it("should show known allergy selector when existingAllergies is empty", () => {
+    render(
+        <IntlProvider locale="en">
+          <AddAllergy
+              onClose={onClose}
+              onSave={onSave}
+              patient={patient}
+              provider={provider}
+              severityOptions={mockSeverityData}
+              allergens={mockAllergensData}
+              reaction={mockReactionsData}
+              existingAllergies={[]}
+          />
+        </IntlProvider>
+    );
+    expect(screen.getByText("Does the patient have any known allergies?")).not.toBeNull();
+  });
+
+  it("should not show known allergy selector when existingAllergies is not empty", () => {
+    render(
+        <IntlProvider locale="en">
+          <AddAllergy
+              onClose={onClose}
+              onSave={onSave}
+              patient={patient}
+              provider={provider}
+              severityOptions={mockSeverityData}
+              allergens={mockAllergensData}
+              reaction={mockReactionsData}
+              existingAllergies={mockExistingAllergies}
+          />
+        </IntlProvider>
+    );
+    expect(() => screen.getByText("Does the patient have any known allergies?")).toThrow();
+  });
+
+  it("should filter out 'No Known Allergy' from allergens when existingAllergies is not empty", () => {
+    const allergensWithNoKnown = [
+      ...mockAllergensData,
+      { name: "No Known Allergy", kind: "Other", uuid: "000000AAAAAA" }
+    ];
+    render(
+        <IntlProvider locale="en">
+          <AddAllergy
+              onClose={onClose}
+              onSave={onSave}
+              patient={patient}
+              provider={provider}
+              severityOptions={mockSeverityData}
+              allergens={allergensWithNoKnown}
+              reaction={mockReactionsData}
+              existingAllergies={[mockExistingAllergies]}
+          />
+        </IntlProvider>
+    );
+    searchAllergen();
+    expect(() => screen.getByText("No Known Allergy")).toThrow();
+  });
+
+  it("should handle 'No' selection in known allergy radio button", () => {
+    const allergensWithNoKnown = [
+      ...mockAllergensData,
+      { name: "No Known Allergy", kind: "Other", uuid: "000000AAAAAA" }
+    ];
+    render(
+        <IntlProvider locale="en">
+          <AddAllergy
+              onClose={onClose}
+              onSave={onSave}
+              patient={patient}
+              provider={provider}
+              severityOptions={mockSeverityData}
+              allergens={allergensWithNoKnown}
+              reaction={mockReactionsData}
+              existingAllergies={[]}
+          />
+        </IntlProvider>
+    );
+    const noButton = screen.getByLabelText("No");
+    fireEvent.click(noButton);
+    expect(screen.getByText("No Known Allergy")).not.toBeNull();
+    expect(screen.getByText("Save").getAttribute("disabled")).toBeNull();
+  });
+
+  it("should handle 'Yes' selection in known allergy radio button", () => {
+    const { getByTestId } = render(
+        <IntlProvider locale="en">
+          <AddAllergy
+              onClose={onClose}
+              onSave={onSave}
+              patient={patient}
+              provider={provider}
+              severityOptions={mockSeverityData}
+              allergens={mockAllergensData}
+              reaction={mockReactionsData}
+              existingAllergies={[]}
+          />
+        </IntlProvider>
+    );
+    const yesButton = screen.getByLabelText("Yes");
+    fireEvent.click(yesButton);
+    expect(getByTestId("search-allergen")).not.toBeNull();
+    expect(screen.getByText("Save").getAttribute("disabled")).not.toBeNull();
   });
 });
