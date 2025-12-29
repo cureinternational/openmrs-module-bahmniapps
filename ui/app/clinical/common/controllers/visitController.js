@@ -162,7 +162,10 @@ angular.module('bahmni.clinical')
                         if (response.status === 200 && allergies.entry) {
                             allergies.entry.forEach(function (allergy) {
                                 if (allergy.resource.code.coding) {
-                                    allergiesList.push(allergy.resource.code.coding[0].display);
+                                    const allergyDisplay = allergy.resource.code.coding[0].display;
+                                    if (allergyDisplay && allergyDisplay !== "No Known Allergy") {
+                                        allergiesList.push(allergyDisplay);
+                                    }
                                 }
                             });
                         }
