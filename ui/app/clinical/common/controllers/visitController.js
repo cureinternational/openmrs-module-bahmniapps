@@ -166,6 +166,11 @@ angular.module('bahmni.clinical')
                                 }
                             });
                         }
+                        if (allergiesList.length > 1) {
+                            allergiesList = allergiesList.filter(function (allergy) {
+                                return allergy !== Bahmni.Clinical.Constants.noKnownAllergy;
+                            });
+                        }
                         $scope.allergies = allergiesList.join(", ");
                     });
                     promises.push(allergyPromise);
