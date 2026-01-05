@@ -87,3 +87,4 @@ CVE-2025-29907 #jspdf
 CVE-2025-57810 #jspdf
 CVE-2022-21680 #marked
 CVE-2022-21681 #marked
+CVE-2025-15284       # qs: qs: Denial of Service via improper input validation in array parsing... https://avd.aquasec.com/nvd/cve-2025-15284    
