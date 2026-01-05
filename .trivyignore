@@ -76,20 +76,20 @@ GHSA-vjh7-7g9h-fjfh  # elliptic vulnerability
 CVE-2024-52798       # path-to-regexp vulnerability
 CVE-2024-4068   #braces
 CVE-2023-46234  #browserify-sign
-CVE-2025-9287   #cipher-base
-CVE-2025-7783   #form-data
-CVE-2025-6545   #pbkdf2
-CVE-2025-6547   #pbkdf2
-CVE-2025-9288   #sha.js
 CVE-2024-37890  #ws
 CVE-2025-25977 #canvg
 CVE-2025-29907 #jspdf
 CVE-2025-57810 #jspdf
 CVE-2022-21680 #marked
 CVE-2022-21681 #marked
-CVE-2025-15284       # qs: qs: Denial of Service via improper input validation in array parsing... https://avd.aquasec.com/nvd/cve-2025-15284
 CVE-2025-68428 #jspdf: jsPDF Local File Inclusion/Path Traversal https://avd.aquasec.com/nvd/cve-2025-68428
 CVE-2026-22787 #html2pdf.js contains a cross-site scripting vulnerability https://avd.aquasec.com/nvd/cve-2026-22787
 CVE-2026-23745 # tar: https://avd.aquasec.com/nvd/2026/cve-2026-23745
 CVE-2026-23950 # node-tar: tar: node-tar: Arbitrary file overwrite https://avd.aquasec.com/nvd/2026/cve-2026-23950
 CVE-2026-24842 # node-tar: tar: node-tar: Arbitrary file creation via path traversal bypass in hardlink https://avd.aquasec.com/nvd/cve-2026-24842
+CVE-2025-9287        # cipher-base: Cipher-base hash manipulation
+CVE-2025-7783        # form-data: Unsafe random function in form-data
+CVE-2025-6545        # pbkdf2: pbkdf2 silently returns predictable key material
+CVE-2025-6547        # pbkdf2: pbkdf2 silently returns static keys
+CVE-2025-9288        # sha.js: Missing type checks leading to hash rewind
+CVE-2025-15284       # qs: qs: Denial of Service via improper input validation in array parsing... https://avd.aquasec.com/nvd/cve-2025-15284
