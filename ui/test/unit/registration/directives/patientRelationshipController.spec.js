@@ -618,4 +618,91 @@ describe('PatientRelationshipController', function () {
 
     });
 
+    describe('addPlaceholderRelationship', function() {
+        it('should add a placeholder relationship', function() {
+            expect(scope.patient.newlyAddedRelationships.length).toBe(0);
+            scope.addPlaceholderRelationship();
+            expect(scope.patient.newlyAddedRelationships.length).toBe(1);
+            expect(scope.patient.newlyAddedRelationships[0]).toEqual({});
+        });
+    });
+
+    describe('getRelationshipType and related methods', function() {
+        it('should handle getRelationshipType with undefined relationshipType', function() {
+            var rel = {};
+            expect(scope.isPatientRelationship(rel)).toBeFalsy();
+            expect(scope.isPersonRelationship(rel)).toBeFalsy();
+            expect(scope.isProviderRelationship(rel)).toBeFalsy();
+        });
+    });
+
+    describe('getChosenRelationshipType', function() {
+        it('should return person in getChosenRelationshipType', function() {
+            spyOn(scope, 'isPatientRelationship').and.returnValue(false);
+            spyOn(scope, 'isProviderRelationship').and.returnValue(false);
+            spyOn(scope, 'isPersonRelationship').and.returnValue(true);
+            expect(scope.getChosenRelationshipType({})).toBe('person');
+        });
+    });
+
+    describe('getRelationshipTypeForDisplay', function() {
+        it('should return empty string if personA is falsy', function() {
+            var rel = {relationshipType: {uuid: rootScope.relationshipTypes[0].uuid}};
+            expect(scope.getRelationshipTypeForDisplay(rel)).toBe('');
+        });
+    });
+
+    describe('searchByPatientIdentifier', function() {
+        it('should set personB and content to null if patientIdentifier is falsy', function() {
+            var rel = {};
+            scope.searchByPatientIdentifier(rel);
+            expect(rel.personB).toBeNull();
+            expect(rel.content).toBeNull();
+        });
+    });
+
+    describe('showPersonNotFound', function() {
+        it('should not show person not found if getChosenRelationshipType returns patient', function() {
+            spyOn(scope, 'getChosenRelationshipType').and.returnValue('patient');
+            var rel = {patientIdentifier: 'id', personB: null};
+            expect(scope.showPersonNotFound(rel)).toBeFalsy();
+        });
+    });
+
+    describe('clearProvider', function() {
+        it('should NOT clear provider from relationship if providerName is present', function() {
+            var rel = {providerName: 'foo', personB: {uuid: 'bar'}};
+            scope.clearProvider(rel);
+            expect(rel.personB).toEqual({uuid: 'bar'});
+        });
+        it('should clear provider from relationship if providerName is falsy', function() {
+            var rel = {providerName: '', personB: {uuid: 'bar'}};
+            scope.clearProvider(rel);
+            expect(rel.personB).toBeUndefined();
+        });
+    });
+
+    describe('providerSelected', function() {
+        it('should set providerName and personB in providerSelected', function() {
+            var rel = {relationshipType: {uuid: rootScope.relationshipTypes[0].uuid}};
+            var fn = scope.providerSelected(rel);
+            fn({identifier: 'prov', uuid: 'prov-uuid'});
+            expect(rel.providerName).toBe('prov');
+            expect(rel.personB).toEqual({display: 'prov', uuid: 'prov-uuid'});
+        });
+    });
+
+    describe('clearRelationshipRow', function() {
+        it('should add placeholder if all rows are non-empty after clearRelationshipRow', function() {
+            var rel1 = {relationshipType: {uuid: 'uuid1'}};
+            var rel2 = {relationshipType: {uuid: 'uuid2'}};
+            scope.patient.newlyAddedRelationships = [rel1, rel2];
+            scope.clearRelationshipRow(rel1, 0);
+            // Should add a placeholder row if none are empty
+            expect(scope.patient.newlyAddedRelationships.length).toBeGreaterThan(1);
+            expect(scope.isEmpty(scope.patient.newlyAddedRelationships[scope.patient.newlyAddedRelationships.length-1])).toBeTruthy();
+        });
+    });
 });
+
+
