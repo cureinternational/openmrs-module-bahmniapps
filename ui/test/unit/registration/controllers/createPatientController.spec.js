@@ -478,7 +478,7 @@ describe('CreatePatientController', function() {
 
         spinnerMock.forPromise.and.returnValue(defer.promise);
         scopeMock.create();
-        scopeMock.$apply();
+        scopeMock.$apply && scopeMock.$apply();
             expect(patientServiceMock.create.calls.count()).toEqual(1);
             expect(messagingService.showMessage).toHaveBeenCalled();
             done();
@@ -512,4 +512,50 @@ describe('CreatePatientController', function() {
         expect(scopeMock.disablePhotoCapture).toBeTruthy();
     });
 
+    it('should return translated identifier using TranslationUtil', function() {
+        spyOn(Bahmni.Common.Util.TranslationUtil, 'translateAttribute').and.returnValue('translated');
+        var result = scopeMock.getTranslatedPatientIdentifier('foo');
+        expect(result).toBe('translated');
+    });
+
+    it('should show info message and redirect to edit page after saving patient', function() {
+        scopeMock.patient = { uuid: 'abc' };
+        scopeMock.afterSave();
+        expect(messagingService.showMessage).toHaveBeenCalledWith('info', 'REGISTRATION_LABEL_SAVED');
+        expect(stateMock.go).toHaveBeenCalledWith('patient.edit', { patientUuid: 'abc' });
+    });
+
+    it('should display validation error message if patient data is invalid on create', function(done) {
+        spyOn(Bahmni.Common.Util.ValidationUtil, 'validate').and.returnValue(['err']);
+        scopeMock.patient = {};
+        scopeMock.patientConfiguration = { attributeTypes: [] };
+        scopeMock.create().then(function() {
+            expect(messagingService.showMessage).toHaveBeenCalledWith('error', 'err');
+            done();
+        });
+        scopeMock.$apply && scopeMock.$apply();
+    });
+
+    it('should set relatedIdentifierAttribute to false by default if configured', function() {
+        appServiceMock.getAppDescriptor = function() {
+            return {
+                getConfigValue: function(key) {
+                    if (key === 'relatedIdentifierAttribute') return { name: 'relatedId' };
+                    if (key === 'patientInformation') return { defaults: { relatedId: 'default' } };
+                    return undefined;
+                }
+            };
+        };
+        $aController('CreatePatientController', {
+            $scope: scopeMock,
+            $rootScope: rootScopeMock,
+            $state: stateMock,
+            patientService: patientServiceMock,
+            spinner: spinnerMock,
+            appService: appServiceMock,
+            ngDialog: ngDialogMock,
+            messagingService: messagingService
+        });
+        expect(scopeMock.patient.relatedId).toBe(false);
+    });
 });
