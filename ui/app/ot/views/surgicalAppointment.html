@@ -59,9 +59,9 @@
                     <label class="surgeon-block surgeon-text">{{'OT_SURGICAL_APPOINTMENT_PATIENT_WEIGHT' | translate}}</label>
                     <input type="text" id="{{attribute.surgicalAppointmentAttributeType.patientWeight}}" ng-model="attribute.value">
                 </p>
-                <p ng-switch-when="anaesthetist">
+                <p ng-switch-when="anesthesic">
                     <label class="surgeon-block surgeon-text">{{'OT_SURGICAL_APPOINTMENT_ANAESTHETIST' | translate}}</label>
-                    <input type="text" id="{{attribute.surgicalAppointmentAttributeType.anaesthetist}}" ng-model="attribute.value">
+                    <input type="text" id="{{attribute.surgicalAppointmentAttributeType.anesthesic}}" ng-model="attribute.value">
                 </p>
                 <p ng-switch-default ng-if="attributeTypeName != 'estTimeMinutes'">
                     <label class="surgeon-block surgeon-text">{{(defaultAttributeTranslations.get(attributeTypeName) | translate) || attribute.surgicalAppointmentAttributeType.name}}</label>
