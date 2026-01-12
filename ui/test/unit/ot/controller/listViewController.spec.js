@@ -416,6 +416,7 @@ describe('listViewController', function () {
             patient: {uuid: "2300015f-95a3-4d47-933d-a81138ad0aa6"},
             statusList: []
         };
+        rootScope.attributeTypes = defaultAttributeTypes;
         createController();
         scope.printPage();
         expect(printer.print).toHaveBeenCalledWith("/bahmni_config/openmrs/apps/ot/printListView.html",
@@ -425,7 +426,11 @@ describe('listViewController', function () {
                 weekEndDate: scope.weekEndDate,
                 viewDate: scope.viewDate,
                 weekOrDay: scope.weekOrDay,
-                isCurrentDate: scope.isCurrentDateinWeekView
+                isCurrentDate: scope.isCurrentDateinWeekView,
+                conceptFormatAttributeName: scope.conceptFormatAttributeName,
+                filteredSurgicalAttributeTypes: scope.filteredSurgicalAttributeTypes,
+                tableInfo: scope.tableInfo,
+                defaultAttributeTranslations: scope.defaultAttributeTranslations
             });
     });
 
@@ -442,16 +447,21 @@ describe('listViewController', function () {
             patient: {uuid: "2300015f-95a3-4d47-933d-a81138ad0aa6"},
             statusList: []
         };
+        rootScope.attributeTypes = defaultAttributeTypes;
         createController();
         scope.printPage();
-        expect(printer.print).toHaveBeenCalledWith("views/listView.html",
+        expect(printer.print).toHaveBeenCalledWith("views/printListView.html",
             {
                 surgicalAppointmentList: scope.surgicalAppointmentList,
                 weekStartDate: scope.weekStartDate,
                 weekEndDate: scope.weekEndDate,
                 viewDate: scope.viewDate,
                 weekOrDay: scope.weekOrDay,
-                isCurrentDate: scope.isCurrentDateinWeekView
+                isCurrentDate: scope.isCurrentDateinWeekView,
+                conceptFormatAttributeName: scope.conceptFormatAttributeName,
+                filteredSurgicalAttributeTypes: scope.filteredSurgicalAttributeTypes,
+                tableInfo: scope.tableInfo,
+                defaultAttributeTranslations: scope.defaultAttributeTranslations
             });
     });
 
@@ -659,13 +669,13 @@ describe('listViewController', function () {
         };
         rootScope.attributeTypes = defaultAttributeTypes;
         createController();
-        expect(scope.tableInfo.length).toBe(22);
-        expect(scope.tableInfo[19].heading).toBe("Bed Location");
-        expect(scope.tableInfo[19].sortInfo).toBe("bedLocation");
-        expect(scope.tableInfo[20].heading).toBe("Bed ID");
-        expect(scope.tableInfo[20].sortInfo).toBe("bedNumber");
-        expect(scope.tableInfo[21].heading).toBe("Primary Diagnoses");
-        expect(scope.tableInfo[21].sortInfo).toBe("patientObservations");
+        expect(scope.tableInfo.length).toBe(23);
+        expect(scope.tableInfo[20].heading).toBe("Bed Location");
+        expect(scope.tableInfo[20].sortInfo).toBe("bedLocation");
+        expect(scope.tableInfo[21].heading).toBe("Bed ID");
+        expect(scope.tableInfo[21].sortInfo).toBe("bedNumber");
+        expect(scope.tableInfo[22].heading).toBe("Primary Diagnoses");
+        expect(scope.tableInfo[22].sortInfo).toBe("patientObservations");
     });
 
     it('should have all the surgical attributes in table info', function () {
@@ -676,20 +686,20 @@ describe('listViewController', function () {
         };
         rootScope.attributeTypes = defaultAttributeTypes;
         createController();
-        expect(scope.tableInfo.length).toBe(22);
-        expect(scope.tableInfo[11].heading).toBe('procedure');
-        expect(scope.tableInfo[11].sortInfo).toBe('surgicalAppointmentAttributes.procedure.value');
-        expect(scope.tableInfo[12].heading).toBe('otherSurgeon');
-        expect(scope.tableInfo[12].sortInfo).toBe('surgicalAppointmentAttributes.otherSurgeon.value.person.display');
-        expect(scope.tableInfo[13].heading).toBe('surgicalAssistant');
-        expect(scope.tableInfo[13].sortInfo).toBe('surgicalAppointmentAttributes.surgicalAssistant.value');
-        expect(scope.tableInfo[14].heading).toBe('anaesthetist');
-        expect(scope.tableInfo[14].sortInfo).toBe('surgicalAppointmentAttributes.anaesthetist.value');
-        expect(scope.tableInfo[15].heading).toBe('scrubNurse');
-        expect(scope.tableInfo[15].sortInfo).toBe('surgicalAppointmentAttributes.scrubNurse.value');
-        expect(scope.tableInfo[16].heading).toBe('circulatingNurse');
-        expect(scope.tableInfo[16].sortInfo).toBe('surgicalAppointmentAttributes.circulatingNurse.value');
-        expect(scope.tableInfo[17].heading).toBe('notes');
-        expect(scope.tableInfo[17].sortInfo).toBe('surgicalAppointmentAttributes.notes.value');
+        expect(scope.tableInfo.length).toBe(23);
+        expect(scope.tableInfo[12].heading).toBe('procedure');
+        expect(scope.tableInfo[12].sortInfo).toBe('surgicalAppointmentAttributes.procedure.value');
+        expect(scope.tableInfo[13].heading).toBe('otherSurgeon');
+        expect(scope.tableInfo[13].sortInfo).toBe('surgicalAppointmentAttributes.otherSurgeon.value.person.display');
+        expect(scope.tableInfo[14].heading).toBe('surgicalAssistant');
+        expect(scope.tableInfo[14].sortInfo).toBe('surgicalAppointmentAttributes.surgicalAssistant.value');
+        expect(scope.tableInfo[15].heading).toBe('anaesthetist');
+        expect(scope.tableInfo[15].sortInfo).toBe('surgicalAppointmentAttributes.anaesthetist.value');
+        expect(scope.tableInfo[16].heading).toBe('scrubNurse');
+        expect(scope.tableInfo[16].sortInfo).toBe('surgicalAppointmentAttributes.scrubNurse.value');
+        expect(scope.tableInfo[17].heading).toBe('circulatingNurse');
+        expect(scope.tableInfo[17].sortInfo).toBe('surgicalAppointmentAttributes.circulatingNurse.value');
+        expect(scope.tableInfo[18].heading).toBe('notes');
+        expect(scope.tableInfo[18].sortInfo).toBe('surgicalAppointmentAttributes.notes.value');
     })
 });

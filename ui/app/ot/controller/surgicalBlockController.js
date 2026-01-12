@@ -237,7 +237,6 @@ angular.module('bahmni.ot')
                 };
                 return !$scope.surgicalForm.id || surgicalBlockWithCompletedAppointments();
             };
-
             $scope.addNewSurgicalAppointment = function (surgicalAppointment) {
                 ngDialog.open({
                     template: "views/surgicalAppointment.html",

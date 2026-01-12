@@ -83,7 +83,7 @@ angular.module('bahmni.ot')
         };
 
         this.getDefaultAttributeTranslations = function () {
-            return new Map([['procedure', "OT_SURGICAL_APPOINTMENT_PROCEDURE"],
+            return new Map([['procedure', "OT_SURGICAL_APPOINTMENT_PROCEDURE"], ['Blood Transfusion Requested for Surgery?', "OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT"],
             ['estTimeHours', "OT_SURGICAL_APPOINTMENT_HOURS"], ['estTimeMinutes', "OT_SURGICAL_APPOINTMENT_MINUTES"],
             ['cleaningTime', "OT_SURGICAL_APPOINTMENT_CLEANING_TIME"], ['otherSurgeon', "OT_SURGICAL_APPOINTMENT_OTHER_SURGEON"],
             ['surgicalAssistant', "OT_SURGICAL_APPOINTMENT_SURGICAL_ASSISTANT"], ['anaesthetist', "OT_SURGICAL_APPOINTMENT_ANAESTHETIST"],
@@ -97,6 +97,13 @@ angular.module('bahmni.ot')
             ['Bed Location', "OT_SURGICAL_APPOINTMENT_BED_LOCATION"],
             ['Bed ID', "OT_SURGICAL_APPOINTMENT_BED_ID"]
             ]);
+        };
+
+        this.addConceptFormatAttributeTranslation = function (translationMap, conceptFormatAttributeName) {
+            if (conceptFormatAttributeName && !translationMap.has(conceptFormatAttributeName)) {
+                translationMap.set(conceptFormatAttributeName, "OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT");
+            }
+            return translationMap;
         };
 
         this.getSurgicalAttributes = function (surgicalAppointment) {

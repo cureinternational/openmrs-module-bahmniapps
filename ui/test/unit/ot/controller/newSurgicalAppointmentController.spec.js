@@ -13,7 +13,10 @@ describe("newSurgicalAppointmentController", function () {
     var queryService = jasmine.createSpyObj('queryService', ['getResponseFromQuery']);
     appService.getAppDescriptor.and.returnValue(getAppDescriptor);
     programHelper = jasmine.createSpyObj('programHelper', ['groupPrograms']);
-
+    var conceptService = jasmine.createSpyObj('conceptService', ['getAnswersForConceptName']);
+    var otUtils = jasmine.createSpyObj('otUtils', ['getConceptFormatAttributeName']);
+    otUtils.getConceptFormatAttributeName.and.returnValue("conceptFormatAttributeName");
+    conceptService.getAnswersForConceptName.and.returnValue(specUtil.simplePromise([]));
     var ngDialog = jasmine.createSpyObj('ngDialog', ['close']);
     _window = jasmine.createSpyObj('$window', ['open', 'location']);
 
@@ -23,6 +26,11 @@ describe("newSurgicalAppointmentController", function () {
             {
                 "uuid": "25ef8484-3a1f-11e7-83f8-0800274a5156",
                 "name": "procedure"
+            },
+            {
+                "uuid": "11111111-3a1f-11e7-83f8-0800274a5156",
+                "name": "conceptFormatAttributeName",
+                "format": "org.openmrs.Concept"
             },
             {
                 "uuid": "25ef9562-3a1f-11e7-83f8-0800274a5156",
@@ -100,7 +108,9 @@ describe("newSurgicalAppointmentController", function () {
             appService: appService,
             surgicalAppointmentHelper: surgicalAppointmentHelper,
             ngDialog: ngDialog,
-            programHelper: programHelper
+            programHelper: programHelper,
+            conceptService: conceptService,
+            otUtils: otUtils
         });
     };
 
@@ -143,11 +153,18 @@ describe("newSurgicalAppointmentController", function () {
                         name: 'procedure'
                     }, value: ""
                 },
-                cleaningTime: {
+                conceptFormatAttributeName: {
                     surgicalAppointmentAttributeType: {
-                        uuid: '25efb2ef-3a1f-11e7-83f8-0800274a5156',
-                        name: 'cleaningTime'
-                    }, value: 15
+                        uuid: '11111111-3a1f-11e7-83f8-0800274a5156',
+                        name: 'conceptFormatAttributeName',
+                        format: 'org.openmrs.Concept'
+                    }, value: ""
+                },
+                estTimeHours: {
+                    surgicalAppointmentAttributeType: {
+                        uuid: '25ef9562-3a1f-11e7-83f8-0800274a5156',
+                        name: 'estTimeHours'
+                    }, value: 0
                 },
                 estTimeMinutes: {
                     surgicalAppointmentAttributeType: {
@@ -155,11 +172,11 @@ describe("newSurgicalAppointmentController", function () {
                         name: 'estTimeMinutes'
                     }, value: 0
                 },
-                estTimeHours: {
+                cleaningTime: {
                     surgicalAppointmentAttributeType: {
-                        uuid: '25ef9562-3a1f-11e7-83f8-0800274a5156',
-                        name: 'estTimeHours'
-                    }, value: 0
+                        uuid: '25efb2ef-3a1f-11e7-83f8-0800274a5156',
+                        name: 'cleaningTime'
+                    }, value: 15
                 },
                 otherSurgeon: {
                     surgicalAppointmentAttributeType: {
@@ -268,11 +285,18 @@ describe("newSurgicalAppointmentController", function () {
                     name: 'procedure'
                 }, value: ""
             },
-            cleaningTime: {
+            conceptFormatAttributeName: {
                 surgicalAppointmentAttributeType: {
-                    uuid: '25efb2ef-3a1f-11e7-83f8-0800274a5156',
-                    name: 'cleaningTime'
-                }, value: 15
+                    uuid: '11111111-3a1f-11e7-83f8-0800274a5156',
+                    name: 'conceptFormatAttributeName',
+                    format: 'org.openmrs.Concept'
+                }, value: ""
+            },
+            estTimeHours: {
+                surgicalAppointmentAttributeType: {
+                    uuid: '25ef9562-3a1f-11e7-83f8-0800274a5156',
+                    name: 'estTimeHours'
+                }, value: 0
             },
             estTimeMinutes: {
                 surgicalAppointmentAttributeType: {
@@ -280,11 +304,11 @@ describe("newSurgicalAppointmentController", function () {
                     name: 'estTimeMinutes'
                 }, value: 0
             },
-            estTimeHours: {
+            cleaningTime: {
                 surgicalAppointmentAttributeType: {
-                    uuid: '25ef9562-3a1f-11e7-83f8-0800274a5156',
-                    name: 'estTimeHours'
-                }, value: 0
+                    uuid: '25efb2ef-3a1f-11e7-83f8-0800274a5156',
+                    name: 'cleaningTime'
+                }, value: 15
             },
             otherSurgeon: {
                 surgicalAppointmentAttributeType: {
@@ -444,11 +468,18 @@ describe("newSurgicalAppointmentController", function () {
                         name: 'procedure'
                     }, value: ""
                 },
-                cleaningTime: {
+                conceptFormatAttributeName: {
                     surgicalAppointmentAttributeType: {
-                        uuid: '25efb2ef-3a1f-11e7-83f8-0800274a5156',
-                        name: 'cleaningTime'
-                    }, value: 15
+                        uuid: '11111111-3a1f-11e7-83f8-0800274a5156',
+                        name: 'conceptFormatAttributeName',
+                        format: 'org.openmrs.Concept'
+                    }, value: ""
+                },
+                estTimeHours: {
+                    surgicalAppointmentAttributeType: {
+                        uuid: '25ef9562-3a1f-11e7-83f8-0800274a5156',
+                        name: 'estTimeHours'
+                    }, value: 0
                 },
                 estTimeMinutes: {
                     surgicalAppointmentAttributeType: {
@@ -456,11 +487,11 @@ describe("newSurgicalAppointmentController", function () {
                         name: 'estTimeMinutes'
                     }, value: 0
                 },
-                estTimeHours: {
+                cleaningTime: {
                     surgicalAppointmentAttributeType: {
-                        uuid: '25ef9562-3a1f-11e7-83f8-0800274a5156',
-                        name: 'estTimeHours'
-                    }, value: 0
+                        uuid: '25efb2ef-3a1f-11e7-83f8-0800274a5156',
+                        name: 'cleaningTime'
+                    }, value: 15
                 },
                 otherSurgeon: {
                     surgicalAppointmentAttributeType: {
