@@ -79,6 +79,7 @@ Bahmni.Clinical.Constants = (function () {
         adtForwardUrl: "../adt/#/patient/{{patientUuid}}/visit/{{visitUuid}}/",
         certificateHeader: "Print Header",
         careSetting: careSetting,
+        noKnownAllergyUuid: "f535bd4e-33ff-4f35-bf7c-189e07d1ac90",
         noKnownAllergy: "No Known Allergy"
     };
 })();

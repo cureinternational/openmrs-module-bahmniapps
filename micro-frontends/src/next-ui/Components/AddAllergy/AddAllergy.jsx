@@ -19,7 +19,7 @@
   import { SearchAllergen } from "../SearchAllergen/SearchAllergen.jsx";
   import { SelectReactions } from "../SelectReactions/SelectReactions";
   import "./AddAllergy.scss";
-  import {NO_KNOWN_ALLERGY} from "../../constants";
+  import {NO_KNOWN_ALLERGY_CODE} from "../../constants";
 
   export function AddAllergy(props) {
     const { patient, onClose, allergens, reaction, severityOptions, onSave, existingAllergies } = props;
@@ -37,6 +37,9 @@
     );
     const additionalComments = (
       intl.formatMessage({ id: "ADDITIONAL_COMMENT_ALLERGY", defaultMessage: "Additional comments such as onset date etc."})
+    );
+    const noKnownAllergyText = (
+        <FormattedMessage id={"NO_KNOWN_ALLERGY"} defaultMessage={"No Known Allergy"} />
     );
     const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
     const [isSaveSuccess, setIsSaveSuccess] = React.useState(null);
@@ -77,7 +80,7 @@
       const isYes = value === "yes";
       setPatientHasAllergies(isYes);
       if (!isYes) {
-        const noKnownAllergyValue = allergens.find(allergen => allergen?.name === NO_KNOWN_ALLERGY);
+        const noKnownAllergyValue = allergens.find(allergen => allergen?.uuid === NO_KNOWN_ALLERGY_CODE);
         setAllergen(noKnownAllergyValue ?? {});
         setReactions([]);
         setSeverity(null);
@@ -88,6 +91,7 @@
         setIsSaveEnabled(false);
       }
     };
+
 
     const showKnownAllergySelector = existingAllergies?.length === 0
 
@@ -114,13 +118,13 @@
               )}
 
               {patientHasAllergies === false ? (
-                  <div className={"font-large no-known-allergy-textarea"}>{NO_KNOWN_ALLERGY}</div>
+                  <div className={"font-large no-known-allergy-textarea"}>{noKnownAllergyText}</div>
               ) : (
                   <>
                     {isEmpty(allergen) && (
                         <div data-testid={"search-allergen"}>
                           <SearchAllergen
-                              allergens={allergens.filter(allergen => allergen?.name !== NO_KNOWN_ALLERGY)}
+                              allergens={allergens.filter(allergen => allergen?.uuid !== NO_KNOWN_ALLERGY_CODE)}
                               onChange={(allergen) => {
                                 setAllergen(allergen);
                               }}

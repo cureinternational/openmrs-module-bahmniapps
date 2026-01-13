@@ -118,6 +118,7 @@ export function PatientAlergiesControl(props) {
     const allergiesData = allergies?.map((allergy) => {
       const { resource } = allergy;
       const allergen = resource.reaction[0]?.substance?.coding?.[0]?.display;
+      const allergenCode = resource.reaction[0]?.substance?.coding?.[0]?.code;
       const severity = resource.reaction[0]?.severity;
       const severityRank =  SEVERITY_RANK[severity] ?? DEFAULT_SEVERITY_RANK;
       const note = resource.note && resource.note[0].text;
@@ -126,7 +127,7 @@ export function PatientAlergiesControl(props) {
       const reactions = resource.reaction[0]?.manifestation?.map((reaction) => {
         return reaction.coding[0].display;
       }) ?? [];
-      return {allergen, severity, severityRank, reactions, note, provider, date};
+      return {allergen, allergenCode, severity, severityRank, reactions, note, provider, date};
     });
 
     allergiesData
