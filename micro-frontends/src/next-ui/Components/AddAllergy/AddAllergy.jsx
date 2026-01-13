@@ -38,9 +38,16 @@
     const additionalComments = (
       intl.formatMessage({ id: "ADDITIONAL_COMMENT_ALLERGY", defaultMessage: "Additional comments such as onset date etc."})
     );
-    const noKnownAllergyText = (
-        <FormattedMessage id={"NO_KNOWN_ALLERGY"} defaultMessage={"No Known Allergy"} />
+    const noKnownAllergyText = (<FormattedMessage id={"NO_KNOWN_ALLERGY"} defaultMessage={"No Known Allergy"} />);
+    const knownAllergyQuestionText = (
+        <FormattedMessage
+            id="KNOWN_ALLERGY_QUESTION"
+            defaultMessage="Does the patient have any known allergies?"
+        />
     );
+    const yesText = (<FormattedMessage id="YES" defaultMessage="Yes" />);
+    const noText = (<FormattedMessage id="NO" defaultMessage="No" />);
+
     const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
     const [isSaveSuccess, setIsSaveSuccess] = React.useState(null);
 
@@ -106,14 +113,14 @@
               {showKnownAllergySelector && (
                   <RadioButtonGroup
                       name="known-allergy"
-                      legendText="Does the patient have any known allergies?"
+                      legendText={knownAllergyQuestionText}
                       onChange={handleKnownAllergyChange}
                       orientation="horizontal"
                       defaultSelected="yes"
                       className={"font-large known-allergy-radio-group"}
                   >
-                    <RadioButton labelText="Yes" value="yes" />
-                    <RadioButton labelText="No" value="no" />
+                    <RadioButton labelText={yesText} value="yes" />
+                    <RadioButton labelText={noText} value="no" />
                   </RadioButtonGroup>
               )}
 

@@ -29,5 +29,8 @@
   "ALLERGEN_SEARCH_PLACEHOLDER": "Saisissez pour rechercher un allergène",
   "ADD_BUTTON_TEXT": "Ajouter +",
   "OK_KEY": "D'ACCORD",
-  "NO_KNOWN_ALLERGY": "Aucune Allergie Connue"
+  "NO_KNOWN_ALLERGY": "Aucune Allergie Connue",
+  "KNOWN_ALLERGY_QUESTION": "Le patient a-t-il des allergies connues?",
+  "YES": "Oui",
+  "NO": "Non"
 }

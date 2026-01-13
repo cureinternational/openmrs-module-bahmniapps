@@ -16,5 +16,8 @@
   "COMMON_REACTIONS": "Reacciones comunes",
   "ALLERGEN": "Alérgeno",
   "EDIT_FORM_ERROR_MESSAGE": "Ingrese un valor en los campos obligatorios o corrija el valor en los campos resaltados para continuar",
-  "NO_KNOWN_ALLERGY": "Sin alergia conocida"
+  "NO_KNOWN_ALLERGY": "Sin alergia conocida",
+  "KNOWN_ALLERGY_QUESTION": "¿El paciente tiene alguna alergia conocida?",
+  "YES": "Sí",
+  "NO": "No"
 }
