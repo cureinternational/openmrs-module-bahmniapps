@@ -38,7 +38,7 @@
     const additionalComments = (
       intl.formatMessage({ id: "ADDITIONAL_COMMENT_ALLERGY", defaultMessage: "Additional comments such as onset date etc."})
     );
-    const noKnownAllergyText = (<FormattedMessage id={"NO_KNOWN_ALLERGY"} defaultMessage={"No Known Allergy"} />);
+    const noKnownAllergyText = (<FormattedMessage id={"NO_KNOWN_ALLERGY"} defaultMessage={"No known allergy"} />);
     const knownAllergyQuestionText = (
         <FormattedMessage
             id="KNOWN_ALLERGY_QUESTION"
