@@ -10,6 +10,7 @@ describe('listViewController', function () {
     var printer = jasmine.createSpyObj('printer', ['print']);
     var appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
     var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+    var otUtils = jasmine.createSpyObj('otUtils', ['getConceptFormatAttributeName']);
     appService.getAppDescriptor.and.returnValue(appDescriptor);
 
     beforeEach(function () {
@@ -20,10 +21,22 @@ describe('listViewController', function () {
             scope = $rootScope.$new();
             q = $q;
         });
+        printer.print.calls.reset();
     });
 
     var createController = function () {
         spyOn(scope, "$emit");
+        if (!scope.viewDate) {
+            scope.viewDate = moment('2017-06-22').toDate();
+        }
+        if (!scope.filterParams) {
+            scope.filterParams = {
+                providers: [],
+                locations: {},
+                patient: {},
+                statusList: []
+            };
+        }
         controller('listViewController', {
             $scope: scope,
             $rootScope: rootScope,
@@ -34,7 +47,8 @@ describe('listViewController', function () {
             appService: appService,
             $state: state,
             ngDialog: ngDialog,
-            printer: printer
+            printer: printer,
+            otUtils: otUtils
         });
         scope.$apply();
     };
@@ -88,6 +102,11 @@ describe('listViewController', function () {
             "uuid": "910f2c7f-4b73-11e7-81d5-0800274a5156",
             "name": "notes",
             "format": "java.lang.String"
+        },
+        {
+            "uuid": "a1b2c3d4-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+            "name": "Blood Transfusion Requested for Surgery?",
+            "format": "org.openmrs.Concept"
         }
     ];
 
@@ -366,9 +385,36 @@ describe('listViewController', function () {
         return {data: {results: results}};
     });
 
+    it("should initialize conceptFormatAttributeName from otUtils", function () {
+        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
+        createController();
+        expect(otUtils.getConceptFormatAttributeName).toHaveBeenCalled();
+        expect(scope.conceptFormatAttributeName).toBe('Blood Transfusion Requested for Surgery?');
+    });
+
+    it("should include conceptFormatAttributeName in tableInfo when it is available", function () {
+        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
+        createController();
+        expect(scope.tableInfo[0].heading).toBe('Blood Transfusion Requested for Surgery?');
+        expect(scope.tableInfo[0].sortInfo).toBe('surgicalAppointmentAttributes.Blood Transfusion Requested for Surgery?.value');
+    });
+
+    it("should exclude conceptFormatAttributeName from filteredSurgicalAttributeTypes", function () {
+        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
+        rootScope.attributeTypes = defaultAttributeTypes.concat([{
+            "uuid": "test-uuid",
+            "name": "Blood Transfusion Requested for Surgery?",
+            "format": "org.openmrs.Concept"
+        }]);
+        createController();
+        var filteredNames = scope.filteredSurgicalAttributeTypes.map(function(attr) { return attr.name; });
+        expect(filteredNames).not.toContain('Blood Transfusion Requested for Surgery?');
+        expect(filteredNames).not.toContain('estTimeHours');
+        expect(filteredNames).not.toContain('estTimeMinutes');
+        expect(filteredNames).not.toContain('cleaningTime');
+    });
 
     it("should sort the appointments by start date and by the location and by start time", function () {
-        scope.viewDate = moment('2017-06-22').toDate();
         scope.filterParams = {
             providers: [],
             locations: {"OT 1": true, "OT 2": true, "OT 3": true},
@@ -387,7 +433,6 @@ describe('listViewController', function () {
     });
 
     it("should set the derived attributes for appointments", function () {
-        scope.viewDate = moment('2017-06-22').toDate();
         scope.filterParams = {
             providers: [],
             locations: {"OT 1": true, "OT 2": false, "OT 3": false},
@@ -450,7 +495,7 @@ describe('listViewController', function () {
         rootScope.attributeTypes = defaultAttributeTypes;
         createController();
         scope.printPage();
-        expect(printer.print).toHaveBeenCalledWith("views/printListView.html",
+        expect(printer.print).toHaveBeenCalledWith("views/listView.html",
             {
                 surgicalAppointmentList: scope.surgicalAppointmentList,
                 weekStartDate: scope.weekStartDate,
@@ -466,7 +511,6 @@ describe('listViewController', function () {
     });
 
     it("should sort appointments by the sort column", function () {
-        scope.viewDate = moment('2017-06-22').toDate();
         scope.filterParams = {
             providers: [],
             locations: {"OT 1": true, "OT 2": true, "OT 3": true},
@@ -535,7 +579,6 @@ describe('listViewController', function () {
     });
 
     it("should reverse sort appointments if sorted on the same column consecutively", function () {
-        scope.viewDate = moment('2017-06-22').toDate();
         scope.filterParams = {
             providers: [],
             locations: {"OT 1": true, "OT 2": true, "OT 3": true},

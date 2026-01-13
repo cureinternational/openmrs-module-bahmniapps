@@ -32,8 +32,12 @@
                     <textarea class="text-section" id="procedureID" ng-model="attributes.procedure.value" msd-elastic> </textarea>
                 </p>
                 <p ng-show="attributeTypeName === conceptFormatAttributeName">
-                    <label class="surgeon-block surgeon-text">{{conceptFormatAttributeName}} <span class="asterick">*</span></label>
-                    <select ng-options="option.value as option.label for option in conceptFormatAttributeDropdownOptions"
+                    <label class="surgeon-block surgeon-text">
+                        <span ng-if="currentLanguage === 'en'">{{ conceptFormatAttributeName }}</span>
+                        <span ng-if="currentLanguage !== 'en'">{{ defaultAttributeTranslations.get(conceptFormatAttributeName) | translate }}</span>
+                        <span class="asterick">*</span>
+                    </label>
+                    <select ng-options="option.value as (option.label | translate) for option in conceptFormatAttributeDropdownOptions"
                             ng-model="attributes[conceptFormatAttributeName].value"
                             required>
                             <option value=""> {{'OT_SELECT_OPTION_KEY' | translate}}</option>

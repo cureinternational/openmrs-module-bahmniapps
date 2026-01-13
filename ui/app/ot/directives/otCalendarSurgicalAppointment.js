@@ -4,9 +4,7 @@ angular.module('bahmni.ot')
     .directive('otCalendarSurgicalAppointment', ['surgicalAppointmentHelper', 'appService', '$window', 'otUtils', function (surgicalAppointmentHelper, appService, $window, otUtils) {
         var link = function ($scope) {
             $scope.attributes = surgicalAppointmentHelper.getSurgicalAttributes($scope.surgicalAppointment);
-            if ($scope.$parent.conceptFormatAttributeName) {
-                $scope.conceptFormatAttributeName = $scope.$parent.conceptFormatAttributeName;
-            } else {
+            if (!$scope.conceptFormatAttributeName) {
                 $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
             }
             var patientUrls = appService.getAppDescriptor().getConfigValue("patientDashboardUrl");
@@ -71,7 +69,8 @@ angular.module('bahmni.ot')
                 operationTheatre: "=",
                 heightPerMin: "=",
                 backgroundColor: "=",
-                filterParams: "="
+                filterParams: "=",
+                conceptFormatAttributeName: "=?"
 
             },
             templateUrl: "../ot/views/calendarSurgicalAppointment.html"

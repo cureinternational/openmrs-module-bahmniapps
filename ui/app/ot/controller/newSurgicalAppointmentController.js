@@ -8,10 +8,13 @@ angular.module('bahmni.ot')
                 $scope.selectedPatient = $scope.ngDialogData && $scope.ngDialogData.patient;
                 $scope.patient = $scope.ngDialogData && $scope.ngDialogData.patient && ($scope.ngDialogData.patient.value || $scope.ngDialogData.patient.display);
                 $scope.otherSurgeons = _.cloneDeep($scope.surgeons);
+                $scope.currentLanguage = $window.localStorage["NG_TRANSLATE_LANG_KEY"] || "en";
                 $scope.conceptFormatAttributeDropdownOptions = [];
+                $scope.defaultAttributeTranslations = surgicalAppointmentHelper.getDefaultAttributeTranslations();
                 return $q.all([surgicalAppointmentService.getSurgicalAppointmentAttributeTypes()]).then(function (response) {
                     $scope.attributeTypes = response[0].data.results;
                     $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
+                    surgicalAppointmentHelper.addConceptFormatAttributeTranslation($scope.defaultAttributeTranslations, $scope.conceptFormatAttributeName);
                     var attributes = {};
                     var mapAttributes = new Bahmni.OT.SurgicalBlockMapper().mapAttributes(attributes, $scope.attributeTypes);
                     $scope.attributes = $scope.ngDialogData && $scope.ngDialogData.surgicalAppointmentAttributes || mapAttributes;

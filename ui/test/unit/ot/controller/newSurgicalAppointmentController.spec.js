@@ -19,7 +19,9 @@ describe("newSurgicalAppointmentController", function () {
     conceptService.getAnswersForConceptName.and.returnValue(specUtil.simplePromise([]));
     var ngDialog = jasmine.createSpyObj('ngDialog', ['close']);
     _window = jasmine.createSpyObj('$window', ['open', 'location']);
-
+    _window.localStorage = {
+        "NG_TRANSLATE_LANG_KEY": "en"
+    };
 
     var attributeTypes = {
         "results": [
@@ -91,6 +93,8 @@ describe("newSurgicalAppointmentController", function () {
             controller = $controller;
             scope = $rootScope.$new();
             surgicalAppointmentHelper = _surgicalAppointmentHelper_;
+            spyOn(surgicalAppointmentHelper, 'addConceptFormatAttributeTranslation').and.returnValue(new Map());
+            spyOn(surgicalAppointmentHelper, 'getDefaultAttributeTranslations').and.returnValue(new Map());
         });
     });
 
@@ -113,6 +117,80 @@ describe("newSurgicalAppointmentController", function () {
             otUtils: otUtils
         });
     };
+
+    it("should initialize conceptFormatAttributeName from otUtils", function () {
+        createController();
+        expect(otUtils.getConceptFormatAttributeName).toHaveBeenCalled();
+        expect(scope.conceptFormatAttributeName).toBe("conceptFormatAttributeName");
+    });
+
+    it("should add conceptFormatAttributeName to defaultAttributeTranslations", function () {
+        createController();
+        expect(surgicalAppointmentHelper.addConceptFormatAttributeTranslation).toHaveBeenCalledWith(
+            scope.defaultAttributeTranslations,
+            "conceptFormatAttributeName"
+        );
+    });
+
+    it("should fetch concept answers for conceptFormatAttributeName dropdown options", function () {
+        var mockAnswers = [
+            { name: { name: "Not Applicable" } },
+            { name: "Requested" },
+            { name: { name: "Not Requested" } }
+        ];
+        conceptService.getAnswersForConceptName.and.returnValue(specUtil.simplePromise(mockAnswers));
+        
+        createController();
+        
+        expect(conceptService.getAnswersForConceptName).toHaveBeenCalledWith({
+            answersConceptName: "conceptFormatAttributeName"
+        });
+        expect(scope.conceptFormatAttributeDropdownOptions).toEqual([
+            { label: "Not Applicable", value: "Not Applicable" },
+            { label: "Requested", value: "Requested" },
+            { label: "Not Requested", value: "Not Requested" }
+        ]);
+    });
+
+    it("should convert object values to string for concept format attributes", function () {
+        scope.ngDialogData = {
+            patient: { uuid: "patientUuid", display: "Test Patient" },
+            surgicalAppointmentAttributes: {
+                conceptFormatAttributeName: {
+                    surgicalAppointmentAttributeType: {
+                        uuid: '11111111-3a1f-11e7-83f8-0800274a5156',
+                        name: 'conceptFormatAttributeName',
+                        format: 'org.openmrs.Concept'
+                    },
+                    value: { display: "Requested", name: "Requested Concept" }
+                }
+            }
+        };
+        
+        createController();
+        
+        expect(scope.attributes.conceptFormatAttributeName.value).toBe("Requested");
+    });
+
+    it("should keep string values as-is for concept format attributes", function () {
+        scope.ngDialogData = {
+            patient: { uuid: "patientUuid", display: "Test Patient" },
+            surgicalAppointmentAttributes: {
+                conceptFormatAttributeName: {
+                    surgicalAppointmentAttributeType: {
+                        uuid: '11111111-3a1f-11e7-83f8-0800274a5156',
+                        name: 'conceptFormatAttributeName',
+                        format: 'org.openmrs.Concept'
+                    },
+                    value: "Not Applicable"
+                }
+            }
+        };
+        
+        createController();
+        
+        expect(scope.attributes.conceptFormatAttributeName.value).toBe("Not Applicable");
+    });
 
     it("should map the display name for patients", function () {
         var patients = [{givenName: "Natsume", familyName: "Hyuga", identifier: "IQ12345"},
