@@ -46,6 +46,7 @@ angular.module('bahmni.ot')
                 $state.weekOrDay = $scope.weekOrDay;
                 $scope.isFilterOpen = true;
                 $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
+                $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
                 if ($scope.weekOrDay === 'week') {
                     $scope.weekStartDate = $state.weekStartDate || new Date(moment().startOf('week'));
                     $state.weekStartDate = $scope.weekStartDate;

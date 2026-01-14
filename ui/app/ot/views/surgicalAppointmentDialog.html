@@ -10,8 +10,7 @@
     <p ng-if="
         conceptFormatAttributeName &&
         attributes[conceptFormatAttributeName] &&
-        attributes[conceptFormatAttributeName] !== 'Not Applicable' &&
-        attributes[conceptFormatAttributeName] !== 'Non applicable'
+        !conceptFormatDropdownConstants.notApplicableValues.includes(attributes[conceptFormatAttributeName])
     ">
         {{'OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT' | translate}}: {{attributes[conceptFormatAttributeName] | translate}}
     </p>

@@ -7,6 +7,7 @@ angular.module('bahmni.ot')
             if (!$scope.conceptFormatAttributeName) {
                 $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
             }
+            $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
             var patientUrls = appService.getAppDescriptor().getConfigValue("patientDashboardUrl");
             $scope.patientDashboardUrl = patientUrls && patientUrls.link && appService.getAppDescriptor().formatUrl(patientUrls.link, {'patientUuid': $scope.surgicalAppointment.patient.uuid});
             $scope.goToForwardUrl = function ($event) {

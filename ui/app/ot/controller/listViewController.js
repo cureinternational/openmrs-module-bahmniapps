@@ -8,6 +8,7 @@ angular.module('bahmni.ot')
             var endDatetime = moment(startDatetime).endOf('day').toDate();
             $scope.defaultAttributeTranslations = surgicalAppointmentHelper.getDefaultAttributeTranslations();
             $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
+            $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
             $scope.filteredSurgicalAttributeTypes = getFilteredSurgicalAttributeTypes();
             $scope.tableInfo = getTableInfo();
 
