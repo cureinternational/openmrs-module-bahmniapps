@@ -9,9 +9,7 @@
     <p ng-if="attributes.procedure"> {{'OT_SURGICAL_APPOINTMENT_PROCEDURE' | translate}}: {{attributes.procedure}} </p>
     <p ng-if="
         conceptFormatAttributeName &&
-        attributes[conceptFormatAttributeName] &&
-        !conceptFormatDropdownConstants.notApplicableValues.includes(attributes[conceptFormatAttributeName])
-    ">
+        attributes[conceptFormatAttributeName]">
         {{'OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT' | translate}}: {{attributes[conceptFormatAttributeName] | translate}}
     </p>
     <p ng-if="attributes.anaesthetist"> {{'OT_SURGICAL_APPOINTMENT_ANAESTHETIST' | translate}}:
