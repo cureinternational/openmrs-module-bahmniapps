@@ -168,12 +168,14 @@ angular.module('bahmni.clinical')
                             }
                         });
                     }
-                    if (allergiesList.length > 1) {
-                        allergiesList = allergiesList.filter(function (allergy) {
-                            return allergy.allergenCode !== Bahmni.Clinical.Constants.noKnownAllergyCode;
-                        });
-                    }
-                    $scope.allergies = allergiesList.map(allergy => allergy.display).join(", ");
+                    allergyService.getNoKnownAllergyCode().then(function (noKnownAllergyCode) {
+                        if (allergiesList.length > 1) {
+                            allergiesList = allergiesList.filter(function (allergy) {
+                                return allergy.allergenCode !== noKnownAllergyCode;
+                            });
+                        }
+                        $scope.allergies = allergiesList.map(allergy => allergy.display).join(", ");
+                    });
                 });
                 promises.push(allergyPromise);
                 Promise.all(promises).then(function () {
