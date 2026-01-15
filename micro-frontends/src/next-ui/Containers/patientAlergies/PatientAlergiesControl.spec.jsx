@@ -95,7 +95,8 @@ const mockFetchAllergiesAndReactionsForPatient = jest.fn().mockResolvedValue(moc
 
 jest.mock("../../utils/PatientAllergiesControl/AllergyControlUtils", () => ({
   fetchAllergensOrReactions: () => mockFetchAllergensOrReactions(),
-  fetchAllergiesAndReactionsForPatient: () => mockFetchAllergiesAndReactionsForPatient()
+  fetchAllergiesAndReactionsForPatient: () => mockFetchAllergiesAndReactionsForPatient(),
+  getNoKnownAllergyCode: jest.fn().mockResolvedValue("no_known_allergy_code_uuid")
 }));
 
 jest.mock("../../Components/i18n/I18nProvider", () => ({

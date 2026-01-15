@@ -5,12 +5,13 @@ import {FormattedMessage} from "react-intl";
 import { Accordion, AccordionItem } from "carbon-components-react";
 import { Document } from "@carbon/icons-react/next";
 import PropTypes from "prop-types";
-import {NO_KNOWN_ALLERGY_CODE} from "../../constants";
 export const ViewAllergiesAndReactions = (props) => {
-    const { allergies, showTextAsAbnormal } = props;
+    const { allergies, showTextAsAbnormal, noKnownAllergyCode } = props;
 
     const hasMultipleAllergies = allergies.length > 1;
-    const hasNoKnownAllergy = allergies.some(allergy => allergy.allergenCode === NO_KNOWN_ALLERGY_CODE);
+    const hasNoKnownAllergy = allergies.some(
+      (allergy) => allergy.allergenCode === noKnownAllergyCode
+    );
     const shouldStrikethroughNoKnown = hasMultipleAllergies && hasNoKnownAllergy;
 
     return <div className={"next-ui"}>
@@ -21,7 +22,7 @@ export const ViewAllergiesAndReactions = (props) => {
             </div>
             <div>
                 {allergies.map((allergy, index) => {
-                    const isNoKnownAllergy = allergy.allergenCode === NO_KNOWN_ALLERGY_CODE;
+                    const isNoKnownAllergy = allergy.allergenCode === noKnownAllergyCode;
                     const isSevere = allergy.severity?.toLowerCase() === "severe";
                     const className = isNoKnownAllergy && shouldStrikethroughNoKnown
                         ? "no-known-allergy"
@@ -56,4 +57,5 @@ export const ViewAllergiesAndReactions = (props) => {
 ViewAllergiesAndReactions.propTypes = {
     allergies: PropTypes.array.isRequired,
     showTextAsAbnormal: PropTypes.bool,
+    noKnownAllergyCode: PropTypes.string.isRequired,
 }

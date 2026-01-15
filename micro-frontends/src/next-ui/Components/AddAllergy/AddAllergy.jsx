@@ -19,10 +19,9 @@
   import { SearchAllergen } from "../SearchAllergen/SearchAllergen.jsx";
   import { SelectReactions } from "../SelectReactions/SelectReactions";
   import "./AddAllergy.scss";
-  import {NO_KNOWN_ALLERGY_CODE} from "../../constants";
 
   export function AddAllergy(props) {
-    const { patient, onClose, allergens, reaction, severityOptions, onSave, existingAllergies } = props;
+    const { patient, onClose, allergens, reaction, severityOptions, onSave, existingAllergies, noKnownAllergyCode } = props;
     const [allergen, setAllergen] = React.useState({});
     const [reactions, setReactions] = React.useState([]);
     const [severity, setSeverity] = React.useState("");
@@ -87,7 +86,7 @@
       const isYes = value === "yes";
       setPatientHasAllergies(isYes);
       if (!isYes) {
-        const noKnownAllergyValue = allergens.find(allergen => allergen?.uuid === NO_KNOWN_ALLERGY_CODE);
+        const noKnownAllergyValue = allergens.find(allergen => allergen?.uuid === noKnownAllergyCode);
         setAllergen(noKnownAllergyValue ?? {});
         setReactions([]);
         setSeverity(null);
@@ -131,7 +130,7 @@
                     {isEmpty(allergen) && (
                         <div data-testid={"search-allergen"}>
                           <SearchAllergen
-                              allergens={allergens.filter(allergen => allergen?.uuid !== NO_KNOWN_ALLERGY_CODE)}
+                              allergens={allergens.filter(allergen => allergen?.uuid !== noKnownAllergyCode)}
                               onChange={(allergen) => {
                                 setAllergen(allergen);
                               }}
@@ -218,4 +217,5 @@
     patient: propTypes.object.isRequired,
     severityOptions: propTypes.array.isRequired,
     existingAllergies: propTypes.array.isRequired,
+    noKnownAllergyCode: propTypes.string.isRequired
   };

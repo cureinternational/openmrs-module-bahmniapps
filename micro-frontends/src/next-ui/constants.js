@@ -33,4 +33,4 @@ export const EMERGENCY_MEDICATIONS_BASE_URL = RESTWS_V1 + "/ipd/adhocMedicationA
 export const GET_PROVIDER_UUID_URL = RESTWS_V1 + "/session";
 export const SAVE_ALLERGIES_URL =  RESTWS_V1 + "/patient/{patientId}/allergy";
 export const NEXT_UI_CONFIG_PATH = hostUrl + "/bahmni_config/openmrs/";
-export const NO_KNOWN_ALLERGY_CODE = "f535bd4e-33ff-4f35-bf7c-189e07d1ac90";
+export const GLOBAL_PROPERTY_URL = RESTWS_V1 + "/bahmnicore/sql/globalproperty";

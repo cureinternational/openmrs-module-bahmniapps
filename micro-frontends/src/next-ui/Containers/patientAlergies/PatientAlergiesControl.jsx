@@ -8,7 +8,8 @@ import { AddAllergy } from "../../Components/AddAllergy/AddAllergy";
 import { FormattedMessage } from "react-intl";
 import {
   fetchAllergensOrReactions,
-  fetchAllergiesAndReactionsForPatient
+  fetchAllergiesAndReactionsForPatient,
+  getNoKnownAllergyCode
 } from "../../utils/PatientAllergiesControl/AllergyControlUtils";
 import { ViewAllergiesAndReactions } from "../../Components/ViewAllergiesAndReactions/ViewAllergiesAndReactions";
 import { I18nProvider } from "../../Components/i18n/I18nProvider";
@@ -144,6 +145,7 @@ export function PatientAlergiesControl(props) {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [error, setError] = useState('');
+  const [noKnownAllergyCode, setNoKnownAllergyCode] = useState('');
 
   const noAllergiesText = (
     <FormattedMessage
@@ -210,6 +212,12 @@ export function PatientAlergiesControl(props) {
     allergiesAndReactionsForPatient();
   }, []);
 
+  useEffect(() => {
+    getNoKnownAllergyCode().then((code) => {
+      setNoKnownAllergyCode(code);
+    });
+  }, []);
+
   return (
     <>
       <I18nProvider>
@@ -231,7 +239,7 @@ export function PatientAlergiesControl(props) {
             )}
           </h2>
             {allergiesAndReactions.length === 0 ?<div className={"placeholder-text"}>{noAllergiesText}</div>:
-                <ViewAllergiesAndReactions allergies={allergiesAndReactions} showTextAsAbnormal={appService.getAppDescriptor().getConfigValue("showTextAsAbnormal")}/>
+                <ViewAllergiesAndReactions allergies={allergiesAndReactions} showTextAsAbnormal={appService.getAppDescriptor().getConfigValue("showTextAsAbnormal")} noKnownAllergyCode={noKnownAllergyCode}/>
             }
           { showAddAllergyPanel && (
             <AddAllergy
@@ -255,6 +263,7 @@ export function PatientAlergiesControl(props) {
                   setShowErrorPopup(true);
                 }
               }}
+              noKnownAllergyCode={noKnownAllergyCode}
             />
           )}
           <NotificationCarbon messageDuration={3000} onClose={()=>{setShowSuccessPopup(false); window.location.reload()}} showMessage={showSuccessPopup} kind={"success"} title={<FormattedMessage id={"ALLERGY_SAVED_SUCCESS"} defaultMessage="Allergy information saved successfully"/>} hideCloseButton={true}/>
