@@ -6,11 +6,11 @@ import { Accordion, AccordionItem } from "carbon-components-react";
 import { Document } from "@carbon/icons-react/next";
 import PropTypes from "prop-types";
 export const ViewAllergiesAndReactions = (props) => {
-    const { allergies, showTextAsAbnormal, noKnownAllergyCode } = props;
+    const { allergies, showTextAsAbnormal, noKnownAllergyUuid } = props;
 
     const hasMultipleAllergies = allergies.length > 1;
     const hasNoKnownAllergy = allergies.some(
-      (allergy) => allergy.allergenCode === noKnownAllergyCode
+      (allergy) => allergy.allergenCode === noKnownAllergyUuid
     );
     const shouldStrikethroughNoKnown = hasMultipleAllergies && hasNoKnownAllergy;
 
@@ -22,7 +22,7 @@ export const ViewAllergiesAndReactions = (props) => {
             </div>
             <div>
                 {allergies.map((allergy, index) => {
-                    const isNoKnownAllergy = allergy.allergenCode === noKnownAllergyCode;
+                    const isNoKnownAllergy = allergy.allergenCode === noKnownAllergyUuid;
                     const isSevere = allergy.severity?.toLowerCase() === "severe";
                     const className = isNoKnownAllergy && shouldStrikethroughNoKnown
                         ? "no-known-allergy"
@@ -57,5 +57,5 @@ export const ViewAllergiesAndReactions = (props) => {
 ViewAllergiesAndReactions.propTypes = {
     allergies: PropTypes.array.isRequired,
     showTextAsAbnormal: PropTypes.bool,
-    noKnownAllergyCode: PropTypes.string.isRequired,
+    noKnownAllergyUuid: PropTypes.string.isRequired,
 }

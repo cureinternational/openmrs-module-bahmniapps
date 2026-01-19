@@ -11,11 +11,11 @@ angular.module('bahmni.common.util')
             });
         };
 
-        const getNoKnownAllergyCode = function () {
+        const getNoKnownAllergyUuid = function () {
             return $http.get(Bahmni.Common.Constants.globalPropertyUrl, {
                 method: "GET",
                 params: {
-                    property: 'allergy.concept.noKnownAllergyCode'
+                    property: 'allergy.concept.noKnownAllergyUuid'
                 },
                 withCredentials: true,
                 headers: {
@@ -28,6 +28,6 @@ angular.module('bahmni.common.util')
 
         return {
             getAllergyForPatient: getAllergyForPatient,
-            getNoKnownAllergyCode: getNoKnownAllergyCode
+            getNoKnownAllergyUuid: getNoKnownAllergyUuid
         };
     }]);

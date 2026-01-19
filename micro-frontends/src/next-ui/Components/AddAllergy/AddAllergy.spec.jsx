@@ -81,7 +81,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         existingAllergies={[mockExistingAllergies]}
         reaction={mockReactionsData}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -100,7 +100,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -120,7 +120,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -139,7 +139,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -160,7 +160,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -187,7 +187,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -212,7 +212,7 @@ describe("AddAllergy", () => {
           allergens={mockAllergensData}
           reaction={mockReactionsData}
           existingAllergies={[mockExistingAllergies]}
-          noKnownAllergyCode={"000000AAAAAA"}
+          noKnownAllergyUuid={"000000AAAAAA"}
         />
       </IntlProvider>
     );
@@ -236,7 +236,7 @@ describe("AddAllergy", () => {
           allergens={mockAllergensData}
           reaction={mockReactionsData}
           existingAllergies={[mockExistingAllergies]}
-          noKnownAllergyCode={"000000AAAAAA"}
+          noKnownAllergyUuid={"000000AAAAAA"}
         />
       </IntlProvider>
     );
@@ -261,7 +261,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -283,7 +283,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -313,7 +313,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider>
     );
@@ -351,7 +351,7 @@ describe("AddAllergy", () => {
         allergens={mockAllergensData}
         reaction={mockReactionsData}
         existingAllergies={[mockExistingAllergies]}
-        noKnownAllergyCode={"000000AAAAAA"}
+        noKnownAllergyUuid={"000000AAAAAA"}
       />
       </IntlProvider> 
     );
@@ -386,7 +386,7 @@ describe("AddAllergy", () => {
               allergens={mockAllergensData}
               reaction={mockReactionsData}
               existingAllergies={[]}
-              noKnownAllergyCode={"000000AAAAAA"}
+              noKnownAllergyUuid={"000000AAAAAA"}
           />
         </IntlProvider>
     );
@@ -405,7 +405,7 @@ describe("AddAllergy", () => {
               allergens={mockAllergensData}
               reaction={mockReactionsData}
               existingAllergies={mockExistingAllergies}
-              noKnownAllergyCode={"000000AAAAAA"}
+              noKnownAllergyUuid={"000000AAAAAA"}
           />
         </IntlProvider>
     );
@@ -428,7 +428,7 @@ describe("AddAllergy", () => {
               allergens={allergensWithNoKnown}
               reaction={mockReactionsData}
               existingAllergies={[mockExistingAllergies]}
-              noKnownAllergyCode={"000000AAAAAA"}
+              noKnownAllergyUuid={"000000AAAAAA"}
           />
         </IntlProvider>
     );
@@ -452,7 +452,7 @@ describe("AddAllergy", () => {
               allergens={allergensWithNoKnown}
               reaction={mockReactionsData}
               existingAllergies={[]}
-              noKnownAllergyCode="000000AAAAAA"
+              noKnownAllergyUuid="000000AAAAAA"
           />
         </IntlProvider>
     );
@@ -474,7 +474,7 @@ describe("AddAllergy", () => {
               allergens={mockAllergensData}
               reaction={mockReactionsData}
               existingAllergies={[]}
-              noKnownAllergyCode={"000000AAAAAA"}
+              noKnownAllergyUuid={"000000AAAAAA"}
           />
         </IntlProvider>
     );
