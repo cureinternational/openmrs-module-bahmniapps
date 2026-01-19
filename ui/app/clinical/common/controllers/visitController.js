@@ -175,7 +175,9 @@ angular.module('bahmni.clinical')
                                     return allergy.allergenCode !== noKnownAllergyUuid;
                                 });
                             }
-                            $scope.allergies = allergiesList.map(allergy => allergy.display).join(", ");
+                            $scope.allergies = allergiesList.map(function (allergy) {
+                                return allergy.display;
+                            }).join(", ");
                         });
                     });
                     promises.push(allergyPromise);
