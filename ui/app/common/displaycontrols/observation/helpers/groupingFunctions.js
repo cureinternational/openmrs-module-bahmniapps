@@ -29,10 +29,7 @@ Bahmni.Common.DisplayControl.Observation.GroupingFunctions = function () {
 
         for (var obsKey in bahmniObservations) {
             var dateTime = obsKey;
-            var uniqueObservations = bahmniObservations[dateTime];
-            if (localStorage.getItem("NG_TRANSLATE_LANG_KEY") === 'fr') {
-                uniqueObservations = _.uniqWith(uniqueObservations, _.isEqual);
-            }
+            var uniqueObservations = _.uniqWith(bahmniObservations[dateTime], _.isEqual);
 
             var anObs = {
                 "key": dateTime,
@@ -83,10 +80,7 @@ Bahmni.Common.DisplayControl.Observation.GroupingFunctions = function () {
         for (var obsKey in sortedArr) {
             obsValues.push(sortedArr[obsKey].value);
         }
-        var uniqueObsValues = obsValues;
-        if (localStorage.getItem("NG_TRANSLATE_LANG_KEY") === 'fr') {
-            uniqueObsValues = _.uniqWith(obsValues, _.isEqual);
-        }
+        var uniqueObsValues = _.uniqWith(obsValues, _.isEqual);
         var ele = {};
         ele.key = oKey;
         ele.value = uniqueObsValues;
