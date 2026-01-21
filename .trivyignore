@@ -90,3 +90,4 @@ CVE-2022-21681 #marked
 CVE-2025-15284       # qs: qs: Denial of Service via improper input validation in array parsing... https://avd.aquasec.com/nvd/cve-2025-15284
 CVE-2025-68428 #jspdf: jsPDF Local File Inclusion/Path Traversal https://avd.aquasec.com/nvd/cve-2025-68428
 CVE-2026-22787 #html2pdf.js contains a cross-site scripting vulnerability https://avd.aquasec.com/nvd/cve-2026-22787
+CVE-2026-23745 # tar: https://avd.aquasec.com/nvd/2026/cve-2026-23745
