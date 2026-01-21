@@ -90,12 +90,21 @@ angular.module('bahmni.common.patientSearch')
 
         $scope.getHeadings = function () {
             if ($scope.search.activePatients && $scope.search.activePatients.length > 0) {
+                var ingoreHeadingList = $scope.ignoredTabularViewHeadingsConfig;
+                if ($scope.search.searchType) {
+                    ingoreHeadingList = ingoreHeadingList.concat($scope.search.searchType.ignoredTabularViewHeadings);
+                }
                 var headings = _.chain($scope.search.activePatients[0])
                     .keys()
                     .filter(function (heading) {
                         return _.indexOf($scope.ignoredTabularViewHeadingsConfig, heading) === -1;
                     })
                     .value();
+                if ($scope.search.searchType && $scope.search.searchType.tabularViewHeadingOrder) {
+                    headings.sort(function (a, b) {
+                        return $scope.search.searchType.tabularViewHeadingOrder.indexOf(a) - $scope.search.searchType.tabularViewHeadingOrder.indexOf(b);
+                    });
+                }
                 setActiveHeadings(headings);
             }
         };
@@ -109,6 +118,13 @@ angular.module('bahmni.common.patientSearch')
                     $scope.activeHeaders.push(newHeading);
                 }
             });
+        };
+
+        $scope.isHeadingOfDateColumn = function (heading) {
+            if ($scope.search.searchType && $scope.search.searchType.dateColumns) {
+                return $scope.search.searchType.dateColumns.includes(heading);
+            }
+            return false;
         };
 
         $scope.sortVisiblePatientsBy = function (sortColumn) {
@@ -142,9 +158,9 @@ angular.module('bahmni.common.patientSearch')
         };
 
         $scope.isHeadingOfLinkColumn = function (heading) {
-            var identifierHeading = _.includes($scope.identifierHeadingsConfig, heading);
-            if (identifierHeading) {
-                return identifierHeading;
+            var identifierHeadings = _.includes($scope.identifierHeadingsConfig, heading);
+            if (identifierHeadings) {
+                return identifierHeadings;
             } else if ($scope.search.searchType && $scope.search.searchType.links) {
                 return _.find($scope.search.searchType.links, {linkColumn: heading});
             }
@@ -181,6 +197,9 @@ angular.module('bahmni.common.patientSearch')
                 params: appExtn.extensionParams.searchParams,
                 refreshTime: appExtn.extensionParams.refreshTime || 0,
                 view: appExtn.extensionParams.view || Bahmni.Common.PatientSearch.Constants.searchExtensionTileViewType,
+                tabularViewHeadingOrder: appExtn.extensionParams.tabularViewHeadingOrder || [],
+                dateColumns: appExtn.extensionParams.dateColumns || [],
+                ignoredTabularViewHeadings: appExtn.extensionParams.ignoredTabularViewHeadings || [],
                 showPrint: appExtn.extensionParams.showPrint || false,
                 printHtmlLocation: appExtn.extensionParams.printHtmlLocation || null,
                 additionalParams: appExtn.extensionParams.additionalParams,
