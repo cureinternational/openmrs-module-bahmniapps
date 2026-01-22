@@ -15,7 +15,7 @@ describe("OrderFulfillmentController", function () {
 
     appService.getAppDescriptor.and.returnValue({
         getConfigValue: function (key) {
-            var configs = {orderLabelConcept: 'orderLabelConcept'};
+            var configs = {orderLabelConcept: {'someOrderType Fulfillment Form': 'orderLabelConcept'}};
             return configs[key];
         }
     });

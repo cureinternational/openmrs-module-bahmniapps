@@ -17,7 +17,7 @@ describe("OrderController", function () {
         var retrospectiveEntryService = jasmine.createSpyObj('retrospectiveEntryService', ['getRetrospectiveEntry']);
         retrospectiveEntryService.getRetrospectiveEntry.and.returnValue(retrospectiveEntry);
 
-        appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfig']);
+        appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfig', 'getConfigValue']);
         var appServiceMock = jasmine.createSpyObj('appService', ['getAppDescriptor']);
         appDescriptor.getConfig = function (param) {
             if (param === "enableRadiologyOrderOptions") {
@@ -30,6 +30,12 @@ describe("OrderController", function () {
                 };
             }
         };
+        appDescriptor.getConfigValue = function (param) {
+            return [{
+                "label": "OP",
+                "translationKey": "OP_KEY"
+            }]
+        }
         appServiceMock.getAppDescriptor = function() { return appDescriptor };
 
         var translate = jasmine.createSpyObj('$translate',['instant']);
