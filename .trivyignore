@@ -79,3 +79,5 @@ CVE-2025-7783        # form-data: Unsafe random function in form-data
 CVE-2025-6545        # pbkdf2: pbkdf2 silently returns predictable key material
 CVE-2025-6547        # pbkdf2: pbkdf2 silently returns static keys
 CVE-2025-9288        # sha.js: Missing type checks leading to hash rewind
+CVE-2025-15284       # qs: qs: Denial of Service via improper input validation in array parsing... https://avd.aquasec.com/nvd/cve-2025-15284
+CVE-2026-23745 # tar: https://avd.aquasec.com/nvd/2026/cve-2026-23745/
