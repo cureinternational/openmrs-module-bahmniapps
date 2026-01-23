@@ -54,11 +54,12 @@ describe('VisitController', function () {
         encounterService = jasmine.createSpyObj('encounterService', ['getEncountersForEncounterType']);
         appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
         getEncounterPromise = specUtil.createServicePromise('getEncountersForEncounterType');
-        allergyService = jasmine.createSpyObj('allergyService', ['getAllergyForPatient']);
+        allergyService = jasmine.createSpyObj('allergyService', ['getAllergyForPatient', 'getNoKnownAllergyUuid']);
         $location = jasmine.createSpyObj('$location', ['search']);
         auditLogService = jasmine.createSpyObj('auditLogService', ['log']);
         sessionService = jasmine.createSpyObj('sessionService', ['destroy']);
         allergyService.getAllergyForPatient.and.returnValue(Promise.resolve(allergiesMock));
+        allergyService.getNoKnownAllergyUuid.and.returnValue(Promise.resolve("no-known-allergy-uuid"));
         encounterService.getEncountersForEncounterType.and.returnValue(getEncounterPromise);
         $location.search.and.returnValue({source: "clinical"});
         window = $window;
