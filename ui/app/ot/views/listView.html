@@ -18,6 +18,15 @@
             ng-blur="deselectSurgicalAppointment($event)" tabindex="1" ng-class="{'current-date': isCurrentDateinWeekView(appointment.derivedAttributes.expectedStartDate),
              'status-postponed': isStatusPostponed(appointment.status), 'status-cancelled': isStatusCancelled(appointment.status)}">
             <td>
+                {{appointment.derivedAttributes.patientIdentifier}}
+            </td>
+            <td>
+                {{appointment.derivedAttributes.patientName}}
+            </td>
+            <td>
+                {{appointment.status}}
+            </td>
+            <td>
                 {{conceptFormatAttributeName && appointment.surgicalAppointmentAttributes[conceptFormatAttributeName] ? (conceptFormatDropdownConstants.indexOf((appointment.surgicalAppointmentAttributes[conceptFormatAttributeName].value | translate)) === -1 ? (appointment.surgicalAppointmentAttributes[conceptFormatAttributeName].value | translate) : '') : ''}}
             </td>
             <td>
@@ -30,22 +39,13 @@
                 {{appointment.paediatricAssessmentDate | bahmniDate}}
             </td>
             <td>
-                {{appointment.paediatricAssessmentValue.display}}
-            </td>
-            <td>
-                {{appointment.status}}
-            </td>
+                {{appointment.paediatricAssessmentValue}}
+            </td> 
             <td>
                 {{appointment.derivedAttributes.expectedStartDate | date : 'EEEE'}}
             </td>
             <td>
                 {{appointment.derivedAttributes.expectedStartDate | bahmniDate}}
-            </td>
-            <td>
-                {{appointment.derivedAttributes.patientIdentifier}}
-            </td>
-            <td>
-                {{appointment.derivedAttributes.patientName}}
             </td>
             <td>
                 {{ appointment.derivedAttributes.patientAgeFormatted }}
