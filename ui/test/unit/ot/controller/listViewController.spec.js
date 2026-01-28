@@ -713,13 +713,13 @@ describe('listViewController', function () {
         rootScope.attributeTypes = defaultAttributeTypes;
         createController();
         expect(scope.tableInfo.length).toBe(27);
-        expect(scope.tableInfo[1].heading).toBe("OT_ANAESTHESIA_ASSESSMENT_DATE");
+        expect(scope.tableInfo[1].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
         expect(scope.tableInfo[1].sortInfo).toBe("patientObservations");
-        expect(scope.tableInfo[2].heading).toBe("OT_ANAESTHESIA_ASSESSMENT");
+        expect(scope.tableInfo[2].heading).toBe("OT_ANAESTHESIA_REVIEW");
         expect(scope.tableInfo[2].sortInfo).toBe("patientObservations");
-        expect(scope.tableInfo[3].heading).toBe("OT_PAEDIATRIC_ASSESSMENT_DATE");
+        expect(scope.tableInfo[3].heading).toBe("OT_PAEDIATRIC_REVIEW_DATE");
         expect(scope.tableInfo[3].sortInfo).toBe("patientObservations");
-        expect(scope.tableInfo[4].heading).toBe("OT_PAEDIATRIC_ASSESSMENT");
+        expect(scope.tableInfo[4].heading).toBe("OT_PAEDIATRIC_REVIEW");
         expect(scope.tableInfo[4].sortInfo).toBe("patientObservations");
         expect(scope.tableInfo[24].heading).toBe("Bed Location");
         expect(scope.tableInfo[24].sortInfo).toBe("bedLocation");
