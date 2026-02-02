@@ -92,3 +92,4 @@ CVE-2025-68428 #jspdf: jsPDF Local File Inclusion/Path Traversal https://avd.aqu
 CVE-2026-22787 #html2pdf.js contains a cross-site scripting vulnerability https://avd.aquasec.com/nvd/cve-2026-22787
 CVE-2026-23745 # tar: https://avd.aquasec.com/nvd/2026/cve-2026-23745
 CVE-2026-23950 # node-tar: tar: node-tar: Arbitrary file overwrite https://avd.aquasec.com/nvd/2026/cve-2026-23950
+CVE-2026-24842 # node-tar: tar: node-tar: Arbitrary file creation via path traversal bypass in hardlink https://avd.aquasec.com/nvd/cve-2026-24842
