@@ -10,18 +10,62 @@ angular.module('bahmni.ot')
             $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
             $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
             $scope.filteredSurgicalAttributeTypes = getFilteredSurgicalAttributeTypes();
+
+            var listViewObservationColumns = appService.getAppDescriptor().getConfigValue("listViewObservationColumns") || [];
+            var observationColumnDefinitions = {
+                'anaesthesiaAssessmentDate': {
+                    key: 'anaesthesiaAssessmentDate',
+                    heading: Bahmni.OT.Constants.listViewAttributeHeadings.anaesthesiaAssessmentDate,
+                    sortInfo: 'anaesthesiaAssessmentDate',
+                    dataProperty: 'anaesthesiaAssessmentDate',
+                    isDate: true
+                },
+                'anaesthesiaAssessment': {
+                    key: 'anaesthesiaAssessment',
+                    heading: Bahmni.OT.Constants.listViewAttributeHeadings.anaesthesiaAssessment,
+                    sortInfo: 'anaesthesiaAssessmentValue',
+                    dataProperty: 'anaesthesiaAssessmentValue',
+                    isDate: false
+                },
+                'paediatricAssessmentDate': {
+                    key: 'paediatricAssessmentDate',
+                    heading: Bahmni.OT.Constants.listViewAttributeHeadings.paediatricAssessmentDate,
+                    sortInfo: 'paediatricAssessmentDate',
+                    dataProperty: 'paediatricAssessmentDate',
+                    isDate: true
+                },
+                'paediatricAssessment': {
+                    key: 'paediatricAssessment',
+                    heading: Bahmni.OT.Constants.listViewAttributeHeadings.paediatricAssessment,
+                    sortInfo: 'paediatricAssessmentValue',
+                    dataProperty: 'paediatricAssessmentValue',
+                    isDate: false
+                }
+            };
+
+            $scope.filteredObservationColumns = listViewObservationColumns
+                .filter(function (key) { return observationColumnDefinitions[key]; })
+                .map(function (key) { return observationColumnDefinitions[key]; });
+
             $scope.tableInfo = getTableInfo();
+
+            function getObservationColumnsTableInfo () {
+                return $scope.filteredObservationColumns.map(function (column) {
+                    return { heading: column.heading, sortInfo: column.sortInfo };
+                });
+            }
 
             function getTableInfo () {
                 var listViewAttributes = [
                     {heading: 'Identifier', sortInfo: 'derivedAttributes.patientIdentifier'},
                     {heading: 'Patient Name', sortInfo: 'derivedAttributes.patientName'},
                     {heading: 'Status', sortInfo: 'status'},
-                    {heading: $scope.conceptFormatAttributeName, sortInfo: 'surgicalAppointmentAttributes.' + $scope.conceptFormatAttributeName + '.value'},
-                    {heading: Bahmni.OT.Constants.listViewAttributeHeadings.anaesthesiaAssessmentDate, sortInfo: 'patientObservations'},
-                    {heading: Bahmni.OT.Constants.listViewAttributeHeadings.anaesthesiaAssessment, sortInfo: 'patientObservations'},
-                    {heading: Bahmni.OT.Constants.listViewAttributeHeadings.paediatricAssessmentDate, sortInfo: 'patientObservations'},
-                    {heading: Bahmni.OT.Constants.listViewAttributeHeadings.paediatricAssessment, sortInfo: 'patientObservations'},
+                    {heading: $scope.conceptFormatAttributeName, sortInfo: 'surgicalAppointmentAttributes.' + $scope.conceptFormatAttributeName + '.value'}
+                ];
+
+                listViewAttributes = listViewAttributes.concat(getObservationColumnsTableInfo());
+
+                listViewAttributes = listViewAttributes.concat([
                     {heading: 'Day', sortInfo: 'derivedAttributes.expectedStartDate'},
                     {heading: 'Date', sortInfo: 'derivedAttributes.expectedStartDate'},
                     {heading: 'Patient Age', sortInfo: 'derivedAttributes.patientAge'},
@@ -29,7 +73,8 @@ angular.module('bahmni.ot')
                     {heading: 'Est Time', sortInfo: 'derivedAttributes.duration'},
                     {heading: 'Actual Time', sortInfo: 'actualStartDatetime'},
                     {heading: 'OT#', sortInfo: 'surgicalBlock.location.name'},
-                    {heading: 'Surgeon', sortInfo: 'surgicalBlock.provider.person.display'}];
+                    {heading: 'Surgeon', sortInfo: 'surgicalBlock.provider.person.display'}
+                ]);
 
                 var attributesRelatedToBed = [{heading: 'Status Change Notes', sortInfo: 'notes'},
                     {heading: 'Bed Location', sortInfo: 'bedLocation'},
@@ -61,7 +106,7 @@ angular.module('bahmni.ot')
                 var clonedSurgicalBlocks = _.cloneDeep(surgicalBlocks);
                 var filteredSurgicalBlocks = surgicalBlockFilter(clonedSurgicalBlocks, $scope.filterParams);
                 var mappedSurgicalBlocks = _.map(filteredSurgicalBlocks, function (surgicalBlock) {
-                    return surgicalBlockMapper.map(surgicalBlock, $rootScope.attributeTypes, $rootScope.surgeons);
+                    return surgicalBlockMapper.map(surgicalBlock, $rootScope.attributeTypes, $rootScope.surgeons, listViewObservationColumns);
                 });
                 mappedSurgicalBlocks = _.map(mappedSurgicalBlocks, function (surgicalBlock) {
                     var blockStartDatetime = surgicalBlock.startDatetime;
@@ -140,6 +185,7 @@ angular.module('bahmni.ot')
                     isCurrentDate: $scope.isCurrentDateinWeekView,
                     conceptFormatAttributeName: $scope.conceptFormatAttributeName,
                     filteredSurgicalAttributeTypes: $scope.filteredSurgicalAttributeTypes,
+                    filteredObservationColumns: $scope.filteredObservationColumns,
                     tableInfo: $scope.tableInfo,
                     defaultAttributeTranslations: $scope.defaultAttributeTranslations
                 });
