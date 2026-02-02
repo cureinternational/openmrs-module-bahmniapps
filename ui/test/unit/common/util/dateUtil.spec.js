@@ -116,13 +116,9 @@ describe('DateUtil', function () {
 
             it("should calculate difference between dates when fromDate is non-leap year", function () {
                 var fromDate = new Date();
-                fromDate.setDate(26);
-                fromDate.setMonth(1);
-                fromDate.setFullYear(2011);
+                fromDate.setFullYear(2011, 1, 26);
                 var toDate = new Date();
-                toDate.setDate(29);
-                toDate.setMonth(1);
-                toDate.setFullYear(2020);
+                toDate.setFullYear(2020, 1, 29);
                 var period = dateUtil.diffInYearsMonthsDays(fromDate, toDate);
                 expect(period.years).toBe(9);
                 expect(period.months).toBe(0);
