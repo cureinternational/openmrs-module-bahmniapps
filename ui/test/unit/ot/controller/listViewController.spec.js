@@ -22,7 +22,6 @@ describe('listViewController', function () {
             q = $q;
         });
         printer.print.calls.reset();
-        // Default mock for listViewObservationColumns - empty array means no columns shown
         appDescriptor.getConfigValue.and.callFake(function (configName) {
             if (configName === 'listViewObservationColumns') {
                 return [];
@@ -718,7 +717,12 @@ describe('listViewController', function () {
     it("should have assessment and other fields in table info when configured", function () {
         appDescriptor.getConfigValue.and.callFake(function (configName) {
             if (configName === 'listViewObservationColumns') {
-                return ['anaesthesiaAssessmentDate', 'anaesthesiaAssessment', 'paediatricAssessmentDate', 'paediatricAssessment'];
+                return [
+                    {concept: "Pre Anaesthesia Assessed for Surgery?", type: "date", label: "OT_ANAESTHESIA_REVIEW_DATE", validityDays: 30},
+                    {concept: "Pre Anaesthesia Assessed for Surgery?", label: "OT_ANAESTHESIA_REVIEW"},
+                    {concept: "Assessed for Surgery?", type: "date", label: "OT_PAEDIATRIC_REVIEW_DATE", validityDays: 30},
+                    {concept: "Assessed for Surgery?", label: "OT_PAEDIATRIC_REVIEW"}
+                ];
             }
             return null;
         });
@@ -731,13 +735,13 @@ describe('listViewController', function () {
         createController();
         expect(scope.tableInfo.length).toBe(27);
         expect(scope.tableInfo[4].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
-        expect(scope.tableInfo[4].sortInfo).toBe("anaesthesiaAssessmentDate");
+        expect(scope.tableInfo[4].sortInfo).toBeNull();
         expect(scope.tableInfo[5].heading).toBe("OT_ANAESTHESIA_REVIEW");
-        expect(scope.tableInfo[5].sortInfo).toBe("anaesthesiaAssessmentValue");
+        expect(scope.tableInfo[5].sortInfo).toBeNull();
         expect(scope.tableInfo[6].heading).toBe("OT_PAEDIATRIC_REVIEW_DATE");
-        expect(scope.tableInfo[6].sortInfo).toBe("paediatricAssessmentDate");
+        expect(scope.tableInfo[6].sortInfo).toBeNull();
         expect(scope.tableInfo[7].heading).toBe("OT_PAEDIATRIC_REVIEW");
-        expect(scope.tableInfo[7].sortInfo).toBe("paediatricAssessmentValue");
+        expect(scope.tableInfo[7].sortInfo).toBeNull();
         expect(scope.tableInfo[24].heading).toBe("Bed Location");
         expect(scope.tableInfo[24].sortInfo).toBe("bedLocation");
         expect(scope.tableInfo[25].heading).toBe("Bed ID");
@@ -795,7 +799,10 @@ describe('listViewController', function () {
     it("should include only configured assessment columns in configured order", function () {
         appDescriptor.getConfigValue.and.callFake(function (configName) {
             if (configName === 'listViewObservationColumns') {
-                return ['paediatricAssessment', 'anaesthesiaAssessmentDate'];
+                return [
+                    {concept: "Assessed for Surgery?", label: "OT_PAEDIATRIC_REVIEW"},
+                    {concept: "Pre Anaesthesia Assessed for Surgery?", type: "date", label: "OT_ANAESTHESIA_REVIEW_DATE", validityDays: 30}
+                ];
             }
             return null;
         });
@@ -819,7 +826,10 @@ describe('listViewController', function () {
     it("should build filteredObservationColumns based on configuration order", function () {
         appDescriptor.getConfigValue.and.callFake(function (configName) {
             if (configName === 'listViewObservationColumns') {
-                return ['anaesthesiaAssessmentDate', 'paediatricAssessment'];
+                return [
+                    {concept: "Pre Anaesthesia Assessed for Surgery?", type: "date", label: "OT_ANAESTHESIA_REVIEW_DATE", validityDays: 30},
+                    {concept: "Assessed for Surgery?", label: "OT_PAEDIATRIC_REVIEW"}
+                ];
             }
             return null;
         });
@@ -831,18 +841,23 @@ describe('listViewController', function () {
         createController();
 
         expect(scope.filteredObservationColumns.length).toBe(2);
-        expect(scope.filteredObservationColumns[0].key).toBe('anaesthesiaAssessmentDate');
-        expect(scope.filteredObservationColumns[0].dataProperty).toBe('anaesthesiaAssessmentDate');
+        expect(scope.filteredObservationColumns[0].conceptName).toBe('Pre Anaesthesia Assessed for Surgery?');
+        expect(scope.filteredObservationColumns[0].heading).toBe('OT_ANAESTHESIA_REVIEW_DATE');
         expect(scope.filteredObservationColumns[0].isDate).toBe(true);
-        expect(scope.filteredObservationColumns[1].key).toBe('paediatricAssessment');
-        expect(scope.filteredObservationColumns[1].dataProperty).toBe('paediatricAssessmentValue');
+        expect(scope.filteredObservationColumns[1].conceptName).toBe('Assessed for Surgery?');
+        expect(scope.filteredObservationColumns[1].heading).toBe('OT_PAEDIATRIC_REVIEW');
         expect(scope.filteredObservationColumns[1].isDate).toBe(false);
     });
 
     it('should have all the surgical attributes in table info', function () {
         appDescriptor.getConfigValue.and.callFake(function (configName) {
             if (configName === 'listViewObservationColumns') {
-                return ['anaesthesiaAssessmentDate', 'anaesthesiaAssessment', 'paediatricAssessmentDate', 'paediatricAssessment'];
+                return [
+                    {concept: "Pre Anaesthesia Assessed for Surgery?", type: "date", label: "OT_ANAESTHESIA_REVIEW_DATE", validityDays: 30},
+                    {concept: "Pre Anaesthesia Assessed for Surgery?", label: "OT_ANAESTHESIA_REVIEW"},
+                    {concept: "Assessed for Surgery?", type: "date", label: "OT_PAEDIATRIC_REVIEW_DATE", validityDays: 30},
+                    {concept: "Assessed for Surgery?", label: "OT_PAEDIATRIC_REVIEW"}
+                ];
             }
             return null;
         });
