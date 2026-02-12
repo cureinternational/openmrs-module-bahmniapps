@@ -62,12 +62,13 @@ Bahmni.OT.SurgicalBlockMapper = function () {
         return { value: latestValue, date: latestDate };
     };
 
-    var mapAnaesthesiaAssessment = function (anaesthesiaAssessmentObs) {
-        return mapConcepts(anaesthesiaAssessmentObs, Bahmni.OT.Constants.preAnaesthesiaAssessedForSurgery, Bahmni.OT.Constants.anaesthesiaAssessmentValidityDays);
-    };
-
-    var mapPaediatricAssessment = function (paediatricAssessmentObs) {
-        return mapConcepts(paediatricAssessmentObs, Bahmni.OT.Constants.assessedForSurgery, Bahmni.OT.Constants.paediatricAssessmentValidityDays);
+    var mapObservations = function (patientObservations, conceptConfigs) {
+        var result = {};
+        _.each(conceptConfigs, function (config) {
+            result[config.conceptName] = mapConcepts(patientObservations, config.conceptName, config.validityDays)
+                || { date: null, value: "" };
+        });
+        return result;
     };
 
     var mapPrimaryDiagnoses = function (diagnosisObs) {
@@ -109,10 +110,9 @@ Bahmni.OT.SurgicalBlockMapper = function () {
         return primaryDiagnosesNames;
     };
 
-    var mapSurgicalAppointment = function (openMrsSurgicalAppointment, attributeTypes, surgeonsList) {
+    var mapSurgicalAppointment = function (openMrsSurgicalAppointment, attributeTypes, surgeonsList, conceptConfigs) {
         var surgicalAppointmentAttributes = mapOpenMrsSurgicalAppointmentAttributes(openMrsSurgicalAppointment.surgicalAppointmentAttributes, surgeonsList);
-        var anaesthesiaAssessmentData = mapAnaesthesiaAssessment(openMrsSurgicalAppointment.patientObservations) || "";
-        var paediatricAssessmentData = mapPaediatricAssessment(openMrsSurgicalAppointment.patientObservations) || "";
+
         return {
             id: openMrsSurgicalAppointment.id,
             uuid: openMrsSurgicalAppointment.uuid,
@@ -127,16 +127,13 @@ Bahmni.OT.SurgicalBlockMapper = function () {
             bedNumber: (openMrsSurgicalAppointment.bedNumber || ""),
             surgicalAppointmentAttributes: new Bahmni.OT.SurgicalBlockMapper().mapAttributes(surgicalAppointmentAttributes, attributeTypes),
             primaryDiagnosis: mapPrimaryDiagnoses(openMrsSurgicalAppointment.patientObservations) || "",
-            anaesthesiaAssessmentDate: anaesthesiaAssessmentData.date || null,
-            anaesthesiaAssessmentValue: anaesthesiaAssessmentData.value || "",
-            paediatricAssessmentDate: paediatricAssessmentData.date || null,
-            paediatricAssessmentValue: paediatricAssessmentData.value || ""
+            observationMap: mapObservations(openMrsSurgicalAppointment.patientObservations, conceptConfigs)
         };
     };
 
-    this.map = function (openMrsSurgicalBlock, attributeTypes, surgeonsList) {
+    this.map = function (openMrsSurgicalBlock, attributeTypes, surgeonsList, conceptConfigs) {
         var surgicalAppointments = _.map(openMrsSurgicalBlock.surgicalAppointments, function (surgicalAppointment) {
-            return mapSurgicalAppointment(surgicalAppointment, attributeTypes, surgeonsList);
+            return mapSurgicalAppointment(surgicalAppointment, attributeTypes, surgeonsList, conceptConfigs);
         });
         return {
             id: openMrsSurgicalBlock.id,
@@ -220,6 +217,5 @@ Bahmni.OT.SurgicalBlockMapper = function () {
     };
 
     this.mapPrimaryDiagnoses = mapPrimaryDiagnoses;
-    this.mapAnaesthesiaAssessment = mapAnaesthesiaAssessment;
-    this.mapPaediatricAssessment = mapPaediatricAssessment;
+    this.mapObservations = mapObservations;
 };
