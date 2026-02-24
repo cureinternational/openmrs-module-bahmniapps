@@ -48,15 +48,14 @@ ViewOrders.propTypes = {
     orders: PropTypes.arrayOf(
         PropTypes.shape({
             name: PropTypes.string.isRequired,
-            provider: PropTypes.string.isRequired,
-            isCompleted: PropTypes.bool,
-            owner: PropTypes.string,
-            notes: PropTypes.string,
-            createdBy: PropTypes.string,
             createdAt: PropTypes.string.isRequired,
-            lastUpdatedAt: PropTypes.string,
+            createdBy: PropTypes.string.isRequired,
+            updatedAt: PropTypes.string,
+            orderStatus: PropTypes.string,
             statusUpdatedBy: PropTypes.string,
             ownerUpdatedBy: PropTypes.string,
+            owner: PropTypes.string,
+            notes: PropTypes.string,
             notesUpdatedBy: PropTypes.string,
         })
     ).isRequired,

@@ -1,10 +1,10 @@
+import React, {useState} from "react";
 import PropTypes from "prop-types";
 import {ChevronUp, ChevronDown} from "@carbon/icons-react/next";
-import {useState} from "react";
 import {Accordion} from "./Accordion";
 import "./OrderItem.scss";
 
-function OrderItem({name, value, updatedBy}) {
+export function OrderItem({name, value, updatedBy}) {
     const [isOpen, setIsOpen] = useState(false)
     return <div className="order-item-wrapper">
         <div className="order-item-header" onClick={() => setIsOpen(!isOpen)}>

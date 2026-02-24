@@ -1,0 +1,243 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewOrders should render the component 1`] = `
+<div>
+  <div
+    class="next-ui orders-view-container"
+  >
+    <div
+      class="accordion order-item"
+    >
+      <div
+        class="accordion-header"
+      >
+        <span
+          class="accordion-icon"
+        >
+          <svg
+            aria-hidden="true"
+            fill="currentColor"
+            focusable="false"
+            height="16"
+            preserveAspectRatio="xMidYMid meet"
+            viewBox="0 0 32 32"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M24 12L16 22 8 12z"
+            />
+          </svg>
+        </span>
+        <div
+          class="order-header-left"
+        >
+          <span
+            class="order-name"
+          >
+            Order 1
+          </span>
+        </div>
+        <div
+          class="order-header-right"
+        >
+          <span
+            class="order-provider"
+          >
+            Dr. Smith
+          </span>
+          <span
+            class="order-date"
+          >
+            01 Jan 2024 03:30 pm
+          </span>
+        </div>
+      </div>
+      <div
+        class="accordion-content"
+      >
+        <div
+          class="accordion order-item-container"
+        >
+          <div
+            class="accordion-header"
+          >
+            <span
+              class="accordion-icon"
+            >
+              <svg
+                aria-hidden="true"
+                fill="currentColor"
+                focusable="false"
+                height="16"
+                preserveAspectRatio="xMidYMid meet"
+                viewBox="0 0 32 32"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M24 12L16 22 8 12z"
+                />
+              </svg>
+            </span>
+            <span>
+              20 Jan 2024 04:30 pm
+            </span>
+          </div>
+          <div
+            class="accordion-content"
+          >
+            <div>
+              <div
+                class="order-item-wrapper"
+              >
+                <div
+                  class="order-item-header"
+                >
+                  <div>
+                    Status
+                  </div>
+                  <div>
+                    Active
+                  </div>
+                  <div
+                    class="order-item-chevron"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      fill="currentColor"
+                      focusable="false"
+                      height="16"
+                      preserveAspectRatio="xMidYMid meet"
+                      viewBox="0 0 16 16"
+                      width="16"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 11L3 6 3.7 5.3 8 9.6 12.3 5.3 13 6z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="order-item-wrapper"
+              >
+                <div
+                  class="order-item-header"
+                >
+                  <div>
+                    Owner
+                  </div>
+                  <div>
+                    Dr. David
+                  </div>
+                  <div
+                    class="order-item-chevron"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      fill="currentColor"
+                      focusable="false"
+                      height="16"
+                      preserveAspectRatio="xMidYMid meet"
+                      viewBox="0 0 16 16"
+                      width="16"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 11L3 6 3.7 5.3 8 9.6 12.3 5.3 13 6z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="order-item-wrapper"
+              >
+                <div
+                  class="order-item-header"
+                >
+                  <div>
+                    Notes
+                  </div>
+                  <div>
+                    Test notes
+                  </div>
+                  <div
+                    class="order-item-chevron"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      fill="currentColor"
+                      focusable="false"
+                      height="16"
+                      preserveAspectRatio="xMidYMid meet"
+                      viewBox="0 0 16 16"
+                      width="16"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 11L3 6 3.7 5.3 8 9.6 12.3 5.3 13 6z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="accordion order-item"
+    >
+      <div
+        class="accordion-header"
+      >
+        <span
+          class="accordion-icon"
+        >
+          <svg
+            aria-hidden="true"
+            fill="currentColor"
+            focusable="false"
+            height="16"
+            preserveAspectRatio="xMidYMid meet"
+            viewBox="0 0 32 32"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 8L22 16 12 24z"
+            />
+          </svg>
+        </span>
+        <div
+          class="order-header-left"
+        >
+          <span
+            class="order-name"
+          >
+            Order 2
+          </span>
+        </div>
+        <div
+          class="order-header-right"
+        >
+          <span
+            class="order-provider"
+          >
+            Dr. Johnson
+          </span>
+          <span
+            class="order-date"
+          >
+            02 Jan 2024 03:30 pm
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
