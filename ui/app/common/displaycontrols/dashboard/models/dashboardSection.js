@@ -23,7 +23,8 @@
     ];
     var reactDisplayControls = [
         "Allergies",
-        "formsV2React"
+        "formsV2React",
+        "ordersV2"
     ];
 
     var getViewUrl = function (section) {
