@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
-import {ChevronUp, ChevronDown, CaretRight, CaretDown} from "@carbon/icons-react/next";
+import {ChevronUp, ChevronDown} from "@carbon/icons-react/next";
 import {useState} from "react";
+import {Accordion} from "./Accordion";
 import "./OrderItem.scss";
 
 function OrderItem({name, value, updatedBy}) {
@@ -16,19 +17,23 @@ function OrderItem({name, value, updatedBy}) {
 }
 
 export function OrderItemContainer(props) {
-    const [isOpen, setIsOpen] = useState(true);
     const {updatedAt, orderStatus, statusUpdatedBy, owner, ownerUpdatedBy, notes, notesUpdatedBy} = props;
-    return <div className="order-item-container">
-        <div className="order-item-container-header" onClick={() => setIsOpen(!isOpen)}>
-            <span className="order-item-container-icon">{isOpen ? <CaretDown/> : <CaretRight/>}</span>
-            <span>{updatedAt}</span>
-        </div>
-        {isOpen && <div>
-            <OrderItem updatedBy={statusUpdatedBy} name={"Status"} value={orderStatus}/>
-            <OrderItem updatedBy={ownerUpdatedBy} name={"Owner"} value={owner}/>
-            <OrderItem updatedBy={notesUpdatedBy} name={"Notes"} value={notes}/>
-        </div>}
-    </div>
+
+    const header = <span>{updatedAt}</span>;
+
+    return (
+        <Accordion
+            header={header}
+            defaultOpen={true}
+            className="order-item-container"
+        >
+            <div>
+                <OrderItem updatedBy={statusUpdatedBy} name={"Status"} value={orderStatus}/>
+                <OrderItem updatedBy={ownerUpdatedBy} name={"Owner"} value={owner}/>
+                <OrderItem updatedBy={notesUpdatedBy} name={"Notes"} value={notes}/>
+            </div>
+        </Accordion>
+    );
 }
 
 OrderItem.propTypes = {

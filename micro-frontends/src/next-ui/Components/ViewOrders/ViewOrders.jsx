@@ -1,9 +1,9 @@
-import React, {useState} from "react";
+import React from "react";
 import "./ViewOrders.scss";
 import "../../../styles/common.scss";
 import PropTypes from "prop-types";
 import {OrderItemContainer} from "./OrderItem";
-import {CaretDown, CaretRight} from "@carbon/icons-react/next";
+import {Accordion} from "./Accordion";
 import moment from "moment";
 
 export function ViewOrders(props) {
@@ -17,21 +17,27 @@ export function ViewOrders(props) {
     return (
         <div className="next-ui orders-view-container">
             {orders && orders.map((order, index) => {
-                const [open, setOpen] = useState(index === 0);
-                return (
-                    <div key={index} className="order-item">
-                        <div className="order-header" onClick={() => setOpen(!open)}>
-                            {open ? <CaretDown/> : <CaretRight/>}
-                            <div className="order-header-left">
-                                <span className="order-name">{order.name}</span>
-                            </div>
-                            <div className="order-header-right">
-                                <span className="order-provider">{order.createdBy}</span>
-                                <span className="order-date">{formatDate(order.createdAt)}</span>
-                            </div>
+                const header = (
+                    <>
+                        <div className="order-header-left">
+                            <span className="order-name">{order.name}</span>
                         </div>
-                        {open && <OrderItemContainer {...order} updatedAt={formatDate(order.updatedAt)}/>}
-                    </div>
+                        <div className="order-header-right">
+                            <span className="order-provider">{order.createdBy}</span>
+                            <span className="order-date">{formatDate(order.createdAt)}</span>
+                        </div>
+                    </>
+                );
+
+                return (
+                    <Accordion
+                        key={index}
+                        header={header}
+                        defaultOpen={index === 0}
+                        className="order-item"
+                    >
+                        <OrderItemContainer {...order} updatedAt={formatDate(order.updatedAt)}/>
+                    </Accordion>
                 );
             })}
         </div>

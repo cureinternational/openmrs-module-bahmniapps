@@ -1,0 +1,15 @@
+.next-ui{
+  .accordion {
+    .accordion-header {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+
+      .accordion-icon {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+    }
+  }
+}

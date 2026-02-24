@@ -25,14 +25,7 @@
 
 .order-item-container {
   background-color: #fff;
-
-  .order-item-container-header {
-    padding: 3px 0 3px 20px;
-    cursor: pointer;
-    display: flex;
-
-    .order-item-container-icon {
-      padding-right: 10px;
-    }
+  .accordion-header {
+    padding-left: 20px !important;
   }
 }
