@@ -7,10 +7,8 @@
         {{ngDialogData.derivedAttributes.expectedStartDatetime | date : 'dd MMM, '}}{{ngDialogData.derivedAttributes.expectedStartDatetime | bahmniTime}} -
         {{ngDialogData.derivedAttributes.expectedEndDatetime | date : 'dd MMM, '}}{{ngDialogData.derivedAttributes.expectedEndDatetime | bahmniTime}}</p>
     <p ng-if="attributes.procedure"> {{'OT_SURGICAL_APPOINTMENT_PROCEDURE' | translate}}: {{attributes.procedure}} </p>
-    <p ng-if="
-        conceptFormatAttributeName &&
-        attributes[conceptFormatAttributeName]">
-        {{'OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT' | translate}}: {{attributes[conceptFormatAttributeName] | translate}}
+    <p ng-if="attributes['Blood Transfusion Requested for Surgery?']">
+        {{'OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT' | translate}}: {{attributes['Blood Transfusion Requested for Surgery?'] | translate}}
     </p>
     <p ng-if="attributes.anaesthetist"> {{'OT_SURGICAL_APPOINTMENT_ANAESTHETIST' | translate}}:
         {{attributes.anaesthetist}} </p>

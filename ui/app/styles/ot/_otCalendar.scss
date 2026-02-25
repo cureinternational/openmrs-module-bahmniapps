@@ -297,7 +297,7 @@
     }
     p {
       font-size: 12px;
-      &[ng-if*="conceptFormatAttributeName"] {
+      &.blood-transfusion-highlight {
         background: #fff;
         display: inline-block;
         padding: 2px 2px;

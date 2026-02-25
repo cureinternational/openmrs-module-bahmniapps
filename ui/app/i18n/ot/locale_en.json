@@ -139,5 +139,10 @@
     "OT_ANAESTHESIA_REVIEW_DATE": "Anaesthesia Review Date",
     "OT_ANAESTHESIA_REVIEW": "Anaesthesia Review",
     "OT_PAEDIATRIC_REVIEW_DATE": "Paediatric Review Date",
-    "OT_PAEDIATRIC_REVIEW": "Paediatric Review"
+    "OT_PAEDIATRIC_REVIEW": "Paediatric Review",
+    "OT_SURGICAL_APPOINTMENT_PATIENT_HEIGHT": "Height (Cm)",
+    "OT_SURGICAL_APPOINTMENT_SCRUB_TECHNICIAN": "Scrub Technician",
+    "OT_SURGICAL_APPOINTMENT_BLOOD_TRANSFUSION": "Blood Transfusion",
+    "OT_SURGICAL_APPOINTMENT_SMILE_TRAIN": "Smile Train",
+    "OT_SURGICAL_APPOINTMENT_C_ARM": "C-arm"
 }

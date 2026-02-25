@@ -1,14 +1,13 @@
 'use strict';
 
 angular.module('bahmni.ot')
-    .controller('listViewController', ['$scope', '$rootScope', '$q', 'spinner', 'surgicalAppointmentService', 'appService', 'surgicalAppointmentHelper', 'surgicalBlockFilter', 'printer', 'otUtils',
-        function ($scope, $rootScope, $q, spinner, surgicalAppointmentService, appService, surgicalAppointmentHelper, surgicalBlockFilter, printer, otUtils) {
+    .controller('listViewController', ['$scope', '$rootScope', '$q', '$window', 'spinner', 'surgicalAppointmentService', 'appService', 'surgicalAppointmentHelper', 'surgicalBlockFilter', 'printer',
+        function ($scope, $rootScope, $q, $window, spinner, surgicalAppointmentService, appService, surgicalAppointmentHelper, surgicalBlockFilter, printer) {
             var startDatetime = moment($scope.viewDate).toDate();
             var surgicalBlockMapper = new Bahmni.OT.SurgicalBlockMapper();
             var endDatetime = moment(startDatetime).endOf('day').toDate();
             $scope.defaultAttributeTranslations = surgicalAppointmentHelper.getDefaultAttributeTranslations();
-            $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
-            $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
+            $scope.conceptFormatAttributeName = Bahmni.OT.Constants.conceptFormatAttributeName;
             $scope.filteredSurgicalAttributeTypes = getFilteredSurgicalAttributeTypes();
 
             var listViewObservationColumns = appService.getAppDescriptor().getConfigValue("listViewObservationColumns") || [];
@@ -47,38 +46,49 @@ angular.module('bahmni.ot')
             }
 
             function getTableInfo () {
-                var listViewAttributes = [
+                var columns = [
                     {heading: 'Identifier', sortInfo: 'derivedAttributes.patientIdentifier'},
                     {heading: 'Patient Name', sortInfo: 'derivedAttributes.patientName'},
                     {heading: 'Status', sortInfo: 'status'},
-                    {heading: $scope.conceptFormatAttributeName, sortInfo: 'surgicalAppointmentAttributes.' + $scope.conceptFormatAttributeName + '.value'}
-                ];
-
-                listViewAttributes = listViewAttributes.concat(getObservationColumnsTableInfo());
-
-                listViewAttributes = listViewAttributes.concat([
-                    {heading: 'Day', sortInfo: 'derivedAttributes.expectedStartDate'},
-                    {heading: 'Date', sortInfo: 'derivedAttributes.expectedStartDate'},
                     {heading: 'Patient Age', sortInfo: 'derivedAttributes.patientAge'},
+                    {heading: 'patientHeight', sortInfo: 'surgicalAppointmentAttributes.patientHeight.value'},
+                    {heading: 'patientWeight', sortInfo: 'surgicalAppointmentAttributes.patientWeight.value'},
+                    {heading: 'Primary Diagnoses', sortInfo: 'primaryDiagnosis'},
+                    {heading: 'procedure', sortInfo: 'surgicalAppointmentAttributes.procedure.value'},
+                    {heading: 'Smile Train?', sortInfo: 'surgicalAppointmentAttributes.Smile Train?.value'},
                     {heading: 'Start Time', sortInfo: 'derivedAttributes.expectedStartTime'},
                     {heading: 'Est Time', sortInfo: 'derivedAttributes.duration'},
                     {heading: 'Actual Time', sortInfo: 'actualStartDatetime'},
-                    {heading: 'OT#', sortInfo: 'surgicalBlock.location.name'},
-                    {heading: 'Surgeon', sortInfo: 'surgicalBlock.provider.person.display'}
+                    {heading: 'Surgeon', sortInfo: 'surgicalBlock.provider.person.display'},
+                    {heading: 'otherSurgeon', sortInfo: 'surgicalAppointmentAttributes.otherSurgeon.value.person.display'},
+                    {heading: 'Anaesthesic', sortInfo: 'surgicalAppointmentAttributes.anesthesic.value'},
+                    {heading: 'scrubTechnician', sortInfo: 'surgicalAppointmentAttributes.scrubTechnician.value'},
+                    {heading: 'Operation Room', sortInfo: 'surgicalAppointmentAttributes.Operation Room.value'},
+                    {heading: 'Blood', sortInfo: 'surgicalAppointmentAttributes.Blood Transfusion Requested for Surgery?.value'},
+                    {heading: 'Blood Availability', sortInfo: 'surgicalAppointmentAttributes.Blood Availability.value'}
+                ];
+
+                columns = columns.concat(getObservationColumnsTableInfo());
+
+                columns = columns.concat([
+                    {heading: 'Equipment Needed', sortInfo: 'surgicalAppointmentAttributes.Equipment Needed.value'},
+                    {heading: 'Patient Position', sortInfo: "surgicalAppointmentAttributes.Patient Position.value"},
+                    {heading: 'C-arm?', sortInfo: 'surgicalAppointmentAttributes.C-arm?.value'},
+                    {heading: 'Tourniquet', sortInfo: 'surgicalAppointmentAttributes.Tourniquet.value'},
+                    {heading: 'Bed Location', sortInfo: 'bedLocation'},
+                    {heading: 'Bed ID', sortInfo: 'bedNumber'},
+                    {heading: 'Remarks', sortInfo: 'remarks'},
+                    {heading: 'Status Change Notes', sortInfo: 'notes'},
+                    {heading: 'Day', sortInfo: 'derivedAttributes.expectedStartDate'},
+                    {heading: 'Date', sortInfo: 'derivedAttributes.expectedStartDate'},
+                    {heading: 'OT#', sortInfo: 'surgicalBlock.location.name'}
                 ]);
 
-                var attributesRelatedToBed = [{heading: 'Status Change Notes', sortInfo: 'notes'},
-                    {heading: 'Bed Location', sortInfo: 'bedLocation'},
-                    {heading: 'Bed ID', sortInfo: 'bedNumber'}];
-                var primaryDiagnosisInfo = [{heading: 'Primary Diagnoses', sortInfo: 'patientObservations'}];
-                return listViewAttributes.concat(getSurgicalAttributesTableInfo(), attributesRelatedToBed, primaryDiagnosisInfo);
+                return columns;
             }
 
             function getFilteredSurgicalAttributeTypes () {
                 var derivedSurgicalAttributes = ['estTimeHours', 'estTimeMinutes', 'cleaningTime'];
-                if ($scope.conceptFormatAttributeName) {
-                    derivedSurgicalAttributes.push($scope.conceptFormatAttributeName);
-                }
                 return surgicalAppointmentHelper.getAttributeTypesByRemovingAttributeNames($rootScope.attributeTypes, derivedSurgicalAttributes);
             }
 
@@ -227,6 +237,15 @@ angular.module('bahmni.ot')
                     filterSurgicalBlocksAndMapAppointmentsForDisplay($scope.surgicalBlocks);
                 }
             });
+
+            $scope.openPatientDashboard = function (appointment, $event) {
+                var listViewPatientDashboardUrl = appService.getAppDescriptor().getConfigValue('listViewPatientDashboardUrl');
+                if (listViewPatientDashboardUrl && appointment.patient) {
+                    var formattedUrl = appService.getAppDescriptor().formatUrl(listViewPatientDashboardUrl, {'patientUuid': appointment.patient.uuid});
+                    $window.open(formattedUrl, 'pre_surgery_tracker');
+                }
+                $event.stopPropagation();
+            };
 
             $scope.isStatusPostponed = function (status) {
                 return status === Bahmni.OT.Constants.postponed;

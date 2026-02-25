@@ -10,7 +10,6 @@ describe('listViewController', function () {
     var printer = jasmine.createSpyObj('printer', ['print']);
     var appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
     var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
-    var otUtils = jasmine.createSpyObj('otUtils', ['getConceptFormatAttributeName']);
     appService.getAppDescriptor.and.returnValue(appDescriptor);
 
     beforeEach(function () {
@@ -53,8 +52,7 @@ describe('listViewController', function () {
             appService: appService,
             $state: state,
             ngDialog: ngDialog,
-            printer: printer,
-            otUtils: otUtils
+            printer: printer
         });
         scope.$apply();
     };
@@ -391,30 +389,17 @@ describe('listViewController', function () {
         return {data: {results: results}};
     });
 
-    it("should initialize conceptFormatAttributeName from otUtils", function () {
-        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
+    it("should include Blood Transfusion column in tableInfo with hardcoded heading and sortInfo", function () {
         createController();
-        expect(otUtils.getConceptFormatAttributeName).toHaveBeenCalled();
-        expect(scope.conceptFormatAttributeName).toBe('Blood Transfusion Requested for Surgery?');
+        var bloodColumn = _.find(scope.tableInfo, {heading: 'Blood'});
+        expect(bloodColumn).toBeDefined();
+        expect(bloodColumn.sortInfo).toBe('surgicalAppointmentAttributes.Blood Transfusion Requested for Surgery?.value');
     });
 
-    it("should include conceptFormatAttributeName in tableInfo when it is available", function () {
-        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
-        createController();
-        expect(scope.tableInfo[3].heading).toBe('Blood Transfusion Requested for Surgery?');
-        expect(scope.tableInfo[3].sortInfo).toBe('surgicalAppointmentAttributes.Blood Transfusion Requested for Surgery?.value');
-    });
-
-    it("should exclude conceptFormatAttributeName from filteredSurgicalAttributeTypes", function () {
-        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
-        rootScope.attributeTypes = defaultAttributeTypes.concat([{
-            "uuid": "test-uuid",
-            "name": "Blood Transfusion Requested for Surgery?",
-            "format": "org.openmrs.Concept"
-        }]);
+    it("should exclude estTimeHours, estTimeMinutes and cleaningTime from filteredSurgicalAttributeTypes", function () {
+        rootScope.attributeTypes = defaultAttributeTypes;
         createController();
         var filteredNames = scope.filteredSurgicalAttributeTypes.map(function(attr) { return attr.name; });
-        expect(filteredNames).not.toContain('Blood Transfusion Requested for Surgery?');
         expect(filteredNames).not.toContain('estTimeHours');
         expect(filteredNames).not.toContain('estTimeMinutes');
         expect(filteredNames).not.toContain('cleaningTime');
@@ -733,21 +718,21 @@ describe('listViewController', function () {
         };
         rootScope.attributeTypes = defaultAttributeTypes;
         createController();
-        expect(scope.tableInfo.length).toBe(27);
-        expect(scope.tableInfo[4].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
-        expect(scope.tableInfo[4].sortInfo).toBeNull();
-        expect(scope.tableInfo[5].heading).toBe("OT_ANAESTHESIA_REVIEW");
-        expect(scope.tableInfo[5].sortInfo).toBeNull();
-        expect(scope.tableInfo[6].heading).toBe("OT_PAEDIATRIC_REVIEW_DATE");
-        expect(scope.tableInfo[6].sortInfo).toBeNull();
-        expect(scope.tableInfo[7].heading).toBe("OT_PAEDIATRIC_REVIEW");
-        expect(scope.tableInfo[7].sortInfo).toBeNull();
-        expect(scope.tableInfo[24].heading).toBe("Bed Location");
-        expect(scope.tableInfo[24].sortInfo).toBe("bedLocation");
-        expect(scope.tableInfo[25].heading).toBe("Bed ID");
-        expect(scope.tableInfo[25].sortInfo).toBe("bedNumber");
-        expect(scope.tableInfo[26].heading).toBe("Primary Diagnoses");
-        expect(scope.tableInfo[26].sortInfo).toBe("patientObservations");
+        expect(scope.tableInfo.length).toBe(34);
+        expect(scope.tableInfo[19].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
+        expect(scope.tableInfo[19].sortInfo).toBeNull();
+        expect(scope.tableInfo[20].heading).toBe("OT_ANAESTHESIA_REVIEW");
+        expect(scope.tableInfo[20].sortInfo).toBeNull();
+        expect(scope.tableInfo[21].heading).toBe("OT_PAEDIATRIC_REVIEW_DATE");
+        expect(scope.tableInfo[21].sortInfo).toBeNull();
+        expect(scope.tableInfo[22].heading).toBe("OT_PAEDIATRIC_REVIEW");
+        expect(scope.tableInfo[22].sortInfo).toBeNull();
+        expect(scope.tableInfo[6].heading).toBe("Primary Diagnoses");
+        expect(scope.tableInfo[6].sortInfo).toBe("primaryDiagnosis");
+        expect(scope.tableInfo[27].heading).toBe("Bed Location");
+        expect(scope.tableInfo[27].sortInfo).toBe("bedLocation");
+        expect(scope.tableInfo[28].heading).toBe("Bed ID");
+        expect(scope.tableInfo[28].sortInfo).toBe("bedNumber");
     });
 
     it("should not include assessment columns when config is absent", function () {
@@ -770,7 +755,7 @@ describe('listViewController', function () {
         expect(headings).not.toContain("OT_ANAESTHESIA_REVIEW");
         expect(headings).not.toContain("OT_PAEDIATRIC_REVIEW_DATE");
         expect(headings).not.toContain("OT_PAEDIATRIC_REVIEW");
-        expect(scope.tableInfo.length).toBe(23);
+        expect(scope.tableInfo.length).toBe(30);
     });
 
     it("should not include assessment columns when config is empty array", function () {
@@ -793,7 +778,7 @@ describe('listViewController', function () {
         expect(headings).not.toContain("OT_ANAESTHESIA_REVIEW");
         expect(headings).not.toContain("OT_PAEDIATRIC_REVIEW_DATE");
         expect(headings).not.toContain("OT_PAEDIATRIC_REVIEW");
-        expect(scope.tableInfo.length).toBe(23);
+        expect(scope.tableInfo.length).toBe(30);
     });
 
     it("should include only configured assessment columns in configured order", function () {
@@ -814,9 +799,9 @@ describe('listViewController', function () {
         rootScope.attributeTypes = defaultAttributeTypes;
         createController();
 
-        expect(scope.tableInfo.length).toBe(25);
-        expect(scope.tableInfo[4].heading).toBe("OT_PAEDIATRIC_REVIEW");
-        expect(scope.tableInfo[5].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
+        expect(scope.tableInfo.length).toBe(32);
+        expect(scope.tableInfo[19].heading).toBe("OT_PAEDIATRIC_REVIEW");
+        expect(scope.tableInfo[20].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
 
         var headings = scope.tableInfo.map(function(info) { return info.heading; });
         expect(headings).not.toContain("OT_ANAESTHESIA_REVIEW");
@@ -849,7 +834,7 @@ describe('listViewController', function () {
         expect(scope.filteredObservationColumns[1].isDate).toBe(false);
     });
 
-    it('should have all the surgical attributes in table info', function () {
+    it('should have hardcoded surgical attribute columns in table info at correct positions', function () {
         appDescriptor.getConfigValue.and.callFake(function (configName) {
             if (configName === 'listViewObservationColumns') {
                 return [
@@ -866,22 +851,13 @@ describe('listViewController', function () {
             locations: {"OT 1": true, "OT 2": true, "OT 3": true},
             statusList: []
         };
-        rootScope.attributeTypes = defaultAttributeTypes;
         createController();
-        expect(scope.tableInfo.length).toBe(27);
-        expect(scope.tableInfo[16].heading).toBe('procedure');
-        expect(scope.tableInfo[16].sortInfo).toBe('surgicalAppointmentAttributes.procedure.value');
-        expect(scope.tableInfo[17].heading).toBe('otherSurgeon');
-        expect(scope.tableInfo[17].sortInfo).toBe('surgicalAppointmentAttributes.otherSurgeon.value.person.display');
-        expect(scope.tableInfo[18].heading).toBe('surgicalAssistant');
-        expect(scope.tableInfo[18].sortInfo).toBe('surgicalAppointmentAttributes.surgicalAssistant.value');
-        expect(scope.tableInfo[19].heading).toBe('anaesthetist');
-        expect(scope.tableInfo[19].sortInfo).toBe('surgicalAppointmentAttributes.anaesthetist.value');
-        expect(scope.tableInfo[20].heading).toBe('scrubNurse');
-        expect(scope.tableInfo[20].sortInfo).toBe('surgicalAppointmentAttributes.scrubNurse.value');
-        expect(scope.tableInfo[21].heading).toBe('circulatingNurse');
-        expect(scope.tableInfo[21].sortInfo).toBe('surgicalAppointmentAttributes.circulatingNurse.value');
-        expect(scope.tableInfo[22].heading).toBe('notes');
-        expect(scope.tableInfo[22].sortInfo).toBe('surgicalAppointmentAttributes.notes.value');
+        expect(scope.tableInfo.length).toBe(34);
+        expect(scope.tableInfo[7].heading).toBe('procedure');
+        expect(scope.tableInfo[7].sortInfo).toBe('surgicalAppointmentAttributes.procedure.value');
+        expect(scope.tableInfo[13].heading).toBe('otherSurgeon');
+        expect(scope.tableInfo[13].sortInfo).toBe('surgicalAppointmentAttributes.otherSurgeon.value.person.display');
+        expect(scope.tableInfo[17].heading).toBe('Blood');
+        expect(scope.tableInfo[17].sortInfo).toBe('surgicalAppointmentAttributes.Blood Transfusion Requested for Surgery?.value');
     })
 });

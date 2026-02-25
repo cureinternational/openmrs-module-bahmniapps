@@ -83,7 +83,7 @@ angular.module('bahmni.ot')
         };
 
         this.getDefaultAttributeTranslations = function () {
-            return new Map([['procedure', "OT_SURGICAL_APPOINTMENT_PROCEDURE"], [Bahmni.OT.Constants.conceptFormatAttributeName, "OT_SURGICAL_APPOINTMENT_CONCEPT_FORMAT_REQUIREMENT"],
+            return new Map([['procedure', "OT_SURGICAL_APPOINTMENT_PROCEDURE"],
             ['estTimeHours', "OT_SURGICAL_APPOINTMENT_HOURS"], ['estTimeMinutes', "OT_SURGICAL_APPOINTMENT_MINUTES"],
             ['cleaningTime', "OT_SURGICAL_APPOINTMENT_CLEANING_TIME"], ['otherSurgeon', "OT_SURGICAL_APPOINTMENT_OTHER_SURGEON"],
             ['surgicalAssistant', "OT_SURGICAL_APPOINTMENT_SURGICAL_ASSISTANT"], ['anaesthetist', "OT_SURGICAL_APPOINTMENT_ANAESTHETIST"],
@@ -95,7 +95,12 @@ angular.module('bahmni.ot')
             ['Actual Time', "OT_SURGICAL_APPOINTMENT_ACTUAL_TIME"], ['OT#', "OT_SURGICAL_BLOCK_LOCATION_NAME"],
             ['Surgeon', "OT_PROVIDER_SURGEON"], ['Status Change Notes', "OT_SURGICAL_APPOINTMENT_STATUS_CHANGE_NOTES"],
             ['Bed Location', "OT_SURGICAL_APPOINTMENT_BED_LOCATION"],
-            ['Bed ID', "OT_SURGICAL_APPOINTMENT_BED_ID"]
+            ['Bed ID', "OT_SURGICAL_APPOINTMENT_BED_ID"],
+            ['patientHeight', "OT_SURGICAL_APPOINTMENT_PATIENT_HEIGHT"],
+            ['patientWeight', "OT_SURGICAL_APPOINTMENT_PATIENT_WEIGHT"],
+            ['scrubTechnician', "OT_SURGICAL_APPOINTMENT_SCRUB_TECHNICIAN"],
+            ['Smile Train?', "OT_SURGICAL_APPOINTMENT_SMILE_TRAIN"],
+            ['C-arm?', "OT_SURGICAL_APPOINTMENT_C_ARM"]
             ]);
         };
 
