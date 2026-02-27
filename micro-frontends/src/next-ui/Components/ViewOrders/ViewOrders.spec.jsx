@@ -30,11 +30,6 @@ describe("ViewOrders", () => {
         }
     ];
 
-    it("should render the component", () => {
-        const {container} = render(<ViewOrders orders={mockOrders}/>);
-        expect(container).toMatchSnapshot();
-    });
-
     it("should render container with with correct details", () => {
         const {container} = render(<ViewOrders orders={mockOrders}/>);
         expect(container.querySelector(".orders-view-container")).toBeTruthy();

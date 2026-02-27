@@ -69,7 +69,8 @@ angular.module('bahmni.clinical').factory('initialization',
                     .then(loadConfigPromise)
                     .then(facilityLocation)
                     .then(mergeFormConditions)
-                    .then(orderTypeService.loadAll)).then(res => {
+                    .then(orderTypeService.loadAll))
+                    .then(function (res) {
                         $rootScope.orderTypeData = res;
                         return res;
                     });

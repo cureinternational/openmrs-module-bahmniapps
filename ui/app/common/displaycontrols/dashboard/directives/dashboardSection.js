@@ -11,7 +11,7 @@ angular.module('bahmni.common.displaycontrol.dashboard')
                 const orderType = $rootScope.orderTypeData.filter(function (item) {
                     return item.display === $scope.section.name;
                 });
-                $scope.ordersData = {...($scope.ordersData || {}), ...$scope.section};
+                $scope.ordersData = Object.assign({}, $scope.ordersData || {}, $scope.section);
                 if (orderType.length > 0) {
                     $scope.ordersData.orderType = orderType[0];
                 }
