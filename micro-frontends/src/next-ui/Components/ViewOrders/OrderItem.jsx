@@ -3,23 +3,24 @@ import PropTypes from "prop-types";
 import {ChevronUp, ChevronDown} from "@carbon/icons-react/next";
 import {Accordion} from "./Accordion";
 import "./OrderItem.scss";
+import {ORDER_STATUS_TO_UI_STATUS} from "../../constants";
 
 export function OrderItem({name, value, updatedBy}) {
     const [isOpen, setIsOpen] = useState(false)
     return <div className="order-item-wrapper">
-        <div className="order-item-header" onClick={() => setIsOpen(!isOpen)}>
+        <div className="order-item-header" onClick={() => updatedBy && setIsOpen(!isOpen)}>
             <div>{name}</div>
             <div>{value}</div>
-            <div className="order-item-chevron">{isOpen ? <ChevronUp/> : <ChevronDown/>}</div>
+            {updatedBy ? <div className="order-item-chevron">{isOpen ? <ChevronUp/> : <ChevronDown/>}</div>: <div/>}
         </div>
         {isOpen && <div className="order-item-details">{updatedBy}</div>}
     </div>
 }
 
 export function OrderItemContainer(props) {
-    const {updatedAt, orderStatus, statusUpdatedBy, owner, ownerUpdatedBy, notes, notesUpdatedBy} = props;
+    const {updatedAt, orderStatus, statusUpdatedBy, owner, ownerUpdatedBy, notes, notesUpdatedBy, createdAt} = props;
 
-    const header = <span>{updatedAt}</span>;
+    const header = <span>{updatedAt || createdAt}</span>;
 
     return (
         <Accordion
@@ -28,9 +29,9 @@ export function OrderItemContainer(props) {
             className="order-item-container"
         >
             <div>
-                <OrderItem updatedBy={statusUpdatedBy} name={"Status"} value={orderStatus}/>
-                <OrderItem updatedBy={ownerUpdatedBy} name={"Owner"} value={owner}/>
-                <OrderItem updatedBy={notesUpdatedBy} name={"Notes"} value={notes}/>
+                <OrderItem updatedBy={statusUpdatedBy} name={"Status"} value={orderStatus ? ORDER_STATUS_TO_UI_STATUS[orderStatus] : "New"}/>
+                <OrderItem updatedBy={ownerUpdatedBy} name={"Owner"} value={owner ? owner : "Unassigned" }/>
+                {notes && <OrderItem updatedBy={notesUpdatedBy} name={"Notes"} value={notes}/>}
             </div>
         </Accordion>
     );

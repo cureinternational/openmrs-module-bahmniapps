@@ -9,7 +9,7 @@ describe("ViewOrders", () => {
             createdBy: "Dr. Smith",
             createdAt: "2024-01-01T10:00:00.000Z",
             updatedAt: "2024-01-20T11:00:00.000Z",
-            orderStatus: "Active",
+            orderStatus: "REQUESTED",
             statusUpdatedBy: "Status updated by Nurse A",
             owner: "Dr. David",
             ownerUpdatedBy: "Owner updated by Admin",
@@ -49,7 +49,7 @@ describe("ViewOrders", () => {
 
         const accordions = container.querySelectorAll(".accordion");
         expect(accordions.length).toBe(3);
-        expect(screen.getByText("Active")).toBeTruthy();
+        expect(screen.getByText("Acknowledged")).toBeTruthy();
     });
 
     it("should render empty container when no orders", () => {

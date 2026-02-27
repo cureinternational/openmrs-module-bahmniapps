@@ -23,6 +23,14 @@ describe("OrderItem", () => {
         expect(chevronIcon).toBeTruthy();
     });
 
+    it("should display name and value without updatedBy", () => {
+        const {container} = render(<OrderItem {...mockProps} updatedBy={undefined} />);
+        expect(screen.getByText("Test Name")).toBeTruthy();
+        expect(screen.getByText("Test Value")).toBeTruthy();
+        const chevronIcon = container.querySelector(".order-item-chevron svg");
+        expect(chevronIcon).toBeFalsy();
+    });
+
     it("should toggle updatedBy details when clicked", () => {
         const { container } = render(<OrderItem {...mockProps} />);
 
@@ -38,8 +46,9 @@ describe("OrderItem", () => {
 describe("OrderItemContainer", () => {
     const mockProps = {
         updatedAt: "01 Jan 2024 10:00 AM",
-        orderStatus: "Active",
+        orderStatus: "COMPLETED",
         statusUpdatedBy: "Status updated by User A",
+        updatedBy: "Updated by User A",
         owner: "Owner Name",
         ownerUpdatedBy: "Owner updated by User B",
         notes: "Test notes",
@@ -53,7 +62,7 @@ describe("OrderItemContainer", () => {
 
     it("should display order values", () => {
         const { container } = render(<OrderItemContainer {...mockProps} />);
-        expect(screen.getByText("Active")).toBeTruthy();
+        expect(screen.getByText("Completed")).toBeTruthy();
         expect(screen.getByText("Owner Name")).toBeTruthy();
         expect(screen.getByText("Test notes")).toBeTruthy();
         expect(screen.getByText("Status")).toBeTruthy();

@@ -8,7 +8,6 @@ import moment from "moment";
 
 export function ViewOrders(props) {
     const {orders} = props;
-
     const formatDate = (dateString) => {
         if (!dateString) return "";
         return moment(dateString).format("DD MMM YYYY hh:mm a")
@@ -28,7 +27,6 @@ export function ViewOrders(props) {
                         </div>
                     </>
                 );
-
                 return (
                     <Accordion
                         key={index}
@@ -36,7 +34,8 @@ export function ViewOrders(props) {
                         defaultOpen={index === 0}
                         className="order-item"
                     >
-                        <OrderItemContainer {...order} updatedAt={formatDate(order.updatedAt)}/>
+                        <OrderItemContainer {...order} createdAt={formatDate(order.createdAt)}
+                                            updatedAt={formatDate(order.updatedAt)}/>
                     </Accordion>
                 );
             })}

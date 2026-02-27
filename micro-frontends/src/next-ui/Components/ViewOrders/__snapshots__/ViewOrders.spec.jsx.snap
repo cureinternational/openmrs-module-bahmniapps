@@ -98,7 +98,7 @@ exports[`ViewOrders should render the component 1`] = `
                     Status
                   </div>
                   <div>
-                    Active
+                    Acknowledged
                   </div>
                   <div
                     class="order-item-chevron"
