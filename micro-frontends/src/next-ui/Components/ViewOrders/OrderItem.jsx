@@ -4,9 +4,10 @@ import {ChevronUp, ChevronDown} from "@carbon/icons-react/next";
 import {Accordion} from "./Accordion";
 import "./OrderItem.scss";
 import {ORDER_STATUS_TO_UI_STATUS} from "../../constants";
+import { FormattedMessage } from "react-intl";
 
 export function OrderItem({name, value, updatedBy}) {
-    const [isOpen, setIsOpen] = useState(false)
+    const [isOpen, setIsOpen] = useState(false);
     return <div className="order-item-wrapper">
         <div className="order-item-header" onClick={() => updatedBy && setIsOpen(!isOpen)}>
             <div>{name}</div>
@@ -29,16 +30,21 @@ export function OrderItemContainer(props) {
             className="order-item-container"
         >
             <div>
-                <OrderItem updatedBy={statusUpdatedBy} name={"Status"} value={orderStatus ? ORDER_STATUS_TO_UI_STATUS[orderStatus] : "New"}/>
-                <OrderItem updatedBy={ownerUpdatedBy} name={"Owner"} value={owner ? owner : "Unassigned" }/>
-                {notes && <OrderItem updatedBy={notesUpdatedBy} name={"Notes"} value={notes}/>}
+                <OrderItem updatedBy={statusUpdatedBy}
+                           name={<FormattedMessage id={"STATUS"} defaultMessage={"Status"}/>}
+                           value={orderStatus ? ORDER_STATUS_TO_UI_STATUS[orderStatus] : "New"}/>
+                <OrderItem updatedBy={ownerUpdatedBy} name={<FormattedMessage id={"OWNER"} defaultMessage={"Owner"}/>}
+                           value={owner ? owner : "Unassigned"}/>
+                {notes &&
+                    <OrderItem updatedBy={notesUpdatedBy} name={<FormattedMessage id={"NOTES"} defaultMessage={"Notes"}/>}
+                               value={notes}/>}
             </div>
         </Accordion>
     );
 }
 
 OrderItem.propTypes = {
-    name: PropTypes.string,
+    name: PropTypes.element,
     value: PropTypes.string,
     updatedBy: PropTypes.string,
 }
