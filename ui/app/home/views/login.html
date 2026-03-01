@@ -3,7 +3,7 @@
     <span ng-if="titleText" class="title_text"> {{'LOGIN_PAGE_TITLE_TEXT' | translate }} </span>
 </div>
 
-<div class="login" ng-hide="showOTP">
+<div class="login" ng-if="!showOTP">
     <div ng-if="headerText" class="emr-login-text">
         <b>{{'LOGIN_PAGE_HEADER_TEXT'| translate}} </b>
     </div>
@@ -11,7 +11,7 @@
         <div class="left">{{'LOGIN_LABEL_LOGIN_KEY' | translate}}</div>
         <div class="right locale-wrapper">
             <span class="locale-text">{{'LOGIN_LABEL_SELECT_LOCALE_KEY' | translate}} </span>
-            <select id="locale" ng-model="selectedLocale" ng-options="item.code as item.nativeName for item in locales" required/>
+            <select id="locale" ng-model="selectedLocale" ng-options="item.code as item.nativeName for item in locales" required></select>
         </div>
     </header>
 
@@ -71,7 +71,7 @@
 
 </div>
 
-<div class="login login-otp" ng-show="showOTP">
+<div class="login login-otp" ng-if="showOTP">
 
     <header class="reg-header">
         <div class="left">{{'LOGIN_LABEL_LOGIN_KEY' | translate}}</div>
