@@ -97,3 +97,14 @@ CVE-2026-23745 # tar: https://avd.aquasec.com/nvd/2026/cve-2026-23745/
 CVE-2025-15284       # qs: qs: Denial of Service via improper input validation in array parsing... https://avd.aquasec.com/nvd/cve-2025-15284
 CVE-2026-23950 # tar: node-tar: tar: node-tar: Arbitrary file overwrite via Unicode path collision race condition.  https://avd.aquasec.com/nvd/cve-2026-23950
 CVE-2026-24842 # node-tar: tar: node-tar: Arbitrary file creation via path traversal bypass in hardlink https://avd.aquasec.com/nvd/cve-2026-24842
+CVE-2026-26996 # minimatch: https://avd.aquasec.com/nvd/cve-2026-26996
+CVE-2026-26960 # tar: https://avd.aquasec.com/nvd/cve-2026-26960
+CVE-2026-27903 # minimatch: https://avd.aquasec.com/nvd/cve-2026-27903
+CVE-2026-27904 # minimatch: https://avd.aquasec.com/nvd/cve-2026-27904
+GHSA-5c6j-r48x-rmvq # serialize-javascript: https://github.com/advisories/GHSA-5c6j-r48x-rmvq
+CVE-2026-27212 # swiper: https://avd.aquasec.com/nvd/cve-2026-27212
+CVE-2026-24133 # jspdf: https://avd.aquasec.com/nvd/cve-2026-24133
+CVE-2026-24737 # jspdf: https://avd.aquasec.com/nvd/cve-2026-24737
+CVE-2026-25535 # jspdf: https://avd.aquasec.com/nvd/cve-2026-25535
+CVE-2026-25755 # jspdf: https://avd.aquasec.com/nvd/cve-2026-25755
+CVE-2026-25940 # jspdf: https://avd.aquasec.com/nvd/cve-2026-25940
