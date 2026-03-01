@@ -732,6 +732,7 @@ describe('listViewController', function () {
             statusList: []
         };
         rootScope.attributeTypes = defaultAttributeTypes;
+        rootScope.showPrimaryDiagnosisForOT = true;
         createController();
         expect(scope.tableInfo.length).toBe(27);
         expect(scope.tableInfo[4].heading).toBe("OT_ANAESTHESIA_REVIEW_DATE");
@@ -763,6 +764,7 @@ describe('listViewController', function () {
             statusList: []
         };
         rootScope.attributeTypes = defaultAttributeTypes;
+        rootScope.showPrimaryDiagnosisForOT = true;
         createController();
 
         var headings = scope.tableInfo.map(function(info) { return info.heading; });
@@ -786,6 +788,7 @@ describe('listViewController', function () {
             statusList: []
         };
         rootScope.attributeTypes = defaultAttributeTypes;
+        rootScope.showPrimaryDiagnosisForOT = true;
         createController();
 
         var headings = scope.tableInfo.map(function(info) { return info.heading; });
@@ -812,6 +815,7 @@ describe('listViewController', function () {
             statusList: []
         };
         rootScope.attributeTypes = defaultAttributeTypes;
+        rootScope.showPrimaryDiagnosisForOT = true;
         createController();
 
         expect(scope.tableInfo.length).toBe(25);
@@ -867,6 +871,7 @@ describe('listViewController', function () {
             statusList: []
         };
         rootScope.attributeTypes = defaultAttributeTypes;
+        rootScope.showPrimaryDiagnosisForOT = true;
         createController();
         expect(scope.tableInfo.length).toBe(27);
         expect(scope.tableInfo[16].heading).toBe('procedure');
@@ -886,6 +891,7 @@ describe('listViewController', function () {
     })
 
     it('should have primaryDiagnosisInfo attributes in table info', function () {
+        otUtils.getConceptFormatAttributeName.and.returnValue('Blood Transfusion Requested for Surgery?');
         scope.filterParams = {
             providers: [],
             locations: {"OT 1": true, "OT 2": true, "OT 3": true},
@@ -894,9 +900,8 @@ describe('listViewController', function () {
         rootScope.attributeTypes = defaultAttributeTypes;
         rootScope.showPrimaryDiagnosisForOT = true;
         createController();
-        console.log(scope.tableInfo)
-        expect(scope.tableInfo.length).toBe(22);
-        expect(scope.tableInfo[21].heading).toBe('Primary Diagnoses');
-        expect(scope.tableInfo[21].sortInfo).toBe('patientObservations');
+        expect(scope.tableInfo.length).toBe(23);
+        expect(scope.tableInfo[22].heading).toBe('Primary Diagnoses');
+        expect(scope.tableInfo[22].sortInfo).toBe('patientObservations');
         })
 });

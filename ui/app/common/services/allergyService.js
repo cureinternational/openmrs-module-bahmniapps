@@ -25,8 +25,6 @@ angular.module('bahmni.common.util')
                 return allergiesList.join(", ");
             });
         };
-
-
         const getNoKnownAllergyUuid = function () {
             return $http.get(Bahmni.Common.Constants.globalPropertyUrl, {
                 method: "GET",

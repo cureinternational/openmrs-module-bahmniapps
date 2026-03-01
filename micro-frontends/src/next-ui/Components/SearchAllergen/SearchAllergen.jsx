@@ -64,6 +64,7 @@ export function SearchAllergen(props) {
       <div>
         <Search
           id={"allergen-search"}
+          labelText="Search"
           placeholder={searchAllergenPlaceholder}
           onChange={(e) => {
             search(e.target.value);
