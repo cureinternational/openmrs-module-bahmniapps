@@ -51,15 +51,19 @@ const transformOrders = (entries = []) => {
 };
 
 export function OrdersDisplayControl({hostData}) {
-    const { translationKey, orderType, patient, name } = hostData;
+    const { translationKey, orderType, patient, name, numberOfVisits } = hostData;
     const [orders, setOrders] = useState([]);
 
     useEffect(() => {
+        const payload = {
+            category: orderType.uuid,
+            patient: patient.uuid,
+        }
+        if(numberOfVisits){
+            payload.numberOfVisits = numberOfVisits;
+        }
         axios.get("/openmrs/ws/fhir2/R4/ServiceRequest", {
-            params: {
-                category: orderType.uuid,
-                patient: patient.uuid,
-            }
+            params: payload
         }).then(res => {
             const entries = res.data?.entry || [];
             const data = transformOrders(entries);
