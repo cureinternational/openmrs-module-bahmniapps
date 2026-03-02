@@ -121,5 +121,5 @@
     "PATIENT_ATTRIBUTE_GIVEN_NAME_LOCAL": "First Name in Arabic",
     "PATIENT_ATTRIBUTE_FAMILY_NAME_LOCAL": "Last Name in Arabic",
     "PATIENT_ATTRIBUTE_MIDDLE_NAME_LOCAL": "Middle Name in Arabic",
-      "REGISTRATION_ACTIVE_VISIT_EXISTS": "Une visite est déjà en cours pour ce patient à cet endroit"
+    "REGISTRATION_ACTIVE_VISIT_EXISTS": "une visite active existe déjà à cet endroit.Veuillez actualiser la page"
 }
