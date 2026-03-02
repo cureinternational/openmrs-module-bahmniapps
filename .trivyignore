@@ -85,3 +85,6 @@ CVE-2025-15284       # qs: qs: Denial of Service via improper input validation i
 CVE-2026-23745 # tar: https://avd.aquasec.com/nvd/2026/cve-2026-23745/
 CVE-2026-23950 # tar: node-tar: tar: node-tar: Arbitrary file overwrite via Unicode path collision race condition.  https://avd.aquasec.com/nvd/cve-2026-23950
 CVE-2026-24842 # node-tar: tar: node-tar: Arbitrary file creation via path traversal bypass in hardlink https://avd.aquasec.com/nvd/cve-2026-24842
+CVE-2026-27903
+CVE-2026-27904
+GHSA-5c6j-r48x-rmvq
