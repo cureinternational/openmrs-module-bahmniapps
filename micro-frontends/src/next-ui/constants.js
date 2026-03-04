@@ -34,3 +34,15 @@ export const GET_PROVIDER_UUID_URL = RESTWS_V1 + "/session";
 export const SAVE_ALLERGIES_URL =  RESTWS_V1 + "/patient/{patientId}/allergy";
 export const NEXT_UI_CONFIG_PATH = hostUrl + "/bahmni_config/openmrs/";
 export const GLOBAL_PROPERTY_URL = RESTWS_V1 + "/bahmnicore/sql/globalproperty";
+export const FHIR_EXT_TASK_CREATED_ON = "task-created-on"
+export const FHIR_EXT_TASK_STATUS = "task-status"
+export const FHIR_EXT_TASK_OWNER = "task-owner"
+export const FHIR_EXT_TASK_NOTE = "task-note"
+export const FHIR_EXT_CREATED_BY = "created-by"
+
+export const ORDER_STATUS_TO_UI_STATUS= {
+    REQUESTED: 'Acknowledged',
+    ACCEPTED: 'In Progress',
+    COMPLETED: 'Completed',
+    EXCEPTION: 'New',
+};
