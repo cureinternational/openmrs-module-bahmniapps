@@ -37,7 +37,7 @@ const transformOrders = (entries = []) => {
                     }
                 }
             })
-            entries.push({
+            orders.push({
                 name: resource.code?.text || "",
                 createdBy: resource.requester?.display || "",
                 createdAt: resource.authoredOn || "",
