@@ -109,3 +109,4 @@ CVE-2026-25535 # jspdf: https://avd.aquasec.com/nvd/cve-2026-25535
 CVE-2026-25755 # jspdf: https://avd.aquasec.com/nvd/cve-2026-25755
 CVE-2026-25940 # jspdf: https://avd.aquasec.com/nvd/cve-2026-25940
 GHSA-qffp-2rhf-9h96
+CVE-2026-29786
