@@ -16,7 +16,7 @@ COPY ui/dist/. /usr/local/apache2/htdocs/bahmni/
 
 # Download Person Management App
 RUN <<EOR
-    RELEASE_URL="https://github.com/Bahmni/person-management-app/releases/tag/v-11"
+    RELEASE_URL="https://github.com/Bahmni/person-management-app/releases/tag/v-14"
     RELEASE_TAG=$(curl -L -s -H 'Accept: application/json' $RELEASE_URL)
     VERSION_TAG=$(echo $RELEASE_TAG | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
     ARTIFACT_URL="https://github.com/Bahmni/person-management-app/releases/download/$VERSION_TAG/person-management-app.zip"
