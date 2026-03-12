@@ -6,7 +6,7 @@ angular.module('bahmni.ot')
             var startDatetime = moment($scope.viewDate).toDate();
             var surgicalBlockMapper = new Bahmni.OT.SurgicalBlockMapper();
             var endDatetime = moment(startDatetime).endOf('day').toDate();
-            var listViewTranslations = appService.getAppDescriptor().getConfigValue("listViewTranslations") || {};
+            var listViewTranslations = appService.getAppDescriptor().getConfigValue("listViewTranslations") || [];
             $scope.defaultAttributeTranslations = surgicalAppointmentHelper.getDefaultAttributeTranslations(listViewTranslations);
             $scope.conceptFormatAttributeName = otUtils.getConceptFormatAttributeName();
             $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
