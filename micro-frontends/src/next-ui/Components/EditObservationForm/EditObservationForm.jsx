@@ -4,6 +4,7 @@ import { getLocale } from "../i18n/utils";
 import { getFormByFormName, getFormDetail, getFormTranslations } from "./EditObservationFormUtils";
 import { findByEncounterUuid } from '../../utils/FormDisplayControl/FormView';
 import { getLatestPublishedForms } from '../../utils/FormDisplayControl/FormUtils';
+import { deepUnescapeStrings } from '../../utils/encodingUtils';
 import { Modal, Loading } from 'carbon-components-react';
 import { FormattedMessage } from "react-intl";
 import { I18nProvider } from '../i18n/I18nProvider';
@@ -78,7 +79,7 @@ const EditObservationForm = (props) => {
                 if (!loadedFormDetails[formUuid]) {
                     var formDetails = await getFormDetail(formUuid);
                     const formDetailsAsString = formDetails.resources[0].value;
-                    formDetails = JSON.parse(formDetailsAsString);
+                    formDetails = deepUnescapeStrings(JSON.parse(formDetailsAsString));
                     formDetails.version = formVersion;
                     setLoadedFormDetails((prevDetails) => ({ ...prevDetails, [formUuid]: formDetails }));
                     

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { GET_ALL_FORMS_BASE_URL, GET_FORMS_BASE_URL, GET_FORM_TRANSLATE_URL } from "../../constants";
 import { cloneDeep, remove } from "lodash";
+import { deepUnescapeStrings } from "../encodingUtils";
 
 
 var getAllForms = async () => {
@@ -184,7 +185,7 @@ var updateObservationsWithFormDefinition = async function (observations, formBui
             //doubt: which resource it should pick - response.resources[0].value;
             var formDetailsAsString = response.resources[0].value;
             if (formDetailsAsString) {
-                var formDef = JSON.parse(formDetailsAsString);
+                var formDef = deepUnescapeStrings(JSON.parse(formDetailsAsString));
                 formDef.version = observationForm.version;
                 var locale = localStorage["NG_TRANSLATE_LANG_KEY"] || "en";
                 var translationData = await getFormTranslate(formDef.name, formDef.version, locale, formDef.uuid)
