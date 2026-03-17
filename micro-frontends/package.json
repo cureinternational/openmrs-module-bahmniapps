@@ -60,5 +60,8 @@
   "engines": {
     "yarn": ">= 1.0.0",
     "npm": "use yarn instead of npm."
+  },
+  "resolutions": {
+    "flatted": "^3.4.0"
   }
 }
