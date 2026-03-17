@@ -3,7 +3,7 @@ import "../../../styles/carbon-conflict-fixes.scss";
 import "../../../styles/carbon-theme.scss";
 import "../../../styles/common.scss";
 import { I18nProvider } from "../../Components/i18n/I18nProvider";
-import PropTypes from "prop-types";
+import PropTypes, {string} from "prop-types";
 import { FormattedMessage } from "react-intl";
 import { ViewOrders } from "../../Components/ViewOrders/ViewOrders";
 import axios from "axios";
@@ -55,7 +55,7 @@ const transformOrders = (entries = []) => {
                     } else if (extension.url.endsWith(FHIR_EXT_TASK_OWNER)) {
                         owner = extension.valueReference.display
                     } else if (extension.url.endsWith(FHIR_EXT_TASK_NOTE)) {
-                        console.log(extension.valueAnnotation.text);
+                        console.log("Prototype", String.prototype);
                         notes = extension.valueAnnotation.text ? extension.valueAnnotation.text.replaceAll('\n', ' | ') : ""
                     } else if (extension.url.endsWith(FHIR_EXT_CREATED_BY)) {
                         updatedBy = extension.valueReference.display
