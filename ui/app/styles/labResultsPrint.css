@@ -1,0 +1,85 @@
+.lab-results-print {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+.lab-results-print .header-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+.lab-results-print .header-section img {
+    height: 80px;
+    width: auto;
+    margin-right: 20px;
+}
+
+.lab-results-print .header-section h2 {
+    margin: 5px 0;
+    font-size: 18px;
+}
+
+.lab-results-print .header-section p {
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+.lab-results-print .patient-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.lab-results-print .patient-info-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+.lab-results-print .lab-results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.lab-results-print .lab-results-table thead tr {
+    background-color: #f2f2f2;
+}
+
+.lab-results-print .lab-results-table th {
+    padding: 8px;
+    text-align: left;
+    border: none;
+}
+
+.lab-results-print .lab-results-table tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+.lab-results-print .lab-results-table tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.lab-results-print .lab-results-table td {
+    padding: 8px;
+    border: none;
+}
+
+.lab-results-print .section-title {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.lab-results-print .doctor-section {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.lab-results-print .doctor-section p {
+    margin: 5px 0;
+}

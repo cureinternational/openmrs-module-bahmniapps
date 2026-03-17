@@ -1,0 +1,48 @@
+<link rel="stylesheet" href="../styles/clinicalPrint.css"/>
+<div class="print-wrapper lab-results-print" ng-switch="true">
+    <div class="print-header" ng-if="printParams">
+        <h1 class="print-title-with-logo"><img height="35px" width="35px" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="logo"/>{{printParams.title}}</h1>
+        <div class="clinic-info">
+            <span>{{printParams.locationName}}</span>
+            <span class="address">{{printParams.locationAddress}}</span>
+        </div>
+        <div class="clinic-info">
+            <span>LABORATORY TESTS</span>
+        </div>
+    </div>
+    <ng-include src="'clinical/common/views/patientInfoPrint.html'"></ng-include>
+    <section bindonce="labOrderResults">
+        <table class="printPrescription lab-results-table">
+            <thead>
+                <tr>
+                    <th>{{ 'TEST_NAME_LABEL' | translate }}</th>
+                    <th>{{ 'TEST_RESULT_LABEL' | translate }}</th>
+                    <th>{{ 'NOTES_LABEL' | translate }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-if="labOrderResults && labOrderResults.length > 0" ng-repeat="test in labOrderResults">
+                    <td bo-text="test.orderName || test.testName"></td>
+                    <td bo-text="test.result"></td>
+                    <td bo-text="test.accessionNotes"></td>
+                </tr>
+                <tr ng-if="!labOrderResults || labOrderResults.length === 0">
+                    <td colspan="3">
+                        <p class="placeholder-text">{{ 'NO_TESTS_AVAILABLE' | translate }}</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div ng-if="labOrderResults && labOrderResults.length > 0" class="accession-info">
+            <p><strong>{{ 'ACCESSION_AT_LABEL' | translate }}:</strong> <span bo-text="accessionDateTime | bahmniDateTime"></span></p>
+        </div>
+    </section>
+    <div class="print-footer">
+        <div class="doctor-section">
+            <p><strong>{{ 'DOCTOR_LABEL' | translate }}:</strong></p>
+            <p>{{ 'DOCTOR_NAME_LABEL' | translate }}: _______________________</p>
+            <p>{{ 'DOCTOR_TITLE_LABEL' | translate }}: _______________________</p>
+            <p>{{ 'MEDICAL_LICENSE_LABEL' | translate }}: _______________________</p>
+        </div>
+    </div>
+</div>
