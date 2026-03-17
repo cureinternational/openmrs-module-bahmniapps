@@ -75,6 +75,7 @@ const transformOrders = (entries = []) => {
             });
         }
     });
+    console.log(orders);
     return orders;
 };
 
