@@ -2,7 +2,7 @@
 
 describe("conceptSet", function () {
     var appService, spinner, conceptSetUiConfigService, contextChangeHandler, observationsService,
-        messagingService, compile, scope, conceptSetService, httpBackend,element, compiledElementScope;
+        messagingService, compile, scope, conceptSetService, httpBackend,element, compiledElementScope, $state;
 
     beforeEach(function () {
         module('bahmni.common.conceptSet');
@@ -14,6 +14,7 @@ describe("conceptSet", function () {
             messagingService = jasmine.createSpyObj('messagingService', ['showMessage']);
             conceptSetUiConfigService = jasmine.createSpyObj('conceptSetUiConfigService', ['getConfig']);
             spinner = jasmine.createSpyObj('spinner', ['forPromise']);
+            $state = {};
             $provide.value('appService', appService);
             $provide.value('conceptSetService', conceptSetService);
             $provide.value('contextChangeHandler', contextChangeHandler);
@@ -21,6 +22,7 @@ describe("conceptSet", function () {
             $provide.value('messagingService', messagingService);
             $provide.value('conceptSetUiConfigService', conceptSetUiConfigService);
             $provide.value('spinner', spinner);
+            $provide.value('$state', $state);
         });
         inject(function ($compile, $rootScope, $httpBackend) {
             compile = $compile;
@@ -112,6 +114,39 @@ describe("conceptSet", function () {
             scope.$digest();
 
             expect(compiledElementScope.numberOfVisits).toBe(4);
+        });
+
+        it("should set dirtyConsultationForm flag when stateChangeStart fires with dirty obsForm", function () {
+            compiledElementScope.obsForm = { $dirty: true };
+            scope.$broadcast('$stateChangeStart');
+            expect($state.dirtyConsultationForm).toBe(true);
+        });
+
+        it("should not set dirtyConsultationForm when obsForm is not dirty", function () {
+            compiledElementScope.obsForm = { $dirty: false };
+            $state.dirtyConsultationForm = false;
+            scope.$broadcast('$stateChangeStart');
+            expect($state.dirtyConsultationForm).toBe(false);
+        });
+
+        it("should not set dirtyConsultationForm when obsForm is absent", function () {
+            compiledElementScope.obsForm = null;
+            $state.dirtyConsultationForm = false;
+            scope.$broadcast('$stateChangeStart');
+            expect($state.dirtyConsultationForm).toBe(false);
+        });
+
+        it("should reset obsForm dirty state on event:changes-saved", function () {
+            compiledElementScope.obsForm = { $dirty: true };
+            scope.$broadcast('event:changes-saved');
+            expect(compiledElementScope.obsForm.$dirty).toBe(false);
+        });
+
+        it("should not throw when obsForm is absent on event:changes-saved", function () {
+            compiledElementScope.obsForm = null;
+            expect(function () {
+                scope.$broadcast('event:changes-saved');
+            }).not.toThrow();
         });
     });
 
