@@ -2,7 +2,7 @@
 
 angular.module('bahmni.clinical')
     .directive('investigationTable', function () {
-        var controller = function ($scope) {
+        var controller = function ($scope, $rootScope) {
             var defaultParams = {
                     noLabOrdersMessage: "NO_LAB_ORDERS_FOR_PATIENT_MESSAGE_KEY",
                     showNormalLabResults: true,
@@ -54,6 +54,10 @@ angular.module('bahmni.clinical')
 
             $scope.showAccessionNotes = function (labOrderResults) {
                 return $scope.getAccessionDetailsFrom(labOrderResults).accessionNotes && $scope.params.showAccessionNotes;
+            };
+
+            $scope.downloadLabResults = function (labOrderResults, accessionDateTime, accessionUuid) {
+                $rootScope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, accessionDateTime, accessionUuid);
             };
 
             $scope.$watch('accessions', function () {

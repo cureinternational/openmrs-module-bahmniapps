@@ -1,48 +1,159 @@
-<link rel="stylesheet" href="../styles/clinicalPrint.css"/>
-<div class="print-wrapper lab-results-print" ng-switch="true">
-    <div class="print-header" ng-if="printParams">
-        <h1 class="print-title-with-logo"><img height="35px" width="35px" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="logo"/>{{printParams.title}}</h1>
-        <div class="clinic-info">
-            <span>{{printParams.locationName}}</span>
-            <span class="address">{{printParams.locationAddress}}</span>
-        </div>
-        <div class="clinic-info">
-            <span>LABORATORY TESTS</span>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        color: #333;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .logo {
+        width: 270px;
+        height: 120px;
+    }
+
+    .header-text {
+        text-align: center;
+        flex: 1;
+    }
+
+    .header-text h2 {
+        margin: 0;
+        font-size: 25px;
+    }
+
+    .header-text h3 {
+        margin: 5px 0;
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .header-text p {
+        margin: 5px 0;
+        font-size: 13px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    td, th {
+        border: 1px solid #ccc;
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    th {
+        background-color: #eaeaea;
+        text-align: left;
+    }
+
+    .lab-results-table td, .lab-results-table th {
+        border: none;
+    }
+
+    .lab-results-table tr:nth-child(odd) {
+        background-color: #eaeaea !important;
+    }
+
+    .lab-results-table tr:nth-child(even) {
+        background-color: #ffffff !important;
+    }
+
+    .section-title {
+        margin-top: 20px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .no-border {
+        border: none;
+    }
+
+    .no-border strong {
+        font-weight: normal;
+    }
+
+    .location-address {
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        margin: 5px 0;
+    }
+</style>
+
+<div class="print-wrapper lab-results-print">
+    <!-- Header -->
+    <div class="header">
+        <img class="logo" src="{{printParams.logo}}" alt="CURE Logo"/>
+        <div class="header-text">
+            <h2 style="margin-left: -100px;">CURE Children's Hospital<br/>of Ethiopia</h2>
         </div>
     </div>
-    <ng-include src="'clinical/common/views/patientInfoPrint.html'"></ng-include>
-    <section bindonce="labOrderResults">
-        <table class="printPrescription lab-results-table">
-            <thead>
-                <tr>
-                    <th>{{ 'TEST_NAME_LABEL' | translate }}</th>
-                    <th>{{ 'TEST_RESULT_LABEL' | translate }}</th>
-                    <th>{{ 'NOTES_LABEL' | translate }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-if="labOrderResults && labOrderResults.length > 0" ng-repeat="test in labOrderResults">
-                    <td bo-text="test.orderName || test.testName"></td>
-                    <td bo-text="test.result"></td>
-                    <td bo-text="test.accessionNotes"></td>
-                </tr>
-                <tr ng-if="!labOrderResults || labOrderResults.length === 0">
-                    <td colspan="3">
-                        <p class="placeholder-text">{{ 'NO_TESTS_AVAILABLE' | translate }}</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <div ng-if="labOrderResults && labOrderResults.length > 0" class="accession-info">
-            <p><strong>{{ 'ACCESSION_AT_LABEL' | translate }}:</strong> <span bo-text="accessionDateTime | bahmniDateTime"></span></p>
-        </div>
-    </section>
-    <div class="print-footer">
-        <div class="doctor-section">
-            <p><strong>{{ 'DOCTOR_LABEL' | translate }}:</strong></p>
-            <p>{{ 'DOCTOR_NAME_LABEL' | translate }}: _______________________</p>
-            <p>{{ 'DOCTOR_TITLE_LABEL' | translate }}: _______________________</p>
-            <p>{{ 'MEDICAL_LICENSE_LABEL' | translate }}: _______________________</p>
-        </div>
-    </div>
+    <h3 style="text-align : center">LABORATORY TESTS</h3>
+    <p class="location-address"><strong>{{printParams.locationAddress}}</strong></p>
+    <!-- Patient Information Table -->
+    <table>
+        <tr>
+            <td colspan="2"><strong>Name of the Patient:</strong> {{patient.name || patient.given_name}} {{patient.family_name}} ({{patient.identifier}})</td>
+            <td><strong>Date:</strong> {{accessionDateTime | bahmniDate}}</td>
+        </tr>
+
+        <tr>
+            <td><strong>Age:</strong> {{patient.age}}{{patient.age ? ' years' : ''}}</td>
+            <td><strong>Sex:</strong> {{patient.gender || patient.genderText}}</td>
+            <td><strong>Weight:</strong> {{patient.weight}}{{patient.weight ? ' Kg' : ''}}</td>
+        </tr>
+        <tr>
+            <td><strong>Address:</strong></td>
+            <td><strong>Kebele:</strong> {{patient.address.address3}}</td>
+            <td><strong>Woreda:</strong> {{patient.address.address4}}</td>
+        </tr>
+        <tr>
+            <td><strong>Zone:</strong> {{patient.address.countyDistrict}}</td>
+            <td><strong>Region:</strong> {{patient.address.stateProvince}}</td>
+            <td><strong>Country:</strong> {{patient.address.country}}</td>
+        </tr>
+        <tr>
+            <td><strong>Tel no:</strong> {{patient.phoneNumber}}</td>
+            <td colspan="2"><strong>Allergies:</strong> {{patient.allergies}}</td>
+        </tr>
+    </table>
+
+    <!-- Lab Tests Section -->
+    <div class="section-title">LAB TESTS</div>
+
+    <table class="lab-results-table">
+        <tr>
+            <th>{{ 'TEST_NAME_LABEL' | translate }}</th>
+            <th>{{ 'NOTES_LABEL' | translate }}</th>
+        </tr>
+        <tr ng-if="test.referredOut" ng-repeat="test in labOrderResults">
+            <td>{{test.orderName || test.testName}}</td>
+            <td>{{test.accessionNotes || test.notes}}</td>
+        </tr>
+    </table>
+
+    <!-- Doctor Section -->
+    <div class="section-title">Doctor:</div>
+
+    <table>
+        <tr>
+            <td class="no-border"><strong>Full Name:</strong> {{labOrderResults[0].provider.name || ''}}</td>
+        </tr>
+        <tr>
+            <td class="no-border"><strong>Title:</strong> {{labOrderResults[0].provider.attributes.title || ''}}</td>
+        </tr>
+        <tr>
+            <td class="no-border"><strong>Medical Licence Number:</strong> {{labOrderResults[0].provider.attributes.licenseNumber || ''}}</td>
+        </tr>
+    </table>
+
 </div>

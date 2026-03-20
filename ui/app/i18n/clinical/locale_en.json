@@ -403,5 +403,14 @@
   "GENDER_KEY": "Gender:",
   "AGE_KEY": "Age:",
   "DATE_OF_BIRTH_LABEL": "Date of Birth:",
-  "REQUESTED_BY_KEY": "Requested by"
+  "REQUESTED_BY_KEY": "Requested by",
+  "TEST_NAME_LABEL": "Test Name",
+  "TEST_RESULT_LABEL": "Result",
+  "REFERRED_OUT_TESTS_LABEL": "Referred Out Tests",
+  "NO_TESTS_AVAILABLE": "No tests available for this accession",
+  "CLINICAL_SHARE_LAB_RESULTS_KEY": "Share Lab Results",
+  "DOCTOR_LABEL": "Doctor",
+  "DOCTOR_NAME_LABEL": "Doctor Name",
+  "DOCTOR_TITLE_LABEL": "Doctor Title",
+  "MEDICAL_LICENSE_LABEL": "Medical License"
 }
