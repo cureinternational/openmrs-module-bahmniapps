@@ -1,0 +1,129 @@
+.comment-panel-container {
+  background: #ffffff;
+  border: 1px solid #c6c6c6;
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin-left: -16px !important;
+  margin-right: -16px !important;
+  margin-bottom: 0px;
+  width: 100%;
+  margin-top: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-comment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.section-heading {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #000000;
+}
+
+.comment-input-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.comment-textarea {
+  width: 75%;
+  flex-shrink: 0;
+  background-color: #f4f4f4 !important;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.cancel-button {
+    background: #393939 !important;
+    color: #ffffff !important;
+    border: none;
+    padding: 2px;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    width: 95px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: #c6c6c6 !important;
+      background-color: #c6c6c6 !important;
+    }
+}
+
+.save-button {
+  background-color: #007d79 !important;
+  color: #ffffff !important;
+  width: 95px !important;
+  height: 48px !important;
+  padding: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  border: none !important;
+  cursor: pointer !important;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: #007d79 !important;
+    color: #ffffff !important;
+  }
+
+  &:disabled,
+  &:hover:disabled,
+  &:focus:disabled,
+  &.bx--btn--disabled,
+  &.bx--btn--disabled:hover,
+  &.bx--btn--disabled:focus {
+    border-color: #c6c6c6;
+    background-color: #c6c6c6 !important;
+    box-shadow: none;
+    color: #8d8d8d !important;
+    cursor: not-allowed;
+  }
+}
+
+.page-blur-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  pointer-events: auto;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  z-index: 9999;
+}
+

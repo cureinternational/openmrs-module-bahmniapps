@@ -92,6 +92,10 @@ module.exports = {
         test: /\.s[ac]ss$/i,
         use: [cssExtract.loader, "css-loader", "sass-loader"],
       },
+      {
+        test: /\.svg$/,
+        type: "asset/resource",
+      },
     ],
   },
   externals: {
