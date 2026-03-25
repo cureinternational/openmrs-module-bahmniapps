@@ -43,6 +43,19 @@ angular.module('bahmni.ot').factory('initialization', ['$rootScope', '$q', 'surg
             }),
             'name'
         );
+        },
+        filterEmptyConceptAttributes: function (attributes) {
+            var conceptFormatAttributeNames = this.getConceptFormatAttributeNames();
+            if (_.isEmpty(conceptFormatAttributeNames)) {
+                return attributes;
+            }
+            return _.filter(attributes, function (attr) {
+                var attrName = attr.surgicalAppointmentAttributeType && attr.surgicalAppointmentAttributeType.name;
+                if (_.includes(conceptFormatAttributeNames, attrName)) {
+                    return attr.value !== '' && attr.value !== null && !_.isUndefined(attr.value);
+                }
+                return true;
+            });
         }
     };
 }]);

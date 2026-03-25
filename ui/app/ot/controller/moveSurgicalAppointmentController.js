@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('bahmni.ot').controller('moveSurgicalAppointmentController', ['$rootScope', '$scope', '$state', '$q', 'ngDialog', 'surgicalAppointmentService', 'surgicalAppointmentHelper', 'surgicalBlockHelper', 'messagingService',
-    function ($rootScope, $scope, $state, $q, ngDialog, surgicalAppointmentService, surgicalAppointmentHelper, surgicalBlockHelper, messagingService) {
+angular.module('bahmni.ot').controller('moveSurgicalAppointmentController', ['$rootScope', '$scope', '$state', '$q', 'ngDialog', 'surgicalAppointmentService', 'surgicalAppointmentHelper', 'surgicalBlockHelper', 'messagingService', 'otUtils',
+    function ($rootScope, $scope, $state, $q, ngDialog, surgicalAppointmentService, surgicalAppointmentHelper, surgicalBlockHelper, messagingService, otUtils) {
         var init = function () {
             $scope.surgicalAppointment = $scope.ngDialogData.surgicalAppointment;
             $scope.sourceSurgicalBlock = $scope.ngDialogData.surgicalBlock;
@@ -70,6 +70,7 @@ angular.module('bahmni.ot').controller('moveSurgicalAppointmentController', ['$r
                 appointment.surgicalAppointmentAttributes = _.values(appointment.surgicalAppointmentAttributes).filter(function (attribute) {
                     return !_.isUndefined(attribute.value);
                 });
+                appointment.surgicalAppointmentAttributes = otUtils.filterEmptyConceptAttributes(appointment.surgicalAppointmentAttributes);
                 return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation', 'patientObservations', 'primaryDiagnosis']);
             });
 

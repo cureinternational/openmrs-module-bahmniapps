@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.ot').controller('cancelSurgicalBlockController', [
-    '$scope', '$state', '$translate', 'ngDialog', 'surgicalAppointmentService', 'messagingService',
-    function ($scope, $state, $translate, ngDialog, surgicalAppointmentService, messagingService) {
+    '$scope', '$state', '$translate', 'ngDialog', 'surgicalAppointmentService', 'messagingService', 'otUtils',
+    function ($scope, $state, $translate, ngDialog, surgicalAppointmentService, messagingService, otUtils) {
         var surgicalBlock = $scope.ngDialogData.surgicalBlock;
 
         $scope.confirmCancelSurgicalBlock = function () {
@@ -20,6 +20,7 @@ angular.module('bahmni.ot').controller('cancelSurgicalBlockController', [
             surgicalBlock.location = {uuid: surgicalBlock.location.uuid};
 
             surgicalBlock.surgicalAppointments = _.map(surgicalBlock.surgicalAppointments, function (appointment) {
+                appointment.surgicalAppointmentAttributes = otUtils.filterEmptyConceptAttributes(appointment.surgicalAppointmentAttributes);
                 return _.omit(appointment, ['derivedAttributes', 'bedNumber', 'bedLocation']);
             });
 

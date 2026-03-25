@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.ot').controller('calendarViewCancelAppointmentController', [
-    '$scope', '$translate', '$q', 'ngDialog', 'surgicalAppointmentService', 'messagingService', 'surgicalAppointmentHelper',
-    function ($scope, $translate, $q, ngDialog, surgicalAppointmentService, messagingService, surgicalAppointmentHelper) {
+    '$scope', '$translate', '$q', 'ngDialog', 'surgicalAppointmentService', 'messagingService', 'surgicalAppointmentHelper', 'otUtils',
+    function ($scope, $translate, $q, ngDialog, surgicalAppointmentService, messagingService, surgicalAppointmentHelper, otUtils) {
         var ngDialogSurgicalAppointment = $scope.ngDialogData.surgicalAppointment;
         var attributes = surgicalAppointmentHelper.getAppointmentAttributes(ngDialogSurgicalAppointment);
         $scope.appointment = {
@@ -55,6 +55,7 @@ angular.module('bahmni.ot').controller('calendarViewCancelAppointmentController'
                 appointment.surgicalAppointmentAttributes = _.values(appointment.surgicalAppointmentAttributes).filter(function (attribute) {
                     return !_.isUndefined(attribute.value);
                 });
+                appointment.surgicalAppointmentAttributes = otUtils.filterEmptyConceptAttributes(appointment.surgicalAppointmentAttributes);
                 return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation']);
             });
 

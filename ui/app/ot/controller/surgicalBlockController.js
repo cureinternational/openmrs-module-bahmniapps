@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.ot')
-    .controller('surgicalBlockController', ['$scope', '$q', '$state', '$stateParams', 'spinner', 'surgicalAppointmentService', 'locationService', 'appService', 'messagingService', 'surgicalAppointmentHelper', 'surgicalBlockHelper', 'ngDialog',
-        function ($scope, $q, $state, $stateParams, spinner, surgicalAppointmentService, locationService, appService, messagingService, surgicalAppointmentHelper, surgicalBlockHelper, ngDialog) {
+    .controller('surgicalBlockController', ['$scope', '$q', '$state', '$stateParams', 'spinner', 'surgicalAppointmentService', 'locationService', 'appService', 'messagingService', 'surgicalAppointmentHelper', 'surgicalBlockHelper', 'ngDialog', 'otUtils',
+        function ($scope, $q, $state, $stateParams, spinner, surgicalAppointmentService, locationService, appService, messagingService, surgicalAppointmentHelper, surgicalBlockHelper, ngDialog, otUtils) {
             var init = function () {
                 $scope.surgicalForm = {
                     surgicalAppointments: []
@@ -92,6 +92,9 @@ angular.module('bahmni.ot')
                 if ($scope.saveAnywaysFlag || Bahmni.Common.Util.DateUtil.isSameDate(surgicalForm.startDatetime, surgicalForm.endDatetime)) {
                     $scope.updateSortWeight(surgicalForm);
                     var surgicalBlock = new Bahmni.OT.SurgicalBlockMapper().mapSurgicalBlockUIToDomain(surgicalForm);
+                    _.each(surgicalBlock.surgicalAppointments, function (appointment) {
+                        appointment.surgicalAppointmentAttributes = otUtils.filterEmptyConceptAttributes(appointment.surgicalAppointmentAttributes);
+                    });
                     var saveOrupdateSurgicalBlock = _.isEmpty(surgicalBlock.uuid) ? surgicalAppointmentService.saveSurgicalBlock : surgicalAppointmentService.updateSurgicalBlock;
                     spinner.forPromise(saveOrupdateSurgicalBlock(surgicalBlock)).then(function (response) {
                         $scope.surgicalForm = new Bahmni.OT.SurgicalBlockMapper().map(response.data, $scope.attributeTypes, $scope.surgeons);
