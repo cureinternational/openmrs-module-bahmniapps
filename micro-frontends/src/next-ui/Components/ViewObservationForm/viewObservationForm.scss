@@ -269,9 +269,10 @@
   }
 
   .success-banner-icon {
-    width: 20px;
-    height: 20px;
     flex-shrink: 0;
+    background-color: #ffffff;
+    border-radius: 50%;
+    color: #24a148;
   }
 
   .success-banner-text {
@@ -289,6 +290,50 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  .alertContainer {
+    width: fit-content !important;
+    max-width: fit-content !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .alertContainer .bx--inline-notification {
+    width: fit-content !important;
+    max-width: fit-content !important;
+    display: flex !important;
+    align-items: center !important;
+    min-height: auto !important;
+  }
+
+  .alertContainer .bx--inline-notification__details {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    max-width: fit-content !important;
+  }
+
+  .alertContainer .bx--inline-notification__title {
+    white-space: nowrap !important;
+    margin: 0 !important;
+    display: inline !important;
+    flex-shrink: 0 !important;
+  }
+
+  .alertContainer .bx--inline-notification__subtitle {
+    display: none !important;
+  }
+
+  .alertContainer .bx--inline-notification__close-button {
+    flex-shrink: 0 !important;
+    min-width: auto !important;
+  }
+
+  .alertContainer .bx--inline-notification__icon {
+    flex-shrink: 0 !important;
+    min-width: auto !important;
   }
 
   .bx--inline-notification--low-contrast.bx--inline-notification--success {

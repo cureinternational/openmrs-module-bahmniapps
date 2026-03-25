@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Modal, Tile, Loading, Button } from "carbon-components-react";
 import propTypes from "prop-types";
-import { Document } from "@carbon/icons-react/next";
+import { Document, CheckmarkFilled } from "@carbon/icons-react/next";
 import { useIntl } from "react-intl";
 import { I18nProvider } from "../i18n/I18nProvider";
 import moment from "moment";
-import completedIcon from "../icons/completed.svg";
 
 import TileItem from "./TileItem/TileItem";
-import Notification from "./Notification/Notification";
+import { NotificationCarbon } from "bahmni-carbon-ui";
 import {
   subLabels,
   isAbnormal,
@@ -268,7 +267,7 @@ export const ViewObservationForm = (props) => {
 
         {showSuccessBanner && (
           <div className="success-banner-modal">
-            <img src={completedIcon} className="success-banner-icon" alt="completed" />
+            <CheckmarkFilled className="success-banner-icon" />
             <span className="success-banner-text">
               {intl.formatMessage({ id: "COMMENT_ADDED_SUCCESSFULLY", defaultMessage: "Comment added successfully!" })}
             </span>
@@ -307,25 +306,21 @@ export const ViewObservationForm = (props) => {
       </Modal>
 
       {showApprovalNotification && (
-        <Notification
-          hostData={{
-            notificationKind: "success",
-            title: intl.formatMessage(
-              { id: "APPROVED_SUCCESSFULLY", defaultMessage: "{formName} approved successfully" },
-              { formName: approvedFormName }
-            ),
-            messageDuration: 10000,
+        <NotificationCarbon
+          messageDuration={3000}
+          onClose={() => {
+            setShowApprovalNotification(false);
+            setApprovedFormName("");
+            closeViewObservationForm();
+            // window.location.reload();
           }}
-          hostApi={{
-            onClose: () => {
-              setShowApprovalNotification(false);
-              setApprovedFormName("");
-              closeViewObservationForm();
-              if (onApprove) {
-                onApprove();
-              }
-            },
-          }}
+          showMessage={showApprovalNotification}
+          kind="success"
+          title={intl.formatMessage(
+            { id: "APPROVED_SUCCESSFULLY", defaultMessage: "{formName} approved successfully" },
+            { formName: approvedFormName }
+          )}
+          hideCloseButton={true}
         />
       )}
       </div>
