@@ -112,13 +112,13 @@
             <td><strong>Weight:</strong> {{patient.weight}}{{patient.weight ? ' Kg' : ''}}</td>
         </tr>
         <tr>
-            <td><strong>Address:</strong></td>
-            <td><strong>Kebele:</strong> {{patient.address.address3}}</td>
-            <td><strong>Woreda:</strong> {{patient.address.address4}}</td>
+            <td><strong>Address:</strong>{{patient.address.address5}}</td>
+            <td><strong>Kebele:</strong> {{patient.address.address4}}</td>
+            <td><strong>Woreda:</strong> {{patient.address.address3}}</td>
         </tr>
         <tr>
-            <td><strong>Zone:</strong> {{patient.address.countyDistrict}}</td>
-            <td><strong>Region:</strong> {{patient.address.stateProvince}}</td>
+            <td><strong>Zone:</strong> {{patient.address.address2}}</td>
+            <td><strong>Region:</strong> {{patient.address.address1}}</td>
             <td><strong>Country:</strong> {{patient.address.country}}</td>
         </tr>
         <tr>
@@ -137,7 +137,7 @@
         </tr>
         <tr ng-if="test.referredOut" ng-repeat="test in labOrderResults">
             <td>{{test.orderName || test.testName}}</td>
-            <td>{{test.accessionNotes || test.notes}}</td>
+            <td>{{test.commentToFulfiller}}</td>
         </tr>
     </table>
 
@@ -146,13 +146,13 @@
 
     <table>
         <tr>
-            <td class="no-border"><strong>Full Name:</strong> {{labOrderResults[0].provider.name || ''}}</td>
+            <td class="no-border"><strong>Full Name:</strong> {{printParams.provider.fullName || printParams.provider.name || ''}}</td>
         </tr>
         <tr>
-            <td class="no-border"><strong>Title:</strong> {{labOrderResults[0].provider.attributes.title || ''}}</td>
+            <td class="no-border"><strong>Title:</strong> {{printParams.provider.title || ''}}</td>
         </tr>
         <tr>
-            <td class="no-border"><strong>Medical Licence Number:</strong> {{labOrderResults[0].provider.attributes.licenseNumber || ''}}</td>
+            <td class="no-border"><strong>Medical Licence Number:</strong> {{printParams.provider.licenceNumber || ''}}</td>
         </tr>
     </table>
 
