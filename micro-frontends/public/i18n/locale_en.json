@@ -64,6 +64,6 @@
   "COMMENT_PLACEHOLDER": "Enter a maximum of {maxCharacters} characters",
   "ACTION": "Action",
   "DATE_TIME": "Date & Time",
-  "USERNAME": "Username",
+  "PROVIDER": "Provider",
   "COMMENTS_COLUMN": "Comments"
 }

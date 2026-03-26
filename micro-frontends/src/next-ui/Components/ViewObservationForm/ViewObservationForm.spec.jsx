@@ -25,7 +25,7 @@ jest.mock("../i18n/I18nProvider", () => {
     "APPROVED_SUCCESSFULLY": "{formName} approved successfully",
     "ACTION": "Action",
     "DATE_TIME": "Date & Time",
-    "USERNAME": "Username",
+    "PROVIDER": "Provider",
     "COMMENTS_COLUMN": "Comments"
   };
 
@@ -47,7 +47,8 @@ const mockMessages = {
   "ACTIONS": "Actions",
   "CREATION": "Creation",
   "COMMENT_ACTION": "Comment",
-  "APPROVED_SUCCESSFULLY": "{formName} approved successfully"
+  "APPROVED_SUCCESSFULLY": "{formName} approved successfully",
+  "PROVIDER": "Provider"
 };
 
 const renderWithIntl = (component) => {
@@ -62,6 +63,9 @@ const initialProps = {
   formName: "Vitals",
   formNameTranslations: "Vitals",
   isViewFormLoading: false,
+  formsApprovalAndCommentsConfig: {
+    enableFormApprovalsAndComments: true,
+  },
   formData: [
     {
       concept: {
@@ -239,5 +243,18 @@ describe("ViewObservationForm", () => {
 
     expect(commentButton).toBeTruthy();
     expect(approveButton).toBeTruthy();
+  });
+
+  it("should not render Comment and Approve buttons when enableFormApprovalsAndComments is false", () => {
+    const propsWithFeatureDisabled = {
+      ...initialProps,
+      formsApprovalAndCommentsConfig: {
+        enableFormApprovalsAndComments: false,
+      },
+    };
+    renderWithIntl(<ViewObservationForm {...propsWithFeatureDisabled} />);
+
+    expect(screen.queryByText("Comment")).toBeNull();
+    expect(screen.queryByText("Approve")).toBeNull();
   });
 });

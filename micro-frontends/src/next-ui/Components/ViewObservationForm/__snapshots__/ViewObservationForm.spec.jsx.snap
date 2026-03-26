@@ -310,7 +310,7 @@ exports[`ViewObservationForm should match the screenshot 1`] = `
                           Date & Time
                         </th>
                         <th>
-                          Username
+                          Provider
                         </th>
                         <th>
                           Comments

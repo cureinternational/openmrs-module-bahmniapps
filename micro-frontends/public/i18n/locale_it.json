@@ -35,6 +35,6 @@
   "COMMENT_PLACEHOLDER": "Inserisci un massimo di {maxCharacters} caratteri",
   "ACTION": "Azione",
   "DATE_TIME": "Data e Ora",
-  "USERNAME": "Nome Utente",
+  "PROVIDER": "Fornitore",
   "COMMENTS_COLUMN": "Commenti"
 }

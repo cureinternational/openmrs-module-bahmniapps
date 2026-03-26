@@ -34,7 +34,10 @@ export const ViewObservationForm = (props) => {
     createdDateTime,
     createdBy,
     currentUser,
+    formsApprovalAndCommentsConfig = {},
   } = props;
+
+  const { enableFormApprovalsAndComments = false } = formsApprovalAndCommentsConfig;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [comments, setComments] = useState([]);
@@ -203,7 +206,7 @@ export const ViewObservationForm = (props) => {
                     <tr>
                       <th>{intl.formatMessage({ id: "ACTION", defaultMessage: "Action" })}</th>
                       <th>{intl.formatMessage({ id: "DATE_TIME", defaultMessage: "Date & Time" })}</th>
-                      <th>{intl.formatMessage({ id: "USERNAME", defaultMessage: "Username" })}</th>
+                      <th>{intl.formatMessage({ id: "PROVIDER", defaultMessage: "Provider" })}</th>
                       <th>{intl.formatMessage({ id: "COMMENTS_COLUMN", defaultMessage: "Comments" })}</th>
                     </tr>
                   </thead>
@@ -239,73 +242,76 @@ export const ViewObservationForm = (props) => {
           )}
         </section>
         </div>
-        {!isCommentPanelOpen && !showConfirmationBanner && (
-          <div className="action-buttons">
-            <Button
-              kind="primary"
-              onClick={handleApproveClick}
-              className="btn-approve"
-            >
-              {intl.formatMessage({ id: "APPROVE", defaultMessage: "Approve" })}
-            </Button>
-            <Button
-              kind="secondary"
-              onClick={handleCommentClick}
-              className="btn-comment"
-            >
-              {intl.formatMessage({ id: "COMMENT", defaultMessage: "Comment" })}
-            </Button>
-          </div>
-        )}
+        {enableFormApprovalsAndComments && (
+          <>
+            {!isCommentPanelOpen && !showConfirmationBanner && (
+              <div className="action-buttons">
+                <Button
+                  kind="primary"
+                  onClick={handleApproveClick}
+                  className="btn-approve"
+                >
+                  {intl.formatMessage({ id: "APPROVE", defaultMessage: "Approve" })}
+                </Button>
+                <Button
+                  kind="secondary"
+                  onClick={handleCommentClick}
+                  className="btn-comment"
+                >
+                  {intl.formatMessage({ id: "COMMENT", defaultMessage: "Comment" })}
+                </Button>
+              </div>
+            )}
 
-        {isCommentPanelOpen && (
-          <CommentPanel
-            onClose={handleCloseCommentPanel}
-            onSaveComment={handleSaveComment}
-          />
-        )}
+            {isCommentPanelOpen && (
+              <CommentPanel
+                onClose={handleCloseCommentPanel}
+                onSaveComment={handleSaveComment}
+              />
+            )}
 
-        {showSuccessBanner && (
-          <div className="success-banner-modal">
-            <CheckmarkFilled className="success-banner-icon" />
-            <span className="success-banner-text">
-              {intl.formatMessage({ id: "COMMENT_ADDED_SUCCESSFULLY", defaultMessage: "Comment added successfully!" })}
-            </span>
-          </div>
-        )}
+            {showSuccessBanner && (
+              <div className="success-banner-modal">
+                <CheckmarkFilled className="success-banner-icon" />
+                <span className="success-banner-text">
+                  {intl.formatMessage({ id: "COMMENT_ADDED_SUCCESSFULLY", defaultMessage: "Comment added successfully!" })}
+                </span>
+              </div>
+            )}
 
-        {showConfirmationBanner && (
-          <div className="confirmation-banner-modal">
-            <div className="confirmation-left">
-              <h3 className="confirmation-heading">
-                {intl.formatMessage({ id: "CONFIRMATION", defaultMessage: "Confirmation" })}
-              </h3>
-              <p className="confirmation-text">
-                {intl.formatMessage({ id: "APPROVE_FORM_CONFIRMATION", defaultMessage: "Do you want to proceed with approving this form?" })}
-              </p>
-            </div>
-            <div className="confirmation-actions">
-              <Button
-                kind="secondary"
-                onClick={handleConfirmationCancel}
-                className="confirmation-cancel"
-              >
-                {intl.formatMessage({ id: "CANCEL", defaultMessage: "Cancel" })}
-              </Button>
-              <Button
-                kind="primary"
-                onClick={handleConfirmationSubmit}
-                className="confirmation-submit"
-              >
-                {intl.formatMessage({ id: "SUBMIT", defaultMessage: "Submit" })}
-              </Button>
-            </div>
-          </div>
+            {showConfirmationBanner && (
+              <div className="confirmation-banner-modal">
+                <div className="confirmation-left">
+                  <h3 className="confirmation-heading">
+                    {intl.formatMessage({ id: "CONFIRMATION", defaultMessage: "Confirmation" })}
+                  </h3>
+                  <p className="confirmation-text">
+                    {intl.formatMessage({ id: "APPROVE_FORM_CONFIRMATION", defaultMessage: "Do you want to proceed with approving this form?" })}
+                  </p>
+                </div>
+                <div className="confirmation-actions">
+                  <Button
+                    kind="secondary"
+                    onClick={handleConfirmationCancel}
+                    className="confirmation-cancel"
+                  >
+                    {intl.formatMessage({ id: "CANCEL", defaultMessage: "Cancel" })}
+                  </Button>
+                  <Button
+                    kind="primary"
+                    onClick={handleConfirmationSubmit}
+                    className="confirmation-submit"
+                  >
+                    {intl.formatMessage({ id: "SUBMIT", defaultMessage: "Submit" })}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
-
       </Modal>
 
-      {showApprovalNotification && (
+      {enableFormApprovalsAndComments && showApprovalNotification && (
         <NotificationCarbon
           messageDuration={3000}
           onClose={() => {
@@ -341,5 +347,6 @@ ViewObservationForm.propTypes = {
   createdDateTime: propTypes.string,
   createdBy: propTypes.string,
   currentUser: propTypes.string,
+  formsApprovalAndCommentsConfig: propTypes.object,
 };
 export default ViewObservationForm;
