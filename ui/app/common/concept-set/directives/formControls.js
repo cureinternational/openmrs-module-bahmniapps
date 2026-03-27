@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.common.conceptSet')
-    .directive('formControls', ['formService', 'spinner', '$timeout', '$translate', '$state', 'messagingService', 'exitAlertService',
-        function (formService, spinner, $timeout, $translate, $state, messagingService, exitAlertService) {
+    .directive('formControls', ['formService', 'spinner', '$timeout', '$translate', '$state', 'messagingService',
+        function (formService, spinner, $timeout, $translate, $state, messagingService) {
             var loadedFormDetails = {};
             var loadedFormTranslations = {};
             var unMountReactContainer = function (formUuid) {
@@ -87,7 +87,7 @@ angular.module('bahmni.common.conceptSet')
                                 var consultationGroupMember = consultationObservation.groupMembers[consultationGroupIndex];
                                 (formGroupMember.value && formGroupMember.value.uuid && consultationGroupMember.value && consultationGroupMember.value.uuid) ?
                                 isGroupMemberChanged[formGroupIndex] = (consultationGroupMember.value.uuid === formGroupMember.value.uuid) ? false : true :
-                                isGroupMemberChanged[formGroupIndex] = (consultationGroupMember.value === formGroupMember.value) ? false : true;
+                                isGroupMemberChanged[formGroupIndex] = (consultationGroupMember.value === formGroupMember.value || (formGroupMember.value && consultationGroupMember.value === formGroupMember.value.toString())) ? false : true;
                                 if (!isGroupMemberChanged[formGroupIndex]) {
                                     break;
                                 }
@@ -98,7 +98,7 @@ angular.module('bahmni.common.conceptSet')
                         if (formObservation.value && formObservation.value.uuid && consultationObservation.value && consultationObservation.value.uuid) {
                             return (consultationObservation.value.uuid === formObservation.value.uuid) ? false : true;
                         } else {
-                            return (consultationObservation.value === formObservation.value) ? false : true;
+                            return !((consultationObservation.value === formObservation.value || (formObservation.value && consultationObservation.value === formObservation.value.toString())));
                         }
                     }
                 }
@@ -134,9 +134,16 @@ angular.module('bahmni.common.conceptSet')
                     if (!$scope.changesSaved) {
                         $scope.dirtyForm = checkFormChanges($scope);
                     }
-                    var isNavigating = exitAlertService.setIsNavigating(next, uuid, currentUuid);
+                    $state.newPatientUuid = currentUuid;
+                    next.url.includes("/patient/search") ? $state.isPatientSearch = true : $state.isPatientSearch = false;
+                    var isNavigating = next.url.includes("/patient/search") || (uuid !== currentUuid);
                     $state.dirtyConsultationForm = $state.discardChanges ? false : $scope.dirtyForm;
-                    exitAlertService.showExitAlert(isNavigating, $state.dirtyConsultationForm, event, next.spinnerToken);
+                    if (isNavigating && $state.dirtyConsultationForm) {
+                        messagingService.showMessage('alert', "{{'ALERT_MESSAGE_ON_EXIT' | translate }}");
+                        $state.reviewButtonFocused = true;
+                        event.preventDefault();
+                        spinner.hide(next.spinnerToken);
+                    }
                 });
 
                 $scope.$on("event:changes-saved", function () {
