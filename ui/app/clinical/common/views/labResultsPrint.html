@@ -2,41 +2,49 @@
     body {
         font-family: Arial, sans-serif;
         margin: 20px;
-        color: #333;
+        color: #000000;
+        background: #fff;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    .header {
+    .print-header .print-logo-plus-text {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 12px;
     }
 
-    .logo {
-        width: 270px;
-        height: 120px;
+    .logo-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    .header-text {
-        text-align: center;
-        flex: 1;
-    }
-
-    .header-text h2 {
-        margin: 0;
-        font-size: 25px;
-    }
-
-    .header-text h3 {
-        margin: 5px 0;
-        font-size: 16px;
+    .logo-subtitle {
+        color: transparent;
+        font-size: 8px;
         letter-spacing: 1px;
+        font-weight: bold;
+        text-align: center;
+        margin: 2px 0 0 0;
+        font-family: Arial, sans-serif;
+        white-space: nowrap;
     }
 
-    .header-text p {
-        margin: 5px 0;
-        font-size: 13px;
+    .print-header h1 {
+        font-size: 16pt;
+        font-weight: 300;
+        color: #444;
+        font-family: Arial, sans-serif;
+        line-height: 26px;
+        margin: 0;
+        text-align: left;
+        padding-left: 20px;
+    }
+
+    .print-header h1 .ethiopia {
+        display: block;
+        padding-left: 30px;
     }
 
     table {
@@ -87,14 +95,34 @@
         font-family: Arial, sans-serif;
         margin: 5px 0;
     }
+
+    .sub-test-name {
+        padding-left: 40px !important;
+    }
+
+    @media print {
+        @page {
+            size: auto;
+            margin: 0;
+        }
+        body {
+            padding: 15mm;
+        }
+        .logo-subtitle {
+            color: #9a9a9a;
+        }
+    }
 </style>
 
 <div class="print-wrapper lab-results-print">
     <!-- Header -->
-    <div class="header">
-        <img class="logo" src="{{printParams.logo}}" alt="CURE Logo"/>
-        <div class="header-text">
-            <h2 style="margin-left: -100px;">CURE Children's Hospital<br/>of Ethiopia</h2>
+    <div class="print-header">
+        <div class="print-logo-plus-text">
+            <div class="logo-container">
+                <img class="print-logo" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="CURE Logo" style="width: auto; height: 60px;"/>
+                <p class="logo-subtitle">INTERNATIONAL CHILDREN'S HOSPITALS</p>
+            </div>
+            <h1>CURE Children's Hospital<span class="ethiopia">of Ethiopia</span></h1>
         </div>
     </div>
     <h3 style="text-align : center">LABORATORY TESTS</h3>
@@ -135,9 +163,9 @@
             <th>{{ 'TEST_NAME_LABEL' | translate }}</th>
             <th>{{ 'NOTES_LABEL' | translate }}</th>
         </tr>
-        <tr ng-if="test.referredOut" ng-repeat="test in labOrderResults">
-            <td>{{test.orderName || test.testName}}</td>
-            <td>{{test.commentToFulfiller}}</td>
+        <tr ng-repeat="test in labOrderResults">
+            <td ng-class="{'sub-test-name': test.isSubTest}">{{test.name}}</td>
+            <td>{{test.notes}}</td>
         </tr>
     </table>
 
