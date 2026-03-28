@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .factory('visitActionsService', ['printer', function (printer) {
+    .factory('visitActionsService', ['printer', 'labOrderResultService', function (printer, labOrderResultService) {
         return {
             printPrescription: function (patient, visitDate, visitUuid, printParams) {
                 printer.print('common/views/prescriptionPrint.html', {patient: patient, visitDate: visitDate, visitUuid: visitUuid, printParams: printParams});
@@ -9,7 +9,7 @@ angular.module('bahmni.clinical')
             downloadLabResults: function (patient, labOrderResults, accessionDateTime, accessionUuid, printParams) {
                 printer.print('common/views/labResultsPrint.html', {
                     patient: patient,
-                    labOrderResults: labOrderResults,
+                    labOrderResults: labOrderResultService.getReferredOutPrintableLabOrders(labOrderResults),
                     accessionDateTime: accessionDateTime,
                     accessionUuid: accessionUuid,
                     printParams: printParams
