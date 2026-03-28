@@ -1,0 +1,133 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    color: #000000;
+    background: #f5f5f5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.print-header .print-logo-plus-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo-subtitle {
+    color: transparent;
+    font-size: 9px;
+    letter-spacing: 1px;
+    font-weight: bold;
+    text-align: center;
+    margin: 2px 0 0 0;
+    font-family: Arial, sans-serif;
+    white-space: nowrap;
+}
+
+.print-header h1 {
+    font-size: 16pt;
+    font-weight: 300;
+    color: #444;
+    font-family: Arial, sans-serif;
+    line-height: 26px;
+    margin: 0;
+    text-align: left;
+    padding-left: 20px;
+}
+
+.print-header h1 .ethiopia {
+    display: block;
+    padding-left: 65px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.patient-table {
+    border: 2px solid #eaeaea;
+}
+
+.patient-table td, .patient-table th {
+    border: 2px solid #b0b0b0;
+}
+
+td, th {
+    padding: 8px;
+    font-size: 14px;
+}
+
+th {
+    background-color: #eaeaea;
+    text-align: left;
+}
+
+.lab-results-table td, .lab-results-table th {
+    border: none;
+}
+
+.lab-results-table tr:nth-child(odd) {
+    background-color: #eaeaea !important;
+}
+
+.lab-results-table tr:nth-child(even) {
+    background-color: #ffffff !important;
+}
+
+.lab-results-print h3 {
+    font-weight: bold;
+    color: #333;
+    margin-top: 5px;
+    text-align: left;
+    padding-left: 42%;
+}
+
+.location-address {
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    margin: 5px 0 2px 0;
+    font-weight: bold;
+}
+
+.location-address strong {
+    font-weight: bold;
+}
+
+.section-title {
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.no-border {
+    border: none;
+}
+
+.no-border strong {
+    font-weight: normal;
+}
+
+.sub-test-name {
+    padding-left: 40px !important;
+}
+
+@media print {
+    @page {
+        size: auto;
+        margin: 0;
+    }
+    body {
+        padding: 15mm;
+    }
+    .logo-subtitle {
+        color: #9a9a9a;
+    }
+}

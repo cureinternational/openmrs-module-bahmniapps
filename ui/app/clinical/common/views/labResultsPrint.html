@@ -1,134 +1,20 @@
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        color: #000000;
-        background: #fff;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-
-    .print-header .print-logo-plus-text {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .logo-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .logo-subtitle {
-        color: transparent;
-        font-size: 8px;
-        letter-spacing: 1px;
-        font-weight: bold;
-        text-align: center;
-        margin: 2px 0 0 0;
-        font-family: Arial, sans-serif;
-        white-space: nowrap;
-    }
-
-    .print-header h1 {
-        font-size: 16pt;
-        font-weight: 300;
-        color: #444;
-        font-family: Arial, sans-serif;
-        line-height: 26px;
-        margin: 0;
-        text-align: left;
-        padding-left: 20px;
-    }
-
-    .print-header h1 .ethiopia {
-        display: block;
-        padding-left: 30px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-    }
-
-    td, th {
-        border: 1px solid #ccc;
-        padding: 8px;
-        font-size: 14px;
-    }
-
-    th {
-        background-color: #eaeaea;
-        text-align: left;
-    }
-
-    .lab-results-table td, .lab-results-table th {
-        border: none;
-    }
-
-    .lab-results-table tr:nth-child(odd) {
-        background-color: #eaeaea !important;
-    }
-
-    .lab-results-table tr:nth-child(even) {
-        background-color: #ffffff !important;
-    }
-
-    .section-title {
-        margin-top: 20px;
-        font-weight: bold;
-        font-size: 16px;
-    }
-
-    .no-border {
-        border: none;
-    }
-
-    .no-border strong {
-        font-weight: normal;
-    }
-
-    .location-address {
-        font-size: 14px;
-        font-family: Arial, sans-serif;
-        margin: 5px 0;
-    }
-
-    .sub-test-name {
-        padding-left: 40px !important;
-    }
-
-    @media print {
-        @page {
-            size: auto;
-            margin: 0;
-        }
-        body {
-            padding: 15mm;
-        }
-        .logo-subtitle {
-            color: #9a9a9a;
-        }
-    }
-</style>
+<link rel="stylesheet" href="common/styles/labResultsPrint.css"/>
 
 <div class="print-wrapper lab-results-print">
     <!-- Header -->
     <div class="print-header">
         <div class="print-logo-plus-text">
             <div class="logo-container">
-                <img class="print-logo" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="CURE Logo" style="width: auto; height: 60px;"/>
+                <img class="print-logo" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="CURE Logo" style="width: auto; height: 63px;"/>
                 <p class="logo-subtitle">INTERNATIONAL CHILDREN'S HOSPITALS</p>
             </div>
             <h1>CURE Children's Hospital<span class="ethiopia">of Ethiopia</span></h1>
         </div>
     </div>
-    <h3 style="text-align : center">LABORATORY TESTS</h3>
+    <h3>LABORATORY TESTS</h3>
     <p class="location-address"><strong>{{printParams.locationAddress}}</strong></p>
     <!-- Patient Information Table -->
-    <table>
+    <table class="patient-table">
         <tr>
             <td colspan="2"><strong>Name of the Patient:</strong> {{patient.name || patient.given_name}} {{patient.family_name}} ({{patient.identifier}})</td>
             <td><strong>Date:</strong> {{accessionDateTime | bahmniDate}}</td>
