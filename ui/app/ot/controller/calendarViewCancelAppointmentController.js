@@ -55,7 +55,7 @@ angular.module('bahmni.ot').controller('calendarViewCancelAppointmentController'
                 appointment.surgicalAppointmentAttributes = _.values(appointment.surgicalAppointmentAttributes).filter(function (attribute) {
                     return !_.isUndefined(attribute.value);
                 });
-                return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation']);
+                return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation', 'observationMap']);
             });
 
             return surgicalAppointmentService.updateSurgicalBlock(surgicalBlock);

@@ -20,7 +20,7 @@ angular.module('bahmni.ot').controller('cancelSurgicalBlockController', [
             surgicalBlock.location = {uuid: surgicalBlock.location.uuid};
 
             surgicalBlock.surgicalAppointments = _.map(surgicalBlock.surgicalAppointments, function (appointment) {
-                return _.omit(appointment, ['derivedAttributes', 'bedNumber', 'bedLocation']);
+                return _.omit(appointment, ['derivedAttributes', 'bedNumber', 'bedLocation', 'observationMap']);
             });
 
             surgicalAppointmentService.updateSurgicalBlock(surgicalBlock).then(function (response) {
