@@ -7,43 +7,37 @@ body {
     print-color-adjust: exact;
 }
 
+.print-header {
+    text-align: center;
+    color: #000000;
+    margin-bottom: 20px;
+}
+
 .print-header .print-logo-plus-text {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
 }
 
-.logo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.logo-subtitle {
-    color: transparent;
-    font-size: 9px;
-    letter-spacing: 1px;
-    font-weight: bold;
-    text-align: center;
-    margin: 2px 0 0 0;
-    font-family: Arial, sans-serif;
-    white-space: nowrap;
+.print-header .print-logo-plus-text .print-logo,
+.print-header .print-logo-plus-text .print-right {
+    flex: 1;
+    margin-left: -32px;
 }
 
 .print-header h1 {
-    font-size: 16pt;
+    font-size: 14pt;
     font-weight: 300;
     color: #444;
     font-family: Arial, sans-serif;
-    line-height: 26px;
+    line-height: 22px;
     margin: 0;
-    text-align: left;
-    padding-left: 20px;
+    text-align: center;
 }
 
 .print-header h1 .ethiopia {
     display: block;
-    padding-left: 65px;
+    padding-left: 20px;
 }
 
 table {
@@ -53,11 +47,11 @@ table {
 }
 
 .patient-table {
-    border: 2px solid #eaeaea;
+    border: 1px solid #ddd;
 }
 
 .patient-table td, .patient-table th {
-    border: 2px solid #b0b0b0;
+    border: 1px solid #ddd;
 }
 
 td, th {
@@ -74,6 +68,16 @@ th {
     border: none;
 }
 
+.lab-results-table th:first-child,
+.lab-results-table td:first-child {
+    width: 50%;
+}
+
+.lab-results-table th:last-child,
+.lab-results-table td:last-child {
+    width: 50%;
+}
+
 .lab-results-table tr:nth-child(odd) {
     background-color: #eaeaea !important;
 }
@@ -86,8 +90,7 @@ th {
     font-weight: bold;
     color: #333;
     margin-top: 5px;
-    text-align: left;
-    padding-left: 42%;
+    text-align: center;
 }
 
 .location-address {
@@ -109,6 +112,7 @@ th {
 
 .no-border {
     border: none;
+    padding-left: 0;
 }
 
 .no-border strong {
@@ -127,7 +131,5 @@ th {
     body {
         padding: 15mm;
     }
-    .logo-subtitle {
-        color: #9a9a9a;
-    }
+
 }
