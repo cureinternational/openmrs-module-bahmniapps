@@ -63,9 +63,7 @@ const initialProps = {
   formName: "Vitals",
   formNameTranslations: "Vitals",
   isViewFormLoading: false,
-  formsApprovalAndCommentsConfig: {
-    enableFormApprovalsAndComments: true,
-  },
+  enableFormApprovalsAndComments: true,
   formData: [
     {
       concept: {
@@ -248,9 +246,7 @@ describe("ViewObservationForm", () => {
   it("should not render Comment and Approve buttons when enableFormApprovalsAndComments is false", () => {
     const propsWithFeatureDisabled = {
       ...initialProps,
-      formsApprovalAndCommentsConfig: {
-        enableFormApprovalsAndComments: false,
-      },
+      enableFormApprovalsAndComments: false,
     };
     renderWithIntl(<ViewObservationForm {...propsWithFeatureDisabled} />);
 

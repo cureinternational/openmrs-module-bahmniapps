@@ -26,6 +26,10 @@ import EditObservationForm from "../../Components/EditObservationForm/EditObserv
  */
 
 export function FormDisplayControl(props) {
+  const { appService } = props;
+  
+  const enableFormApprovalsAndComments = appService?.getAppDescriptor?.().getConfigValue("enableFormApprovalsAndComments");
+
   const noFormText = (
     <FormattedMessage
       id={"NO_FORM"}
@@ -342,6 +346,7 @@ export function FormDisplayControl(props) {
                   createdDateTime={createdDateTime}
                   createdBy={createdBy}
                   currentUser={props?.hostData?.currentUser}
+                  enableFormApprovalsAndComments={enableFormApprovalsAndComments}
                 />
               ) : null}
               {showEditObservationForm ? (
@@ -369,5 +374,5 @@ export function FormDisplayControl(props) {
 
 FormDisplayControl.propTypes = {
   hostData: PropTypes.object.isRequired,
-  hostApi: PropTypes.object.isRequired
-};
+  hostApi: PropTypes.object.isRequired,
+  appService: PropTypes.object};

@@ -34,10 +34,8 @@ export const ViewObservationForm = (props) => {
     createdDateTime,
     createdBy,
     currentUser,
-    formsApprovalAndCommentsConfig = {},
+    enableFormApprovalsAndComments,
   } = props;
-
-  const { enableFormApprovalsAndComments = false } = formsApprovalAndCommentsConfig;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [comments, setComments] = useState([]);
@@ -347,6 +345,6 @@ ViewObservationForm.propTypes = {
   createdDateTime: propTypes.string,
   createdBy: propTypes.string,
   currentUser: propTypes.string,
-  formsApprovalAndCommentsConfig: propTypes.object,
+  enableFormApprovalsAndComments: propTypes.bool,
 };
 export default ViewObservationForm;
