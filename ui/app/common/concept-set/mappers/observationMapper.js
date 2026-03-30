@@ -193,7 +193,7 @@ Bahmni.ConceptSet.ObservationMapper = function () {
             return valueConcept.shortName || valueConcept.name;
         }
 
-        if (observation.groupMembers === undefined || observation.groupMembers.length <= 0) {
+        if (!observation.groupMembers || observation.groupMembers.length <= 0) {
             return observation.value.shortName || observation.value.name || observation.value;
         }
 

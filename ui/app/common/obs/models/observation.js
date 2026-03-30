@@ -97,7 +97,7 @@ Bahmni.Common.Obs.Observation = (function () {
                 return this.complexData.display;
             }
 
-            if (this.groupMembers.length <= 0) {
+            if (!this.groupMembers || this.groupMembers.length <= 0) {
                 value = this.value;
                 var displayValue = value && (value.shortName || (value.name && (value.name.name || value.name)) || value);
                 if (this.duration) {

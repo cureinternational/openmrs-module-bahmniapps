@@ -84,7 +84,6 @@ angular.module('bahmni.common.displaycontrol.observation')
                             $scope.bahmniObservations.splice(index, 1);
                         }
                     });
-                    console.log("$scope.bahmniObservations -- ", $scope.bahmniObservations);
                 };
 
                 var fetchObservations = function () {

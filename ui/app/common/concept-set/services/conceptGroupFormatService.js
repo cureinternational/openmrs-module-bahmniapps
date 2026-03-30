@@ -4,8 +4,8 @@ angular.module('bahmni.common.conceptSet')
     .factory('conceptGroupFormatService', ['$translate', 'appService', function ($translate, appService) {
         var conceptGroupFormatConfig = appService.getAppDescriptor().getConfigValue("obsGroupDisplayFormat") || {};
         var isConceptDefinedInConfig = function (observation) {
-            if (observation.groupMembers.length > 0) {
-                if ((observation.formNamespace === null && observation.obsGroupUuid !== null) || observation.formNamespace !== null) {
+            if (observation.groupMembers && observation.groupMembers.length > 0) {
+                if ((observation.formNamespace == null && observation.obsGroupUuid != null) || observation.formNamespace != null) {
                     return conceptGroupFormatConfig.hasOwnProperty(observation.concept.name);
                 }
             }
