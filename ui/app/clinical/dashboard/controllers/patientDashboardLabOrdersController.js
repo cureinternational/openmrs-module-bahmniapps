@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .controller('PatientDashboardLabOrdersController', ['$scope', '$stateParams', '$rootScope', '$q', 'visitActionsService', 'allergyService', 'observationsService', 'orderService',
-        function ($scope, $stateParams, $rootScope, $q, visitActionsService, allergyService, observationsService, orderService) {
+    .controller('PatientDashboardLabOrdersController', ['$scope', '$stateParams', '$rootScope', '$q', 'visitActionsService', 'allergyService', 'observationsService', 'orderService', 'treatmentService',
+        function ($scope, $stateParams, $rootScope, $q, visitActionsService, allergyService, observationsService, orderService, treatmentService) {
             var labOrdersConfigParams = $scope.dashboard.getSectionByType("labOrders") || {};
             var patientParams = {"patientUuid": $scope.patient.uuid};
             $scope.dashboardConfig = {};
@@ -15,17 +15,6 @@ angular.module('bahmni.clinical')
             };
 
             var enhancedPatient = angular.copy($scope.patient);
-
-            // Resolve patient phone number from available phone fields
-            if (enhancedPatient.mobilePhone) {
-                enhancedPatient.phoneNumber = enhancedPatient.mobilePhone.value;
-            } else if (enhancedPatient.residentialPhone) {
-                enhancedPatient.phoneNumber = enhancedPatient.residentialPhone.value;
-            } else if (enhancedPatient.workPhone) {
-                enhancedPatient.phoneNumber = enhancedPatient.workPhone.value;
-            } else if (enhancedPatient.otherPhone) {
-                enhancedPatient.phoneNumber = enhancedPatient.otherPhone.value;
-            }
 
             // Fetch patient allergies
             allergyService.fetchAndProcessAllergies($scope.patient.uuid).then(function (allergies) {
@@ -44,53 +33,26 @@ angular.module('bahmni.clinical')
             ).then(function (response) {
                 if (response.data && response.data.length > 0) {
                     enhancedPatient.weight = response.data[0].value;
-                    console.log('[LabResults] Weight fetched:', enhancedPatient.weight);
-                } else {
-                    console.warn('[LabResults] No weight observation found for patient');
                 }
-            }).catch(function (error) {
-                console.error('[LabResults] Weight fetch failed:', error);
-            });
+            }).catch(function () {});
 
-            // Build print config from facility location and static defaults
+            // Build print config from facility location and config
             var labResultsPrintConfig = labOrdersConfigParams.labResultsPrint || {};
-            labResultsPrintConfig.locationName = $rootScope.facilityLocation.name;
-            labResultsPrintConfig.logo = '/bahmni/images/cureLogoFull.png';
-            labResultsPrintConfig.title = 'Lab Results';
             labResultsPrintConfig.locationAddress = $rootScope.facilityLocation.address5;
-
-            // Map orderer and selected provider attributes into a flat provider object
-            var buildProvider = function (orderer, attributes) {
-                var provider = {name: orderer.display, uuid: orderer.uuid, fullName: '', title: '', licenceNumber: ''};
-                if (attributes) {
-                    attributes.forEach(function (attr) {
-                        var display = attr.attributeType.display.trim().toLowerCase();
-                        if (display === 'provider full name') {
-                            provider.fullName = attr.value;
-                        } else if (display === 'provider title') {
-                            provider.title = attr.value;
-                        } else if (display === 'medical licence number') {
-                            provider.licenceNumber = attr.value;
-                        }
-                    });
-                }
-                return provider;
-            };
 
             // Fetch ordering provider details from Order API
             var fetchProvider = function (orderUuid) {
-                console.log('[LabResults] Fetching provider for orderUuid:', orderUuid);
                 return orderService.getOrderByUuid(orderUuid, 'custom:(orderer:(uuid,display,attributes:(value,attributeType:(display))))').then(function (response) {
                     var orderer = response.data.orderer;
                     if (orderer && orderer.uuid) {
-                        var provider = buildProvider(orderer, orderer.attributes);
-                        console.log('[LabResults] Provider built:', provider);
-                        return provider;
+                        var providerAttributesForPrint = labResultsPrintConfig.providerAttributesForPrint || [];
+                        orderer.attributes = treatmentService.getOrderedProviderAttributesForPrint(
+                            orderer.attributes, providerAttributesForPrint
+                        ) || [];
+                        return orderer;
                     }
-                    console.warn('[LabResults] No orderer found in order response, falling back to currentProvider');
                     return $rootScope.currentProvider || {};
-                }).catch(function (error) {
-                    console.error('[LabResults] Provider fetch failed, falling back to currentProvider:', error);
+                }).catch(function () {
                     return $rootScope.currentProvider || {};
                 });
             };
@@ -99,13 +61,10 @@ angular.module('bahmni.clinical')
             $scope.$on("event:downloadLabResultsFromDashboard", function (event, labOrderResults, accessionDateTime, accessionUuid) {
                 var firstResult = labOrderResults[0].isPanel ? labOrderResults[0].tests[0] : labOrderResults[0];
                 var orderUuid = firstResult.orderUuid;
-                console.log('[LabResults] Download triggered, orderUuid:', orderUuid);
                 var providerPromise = orderUuid ? fetchProvider(orderUuid) : $q.when($rootScope.currentProvider || {});
                 $q.all([weightPromise, providerPromise]).then(function (results) {
-                    var provider = results[1];
-                    console.log('[LabResults] Printing with patient:', enhancedPatient, 'provider:', provider);
                     var printConfig = angular.copy(labResultsPrintConfig);
-                    printConfig.provider = provider;
+                    printConfig.orderer = results[1];
                     visitActionsService.downloadLabResults(enhancedPatient, labOrderResults, accessionDateTime, accessionUuid, printConfig);
                 });
             });
