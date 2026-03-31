@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import propTypes from "prop-types";
 import { Button, TextArea, Loading } from "carbon-components-react";
 import { useIntl } from "react-intl";
+import { COMMENT_MAX_CHARACTERS } from "../../../constants";
 import "./commentPanel.scss";
 
 export const CommentPanel = (props) => {
   const {
     onClose,
     onSaveComment,
-    maxCharacters = 256,
+    maxCharacters = COMMENT_MAX_CHARACTERS,
     saveDelay = 1500,
   } = props;
 
