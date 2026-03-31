@@ -2,10 +2,10 @@
 
 <div class="print-wrapper lab-results-print">
     <!-- Header -->
-    <div class="print-header">
+    <div class="print-header" ng-if="printParams">
         <div class="print-logo-plus-text">
-            <img class="print-logo" width="125px" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="CURE Logo"/>
-            <h1>CURE Children's Hospital<span class="ethiopia">of Ethiopia</span></h1>
+            <img class="print-logo" width="125px" ng-if="printParams.logo" ng-src="{{printParams.logo}}" alt="logo"/>
+            <h1>{{printParams.title}}</h1>
             <div class="print-right"></div>
         </div>
     </div>
@@ -14,33 +14,22 @@
     <!-- Patient Information Table -->
     <table class="patient-table">
         <tr>
-            <td colspan="2"><strong>Name of the Patient:</strong> {{patient.name || patient.given_name}} {{patient.family_name}} ({{patient.identifier}})</td>
+            <td colspan="2"><strong>Name of the Patient:</strong> {{patient.name}} ({{patient.identifier}})</td>
             <td><strong>Date:</strong> {{accessionDateTime | bahmniDate}}</td>
         </tr>
-
         <tr>
-            <td><strong>Age:</strong> {{patient.age}}{{patient.age ? ' years' : ''}}</td>
-            <td><strong>Sex:</strong> {{patient.gender || patient.genderText}}</td>
+            <td><strong>Age:</strong> <span ng-bind-html="patient.birthdate | dateToAge:accessionDateTime"></span></td>
+            <td><strong>Sex:</strong> {{patient.genderText.substring(6, patient.genderText.length - 7)}}</td>
             <td><strong>Weight:</strong> {{patient.weight}}{{patient.weight ? ' Kg' : ''}}</td>
         </tr>
         <tr>
-            <td><strong>Address:</strong>{{patient.address.address5}}</td>
-            <td><strong>Kebele:</strong> {{patient.address.address4}}</td>
-            <td><strong>Woreda:</strong> {{patient.address.address3}}</td>
-        </tr>
-        <tr>
-            <td><strong>Zone:</strong> {{patient.address.address2}}</td>
-            <td><strong>Region:</strong> {{patient.address.address1}}</td>
-            <td><strong>Country:</strong> {{patient.address.country}}</td>
-        </tr>
-        <tr>
-            <td><strong>Tel no:</strong> {{patient.phoneNumber}}</td>
-            <td colspan="2"><strong>Allergies:</strong> {{patient.allergies}}</td>
+            <td><strong>Tel no:</strong> {{patient.mobilePhone.value}}</td>
+            <td colspan="2"><strong>Allergies:</strong> {{patient.allergies || 'No allergies recorded for this patient'}}</td>
         </tr>
     </table>
 
     <!-- Lab Tests Section -->
-    <div class="section-title">LAB TESTS</div>
+    <div class="section-title">{{ 'LAB_TESTS_LABEL' | translate }}</div>
 
     <table class="lab-results-table">
         <tr>
@@ -54,18 +43,12 @@
     </table>
 
     <!-- Doctor Section -->
-    <div class="section-title">Doctor:</div>
-
-    <table>
-        <tr>
-            <td class="no-border"><strong>Full Name:</strong> {{printParams.provider.fullName || printParams.provider.name || ''}}</td>
-        </tr>
-        <tr>
-            <td class="no-border"><strong>Title:</strong> {{printParams.provider.title || ''}}</td>
-        </tr>
-        <tr>
-            <td class="no-border"><strong>Medical Licence Number:</strong> {{printParams.provider.licenceNumber || ''}}</td>
-        </tr>
-    </table>
-
+    <div ng-if="printParams.orderer">
+        <div class="section-title">Doctor:</div>
+        <table>
+            <tr ng-repeat="attr in printParams.orderer.attributes">
+                <td class="no-border"><strong>{{attr.attributeType.display}}:</strong> {{attr.value}}</td>
+            </tr>
+        </table>
+    </div>
 </div>

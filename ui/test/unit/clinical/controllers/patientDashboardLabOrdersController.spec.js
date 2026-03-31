@@ -4,10 +4,9 @@ describe("PatientDashboardLabOrdersController", function () {
 
     beforeEach(module('bahmni.clinical'));
 
-    var scope, stateParams, controller, visitActionsService, allergyService, observationsService, orderService, $q, $rootScope;
+    var scope, stateParams, controller, visitActionsService, allergyService, observationsService, orderService, treatmentService, $q, $rootScope;
 
     var labResultSection = {
-        "title": "Lab Results",
         "type": "labOrders",
         "dashboardConfig": {
             "title": null,
@@ -19,6 +18,13 @@ describe("PatientDashboardLabOrdersController", function () {
         }
     };
 
+    var labResultSectionWithPrintConfig = angular.extend({}, labResultSection, {
+        "labResultsPrint": {
+            "templateUrl": "/bahmni_config/openmrs/apps/clinical/clinicalPrints/labResultsPrint.html",
+            "providerAttributesForPrint": ["Provider Full Name", "Provider Title", "Medical Licence Number"]
+        }
+    });
+
     beforeEach(inject(function ($controller, _$rootScope_, _$q_) {
         controller = $controller;
         $rootScope = _$rootScope_;
@@ -28,18 +34,28 @@ describe("PatientDashboardLabOrdersController", function () {
         scope.dialogData = {};
         stateParams = {patientUuid: "patient123"};
 
-        $rootScope.facilityLocation = {name: 'Test Hospital', address5: 'Test Address'};
+        $rootScope.facilityLocation = {address5: 'Test Address'};
         $rootScope.currentProvider = {uuid: 'provider-fallback', display: 'Dr. Fallback'};
 
         visitActionsService = jasmine.createSpyObj('visitActionsService', ['downloadLabResults']);
         allergyService = jasmine.createSpyObj('allergyService', ['fetchAndProcessAllergies']);
-        allergyService.fetchAndProcessAllergies.and.returnValue($q.when('No allergies'));
+        allergyService.fetchAndProcessAllergies.and.returnValue($q.when('Pollen'));
         observationsService = jasmine.createSpyObj('observationsService', ['fetch']);
         observationsService.fetch.and.returnValue($q.when({data: []}));
         orderService = jasmine.createSpyObj('orderService', ['getOrderByUuid']);
         orderService.getOrderByUuid.and.returnValue($q.when({
             data: {orderer: {uuid: 'provider-uuid', display: 'Dr. Test', attributes: []}}
         }));
+        treatmentService = jasmine.createSpyObj('treatmentService', ['getOrderedProviderAttributesForPrint']);
+        treatmentService.getOrderedProviderAttributesForPrint.and.callFake(function (attributes, filter) {
+            if (!filter || !filter.length) { return attributes; }
+            var ordered = [];
+            filter.forEach(function (name) {
+                var match = (attributes || []).filter(function (a) { return a.attributeType.display === name; })[0];
+                if (match) { ordered.push(match); }
+            });
+            return ordered;
+        });
     }));
 
     var initController = function () {
@@ -51,7 +67,8 @@ describe("PatientDashboardLabOrdersController", function () {
             visitActionsService: visitActionsService,
             allergyService: allergyService,
             observationsService: observationsService,
-            orderService: orderService
+            orderService: orderService,
+            treatmentService: treatmentService
         });
     };
 
@@ -66,17 +83,9 @@ describe("PatientDashboardLabOrdersController", function () {
             expect(scope.dashboardConfig.showNormalValues).toBe(labResultSection.dashboardConfig.showNormalValues);
         });
 
-        it("should pass patient uuid when no section config exists", function () {
-            scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create({
-                "dashboardName": "General",
-                "sections": []
-            });
-            initController();
-            expect(scope.dashboardConfig.patientUuid).toBe("patient123");
-        });
     });
 
-    describe("Phone Number Resolution", function () {
+    describe("Allergies Fetch", function () {
         beforeEach(function () {
             scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create({
                 "dashboardName": "General",
@@ -84,44 +93,23 @@ describe("PatientDashboardLabOrdersController", function () {
             });
         });
 
-        var triggerDownloadAndGetPatient = function () {
+        it("should set allergies on patient when returned", function () {
             initController();
             var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
             scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
             $rootScope.$digest();
-            return visitActionsService.downloadLabResults.calls.mostRecent().args[0];
-        };
-
-        it("should set phoneNumber from mobilePhone when available", function () {
-            scope.patient.mobilePhone = {value: "+251911234567"};
-            scope.patient.residentialPhone = {value: "+251644567890"};
-            var patient = triggerDownloadAndGetPatient();
-            expect(patient.phoneNumber).toBe("+251911234567");
+            var patient = visitActionsService.downloadLabResults.calls.mostRecent().args[0];
+            expect(patient.allergies).toBe('Pollen');
         });
 
-        it("should use residentialPhone when mobilePhone is not set", function () {
-            scope.patient.residentialPhone = {value: "+251644567890"};
-            scope.patient.workPhone = {value: "+251722111222"};
-            var patient = triggerDownloadAndGetPatient();
-            expect(patient.phoneNumber).toBe("+251644567890");
-        });
-
-        it("should use workPhone when mobile and residential are not set", function () {
-            scope.patient.workPhone = {value: "+251722111222"};
-            scope.patient.otherPhone = {value: "+251633999888"};
-            var patient = triggerDownloadAndGetPatient();
-            expect(patient.phoneNumber).toBe("+251722111222");
-        });
-
-        it("should use otherPhone as last resort", function () {
-            scope.patient.otherPhone = {value: "+251633999888"};
-            var patient = triggerDownloadAndGetPatient();
-            expect(patient.phoneNumber).toBe("+251633999888");
-        });
-
-        it("should not set phoneNumber when no phone fields available", function () {
-            var patient = triggerDownloadAndGetPatient();
-            expect(patient.phoneNumber).toBeUndefined();
+        it("should set empty string on patient when allergies fetch fails", function () {
+            allergyService.fetchAndProcessAllergies.and.returnValue($q.reject('error'));
+            initController();
+            var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
+            scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
+            $rootScope.$digest();
+            var patient = visitActionsService.downloadLabResults.calls.mostRecent().args[0];
+            expect(patient.allergies).toBe('');
         });
     });
 
@@ -175,99 +163,6 @@ describe("PatientDashboardLabOrdersController", function () {
         });
     });
 
-    describe("buildProvider - attribute mapping", function () {
-        beforeEach(function () {
-            scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create({
-                "dashboardName": "General",
-                "sections": [labResultSection]
-            });
-        });
-
-        var triggerDownloadWithAttributes = function (attributes) {
-            orderService.getOrderByUuid.and.returnValue($q.when({
-                data: {orderer: {uuid: 'p1', display: 'Dr. Login Name', attributes: attributes}}
-            }));
-            initController();
-            var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
-            scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
-            $rootScope.$digest();
-            return visitActionsService.downloadLabResults.calls.mostRecent().args[4].provider;
-        };
-
-        it("should map Provider Full Name attribute to provider.fullName", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'Dr. John Doe', attributeType: {display: 'Provider Full Name'}}
-            ]);
-            expect(provider.fullName).toBe('Dr. John Doe');
-        });
-
-        it("should map Provider Title attribute to provider.title", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'MD', attributeType: {display: 'Provider Title'}}
-            ]);
-            expect(provider.title).toBe('MD');
-        });
-
-        it("should map Medical Licence Number attribute to provider.licenceNumber", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'LIC-12345', attributeType: {display: 'Medical Licence Number'}}
-            ]);
-            expect(provider.licenceNumber).toBe('LIC-12345');
-        });
-
-        it("should map all three attributes together", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'Dr. John Doe', attributeType: {display: 'Provider Full Name'}},
-                {value: 'MD', attributeType: {display: 'Provider Title'}},
-                {value: 'LIC-12345', attributeType: {display: 'Medical Licence Number'}}
-            ]);
-            expect(provider.fullName).toBe('Dr. John Doe');
-            expect(provider.title).toBe('MD');
-            expect(provider.licenceNumber).toBe('LIC-12345');
-        });
-
-        it("should match attribute names case-insensitively", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'Dr. John Doe', attributeType: {display: 'PROVIDER FULL NAME'}},
-                {value: 'MD', attributeType: {display: 'provider title'}},
-                {value: 'LIC-12345', attributeType: {display: 'Medical Licence Number'}}
-            ]);
-            expect(provider.fullName).toBe('Dr. John Doe');
-            expect(provider.title).toBe('MD');
-            expect(provider.licenceNumber).toBe('LIC-12345');
-        });
-
-        it("should trim whitespace from attribute type display name", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'Dr. John Doe', attributeType: {display: '  Provider Full Name  '}}
-            ]);
-            expect(provider.fullName).toBe('Dr. John Doe');
-        });
-
-        it("should set orderer display as provider name", function () {
-            var provider = triggerDownloadWithAttributes([]);
-            expect(provider.name).toBe('Dr. Login Name');
-        });
-
-        it("should ignore unrelated attributes", function () {
-            var provider = triggerDownloadWithAttributes([
-                {value: 'Doctor', attributeType: {display: 'practitioner_type'}},
-                {value: true, attributeType: {display: 'Available for appointments'}},
-                {value: 'Dr. John Doe', attributeType: {display: 'Provider Full Name'}}
-            ]);
-            expect(provider.fullName).toBe('Dr. John Doe');
-            expect(provider.title).toBe('');
-            expect(provider.licenceNumber).toBe('');
-        });
-
-        it("should handle empty attributes array", function () {
-            var provider = triggerDownloadWithAttributes([]);
-            expect(provider.fullName).toBe('');
-            expect(provider.title).toBe('');
-            expect(provider.licenceNumber).toBe('');
-        });
-    });
-
     describe("Download Lab Results event", function () {
         beforeEach(function () {
             scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create({
@@ -298,31 +193,51 @@ describe("PatientDashboardLabOrdersController", function () {
             );
         });
 
-        it("should call visitActionsService.downloadLabResults with provider from order API", function () {
+        it("should pass raw orderer from order API in print config", function () {
+            var attrs = [{value: 'Dr. Full Name', attributeType: {display: 'Provider Full Name'}}];
             orderService.getOrderByUuid.and.returnValue($q.when({
-                data: {orderer: {uuid: 'p1', display: 'Dr. Test', attributes: [
-                    {value: 'Dr. Full Name', attributeType: {display: 'Provider Full Name'}}
-                ]}}
+                data: {orderer: {uuid: 'p1', display: 'Dr. Test', attributes: attrs}}
             }));
             initController();
             var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
             scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
             $rootScope.$digest();
 
-            expect(visitActionsService.downloadLabResults).toHaveBeenCalled();
             var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
-            expect(printConfig.provider.fullName).toBe('Dr. Full Name');
+            expect(printConfig.orderer.uuid).toBe('p1');
+            expect(printConfig.orderer.display).toBe('Dr. Test');
+        });
+
+        it("should call getOrderedProviderAttributesForPrint with orderer attributes and config filter", function () {
+            scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create({
+                "dashboardName": "General",
+                "sections": [labResultSectionWithPrintConfig]
+            });
+            var attrs = [
+                {value: 'Dr. Full Name', attributeType: {display: 'Provider Full Name'}},
+                {value: 'MD', attributeType: {display: 'Provider Title'}}
+            ];
+            orderService.getOrderByUuid.and.returnValue($q.when({
+                data: {orderer: {uuid: 'p1', display: 'Dr. Test', attributes: attrs}}
+            }));
+            initController();
+            scope.$broadcast("event:downloadLabResultsFromDashboard", [{orderUuid: 'order-1', isPanel: false}], '2024-01-01', 'acc-1');
+            $rootScope.$digest();
+            expect(treatmentService.getOrderedProviderAttributesForPrint).toHaveBeenCalledWith(
+                attrs,
+                ["Provider Full Name", "Provider Title", "Medical Licence Number"]
+            );
         });
 
         it("should fall back to currentProvider when orderUuid is missing", function () {
             initController();
-            var labOrderResults = [{isPanel: false}]; // no orderUuid
+            var labOrderResults = [{isPanel: false}];
             scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
             $rootScope.$digest();
 
             expect(orderService.getOrderByUuid).not.toHaveBeenCalled();
             var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
-            expect(printConfig.provider).toEqual($rootScope.currentProvider);
+            expect(printConfig.orderer).toEqual($rootScope.currentProvider);
         });
 
         it("should fall back to currentProvider when order API call fails", function () {
@@ -333,7 +248,7 @@ describe("PatientDashboardLabOrdersController", function () {
             $rootScope.$digest();
 
             var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
-            expect(printConfig.provider).toEqual($rootScope.currentProvider);
+            expect(printConfig.orderer).toEqual($rootScope.currentProvider);
         });
 
         it("should fall back to currentProvider when orderer is missing in order response", function () {
@@ -344,20 +259,39 @@ describe("PatientDashboardLabOrdersController", function () {
             $rootScope.$digest();
 
             var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
-            expect(printConfig.provider).toEqual($rootScope.currentProvider);
+            expect(printConfig.orderer).toEqual($rootScope.currentProvider);
         });
 
-        it("should include correct print config fields", function () {
+        it("should set locationAddress from facilityLocation.address5 in print config", function () {
             initController();
             var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
             scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
             $rootScope.$digest();
 
             var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
-            expect(printConfig.locationName).toBe('Test Hospital');
-            expect(printConfig.logo).toBe('/bahmni/images/cureLogoFull.png');
-            expect(printConfig.title).toBe('Lab Results');
             expect(printConfig.locationAddress).toBe('Test Address');
+        });
+
+        it("should use templateUrl from labResultsPrint config", function () {
+            scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create({
+                "dashboardName": "General",
+                "sections": [labResultSectionWithPrintConfig]
+            });
+            initController();
+            scope.$broadcast("event:downloadLabResultsFromDashboard", [{orderUuid: 'order-1', isPanel: false}], '2024-01-01', 'acc-1');
+            $rootScope.$digest();
+
+            var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
+            expect(printConfig.templateUrl).toBe('/bahmni_config/openmrs/apps/clinical/clinicalPrints/labResultsPrint.html');
+        });
+
+        it("should not set templateUrl when labResultsPrint config is absent", function () {
+            initController();
+            scope.$broadcast("event:downloadLabResultsFromDashboard", [{orderUuid: 'order-1', isPanel: false}], '2024-01-01', 'acc-1');
+            $rootScope.$digest();
+
+            var printConfig = visitActionsService.downloadLabResults.calls.mostRecent().args[4];
+            expect(printConfig.templateUrl).toBeUndefined();
         });
 
         it("should pass labOrderResults and accession details to downloadLabResults", function () {

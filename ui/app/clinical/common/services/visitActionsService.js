@@ -7,7 +7,8 @@ angular.module('bahmni.clinical')
                 printer.print('common/views/prescriptionPrint.html', {patient: patient, visitDate: visitDate, visitUuid: visitUuid, printParams: printParams});
             },
             downloadLabResults: function (patient, labOrderResults, accessionDateTime, accessionUuid, printParams) {
-                printer.print('common/views/labResultsPrint.html', {
+                var templateUrl = (printParams && printParams.templateUrl) ? printParams.templateUrl : 'common/views/labResultsPrint.html';
+                printer.print(templateUrl, {
                     patient: patient,
                     labOrderResults: labOrderResultService.getReferredOutPrintableLabOrders(labOrderResults),
                     accessionDateTime: accessionDateTime,
