@@ -15,5 +15,22 @@
   "SEARCH_REACTION": "Search Reaction",
   "COMMON_REACTIONS": "Common Reactions",
   "ALLERGEN": "Allergen",
-  "EDIT_FORM_ERROR_MESSAGE": "Please enter a value in the mandatory fields or correct the value in the highlighted fields to proceed"
+  "EDIT_FORM_ERROR_MESSAGE": "Please enter a value in the mandatory fields or correct the value in the highlighted fields to proceed",
+  "APPROVE": "Aprovar",
+  "COMMENT": "Comentário",
+  "COMMENT_ADDED_SUCCESSFULLY": "Comentário adicionado com sucesso!",
+  "CONFIRMATION": "Confirmação",
+  "APPROVE_FORM_CONFIRMATION": "Deseja proceder com a aprovação deste formulário?",
+  "CANCEL": "Cancelar",
+  "SUBMIT": "Enviar",
+  "APPROVED_SUCCESSFULLY": "{formName} aprovado com sucesso",
+  "ACTIONS": "Ações",
+  "CREATION": "Criação",
+  "COMMENT_ACTION": "Comentário",
+  "ADD_COMMENT": "Adicionar Comentário",
+  "COMMENT_PLACEHOLDER": "Digite um máximo de {maxCharacters} caracteres",
+  "ACTION": "Ação",
+  "DATE_TIME": "Data e Hora",
+  "PROVIDER": "Fornecedor",
+  "COMMENTS_COLUMN": "Comentários"
 }

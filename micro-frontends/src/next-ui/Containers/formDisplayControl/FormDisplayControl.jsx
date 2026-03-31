@@ -26,6 +26,10 @@ import EditObservationForm from "../../Components/EditObservationForm/EditObserv
  */
 
 export function FormDisplayControl(props) {
+  const { appService } = props;
+  
+  const enableFormApprovalsAndComments = appService?.getAppDescriptor?.().getConfigValue("enableFormApprovalsAndComments");
+
   const noFormText = (
     <FormattedMessage
       id={"NO_FORM"}
@@ -55,6 +59,8 @@ export function FormDisplayControl(props) {
   const [isViewFormLoading, setViewFormLoading] = useState(false);
   const [isEditFormLoading, setEditFormLoading] = useState(false);
   const [encounterUuid, setEncounterUuid] = useState("");
+  const [createdDateTime, setCreatedDateTime] = useState("");
+  const [createdBy, setCreatedBy] = useState("");
 
   const buildResponseData = async () => {
     try {
@@ -132,7 +138,9 @@ export function FormDisplayControl(props) {
   const openViewObservationForm = async (
     formName,
     encounterUuid,
-    formNameTranslations
+    formNameTranslations,
+    encounterDate,
+    providerName
   ) => {
     var formMap = {
       formName: formName,
@@ -141,6 +149,8 @@ export function FormDisplayControl(props) {
     };
     setFormName(formName);
     setFormNameTranslations(formNameTranslations);
+    setCreatedDateTime(formatDate(encounterDate));
+    setCreatedBy(providerName);
     setViewFormLoading(true);
     setViewObservationForm(true);
     const data = await buildFormMap(formMap);
@@ -235,7 +245,9 @@ export function FormDisplayControl(props) {
                                         openViewObservationForm(
                                           key,
                                           entry.encounterUuid,
-                                          entry.formNameTranslations
+                                          entry.formNameTranslations,
+                                          entry.encounterDate,
+                                          entry.providerName
                                         )
                                       }
                                       className="form-link"
@@ -288,7 +300,9 @@ export function FormDisplayControl(props) {
                                 openViewObservationForm(
                                   key,
                                   value[0].encounterUuid,
-                                  value[0].formNameTranslations
+                                  value[0].formNameTranslations,
+                                  value[0].encounterDate,
+                                  value[0].providerName
                                 )
                               }
                             >
@@ -329,6 +343,10 @@ export function FormDisplayControl(props) {
                   formData={formData}
                   showPrintOption={props?.hostData?.showPrintOption}
                   printForm={printForm}
+                  createdDateTime={createdDateTime}
+                  createdBy={createdBy}
+                  currentUser={props?.hostData?.currentUser}
+                  enableFormApprovalsAndComments={enableFormApprovalsAndComments}
                 />
               ) : null}
               {showEditObservationForm ? (
@@ -356,5 +374,5 @@ export function FormDisplayControl(props) {
 
 FormDisplayControl.propTypes = {
   hostData: PropTypes.object.isRequired,
-  hostApi: PropTypes.object.isRequired
-};
+  hostApi: PropTypes.object.isRequired,
+  appService: PropTypes.object};

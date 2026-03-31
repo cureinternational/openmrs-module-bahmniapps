@@ -1,13 +1,69 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render as rtlRender, screen, within, fireEvent, waitFor } from "@testing-library/react";
+import { IntlProvider } from "react-intl";
 import ViewObservationForm from "./ViewObservationForm.jsx";
 import { observationList, observationListWithGroupMembers } from "./FileViewer/FileViewerMockData";
 import { formatDate } from "../../utils/utils";
+
+jest.mock("../i18n/I18nProvider", () => {
+  // eslint-disable-next-line global-require
+  const React = require("react");
+  // eslint-disable-next-line global-require
+  const { IntlProvider } = require("react-intl");
+
+  const mockMessages = {
+    "APPROVE": "Approve",
+    "COMMENT": "Comment",
+    "COMMENT_ADDED_SUCCESSFULLY": "Comment added successfully!",
+    "CONFIRMATION": "Confirmation",
+    "APPROVE_FORM_CONFIRMATION": "Do you want to proceed with approving this form?",
+    "CANCEL": "Cancel",
+    "SUBMIT": "Submit",
+    "ACTIONS": "Actions",
+    "CREATION": "Creation",
+    "COMMENT_ACTION": "Comment",
+    "APPROVED_SUCCESSFULLY": "{formName} approved successfully",
+    "ACTION": "Action",
+    "DATE_TIME": "Date & Time",
+    "PROVIDER": "Provider",
+    "COMMENTS_COLUMN": "Comments"
+  };
+
+  return {
+    // eslint-disable-next-line react/prop-types
+    I18nProvider: ({ children }) =>
+      React.createElement(IntlProvider, { locale: "en", messages: mockMessages }, children)
+  };
+});
+
+const mockMessages = {
+  "APPROVE": "Approve",
+  "COMMENT": "Comment",
+  "COMMENT_ADDED_SUCCESSFULLY": "Comment added successfully!",
+  "CONFIRMATION": "Confirmation",
+  "APPROVE_FORM_CONFIRMATION": "Do you want to proceed with approving this form?",
+  "CANCEL": "Cancel",
+  "SUBMIT": "Submit",
+  "ACTIONS": "Actions",
+  "CREATION": "Creation",
+  "COMMENT_ACTION": "Comment",
+  "APPROVED_SUCCESSFULLY": "{formName} approved successfully",
+  "PROVIDER": "Provider"
+};
+
+const renderWithIntl = (component) => {
+  return rtlRender(
+    <IntlProvider locale="en" messages={mockMessages}>
+      {component}
+    </IntlProvider>
+  );
+};
 
 const initialProps = {
   formName: "Vitals",
   formNameTranslations: "Vitals",
   isViewFormLoading: false,
+  enableFormApprovalsAndComments: true,
   formData: [
     {
       concept: {
@@ -64,25 +120,25 @@ const initialProps = {
 
 describe("ViewObservationForm", () => {
   it("should match the screenshot", () => {
-    const { container } = render(<ViewObservationForm {...initialProps} />);
+    const { container } = renderWithIntl(<ViewObservationForm {...initialProps} />);
     expect(container).toMatchSnapshot();
   });
 
   it("should highlight member in red if it is abnormal", () => {
-    render(<ViewObservationForm {...initialProps} />);
+    renderWithIntl(<ViewObservationForm {...initialProps} />);
     const element = screen.getByTestId("section-label-0");
     expect(element.classList.contains("is-abnormal")).toBeTruthy();
   });
 
   it("should show loader", () => {
     const updatedProps = { ...initialProps, isViewFormLoading: true };
-    render(<ViewObservationForm {...updatedProps} />);
+    renderWithIntl(<ViewObservationForm {...updatedProps} />);
     expect(screen.queryAllByText("Active loading indicator")).toHaveLength(2);
   });
 
   it("should render and group complex type like video/image/pdf which is in first level of hierarchy", () => {
     const updatedProps = { ...initialProps, formData: observationList};
-    const { container } = render(<ViewObservationForm {...updatedProps} />);
+    const { container } = renderWithIntl(<ViewObservationForm {...updatedProps} />);
 
     const fileSections = container.querySelectorAll(".file-section");
     expect(fileSections).toHaveLength(2);
@@ -117,7 +173,7 @@ describe("ViewObservationForm", () => {
 
   it("should render and group complex type like image which is in second level of hierarchy", () => {
     const updatedProps = { ...initialProps, formData: observationListWithGroupMembers};
-    const { container } = render(<ViewObservationForm {...updatedProps} />);
+    const { container } = renderWithIntl(<ViewObservationForm {...updatedProps} />);
 
     const sectionHeader = container.querySelector(".section-header");
     expect(within(sectionHeader).getByText(/Consultation Images/i)).toBeTruthy();
@@ -138,5 +194,63 @@ describe("ViewObservationForm", () => {
     expect(within(imageRowTwo).getByText(/Notes 2/i)).toBeTruthy();
     expect(within(imageRowTwo).getByText(/provider one/i)).toBeTruthy();
     expect(within(imageRowTwo).getByText(new RegExp(formatDate(observationListWithGroupMembers[0].encounterDateTime)))).toBeTruthy();
+  });
+
+  it("should render Comment and Approve buttons", () => {
+    renderWithIntl(<ViewObservationForm {...initialProps} />);
+    expect(screen.getByText("Comment")).toBeTruthy();
+    expect(screen.getByText("Approve")).toBeTruthy();
+  });
+
+  it("should open CommentPanel when Comment button is clicked", async () => {
+    renderWithIntl(<ViewObservationForm {...initialProps} />);
+    const commentButton = screen.getByText("Comment");
+    fireEvent.click(commentButton);
+    await waitFor(() => {
+      expect(screen.getByText("Add Comment")).toBeTruthy();
+    });
+  });
+
+  it("should display comment action in the actions table when comment exists", () => {
+    renderWithIntl(<ViewObservationForm
+      {...initialProps}
+      actionsHistory={[]}
+      createdDateTime="20 Feb 2025 10:00 am"
+      createdBy="Admin"
+    />);
+
+    const commentButton = screen.getByText("Comment");
+    expect(commentButton).toBeTruthy();
+  });
+
+  it("should show confirmation banner when Approve button is clicked", async () => {
+    renderWithIntl(<ViewObservationForm {...initialProps} />);
+    const approveButton = screen.getByText("Approve");
+    fireEvent.click(approveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Do you want to proceed with approving this form?")).toBeTruthy();
+    });
+  });
+
+  it("should show and then clear success banner when different actions are taken", () => {
+    renderWithIntl(<ViewObservationForm {...initialProps} />);
+
+    const commentButton = screen.getByText("Comment");
+    const approveButton = screen.getByText("Approve");
+
+    expect(commentButton).toBeTruthy();
+    expect(approveButton).toBeTruthy();
+  });
+
+  it("should not render Comment and Approve buttons when enableFormApprovalsAndComments is false", () => {
+    const propsWithFeatureDisabled = {
+      ...initialProps,
+      enableFormApprovalsAndComments: false,
+    };
+    renderWithIntl(<ViewObservationForm {...propsWithFeatureDisabled} />);
+
+    expect(screen.queryByText("Comment")).toBeNull();
+    expect(screen.queryByText("Approve")).toBeNull();
   });
 });
