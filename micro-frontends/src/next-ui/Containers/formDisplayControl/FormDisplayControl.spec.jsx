@@ -16,6 +16,17 @@ import { defaultDateTimeFormat } from "../../constants";
 const mockFetchFormData = jest.fn();
 const mockGetLatestPublishedForms = jest.fn();
 
+const mockAppService = {
+  getAppDescriptor: () => ({
+    getConfigValue: (configName) => {
+      if (configName === "enableFormApprovalsAndComments") {
+        return true;
+      }
+      return undefined;
+    },
+  }),
+};
+
 jest.mock("../../utils/FormDisplayControl/FormUtils", () => ({
   fetchFormData: () => mockFetchFormData(),
   getLatestPublishedForms: () => mockGetLatestPublishedForms(),
@@ -54,7 +65,7 @@ describe("FormDisplayControl Component for empty mock data", () => {
     mockFetchFormData.mockResolvedValueOnce({});
 
     const { container } = render(
-      <FormDisplayControl hostData={mockWithPatientHostData} />
+      <FormDisplayControl hostData={mockWithPatientHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -71,14 +82,14 @@ describe("FormDisplayControl Component for empty mock data", () => {
 describe("FormDisplayControl Component", () => {
   it("should render the component", () => {
     const { container } = render(
-      <FormDisplayControl hostData={mockHostData} />
+      <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
     expect(container).toMatchSnapshot();
   });
 
   it("should show loading message", () => {
     const { container } = render(
-      <FormDisplayControl hostData={mockHostData} />
+      <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
     expect(container.querySelector(".loading-message")).not.toBeNull();
     expect(container.querySelector(".loading-message").innerHTML).toEqual(
@@ -103,7 +114,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
 
   it("should render accordion form entries when loading is done", async () => {
     const { container } = render(
-      <FormDisplayControl hostData={mockHostData} />
+      <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -126,7 +137,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
 
   it("should render non-accordion form entries when loading is done", async () => {
     const { container } = render(
-      <FormDisplayControl hostData={mockHostData} />
+      <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -162,7 +173,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
 
   it("should not see edit button for non-active-encounter entries and when showEditForActiveEncounter is true", async () => {
     const { container } = render(
-      <FormDisplayControl hostData={mockHostData} />
+      <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -177,7 +188,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
       encounterUuid: "6e52cecd-a095-457f-9515-38cf9178cb50",
     };
     const { container } = render(
-      <FormDisplayControl hostData={activeEncounterMockHostData} />
+      <FormDisplayControl hostData={activeEncounterMockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -192,7 +203,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
       encounterUuid: "6e52cecd-a095-457f-9515-38cf9178cb50",
     };
     const { container } = render(
-      <FormDisplayControl hostData={activeEncounterMockHostData} />
+      <FormDisplayControl hostData={activeEncounterMockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -206,7 +217,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
       encounterUuid: "6e52cecd-a095-457f-9515-38cf9178cb50",
     };
     const { container } = render(
-      <FormDisplayControl hostData={activeEncounterMockHostData} />
+      <FormDisplayControl hostData={activeEncounterMockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
@@ -223,6 +234,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
     const { container } = render(
       <FormDisplayControl
         hostData={activeEncounterMockHostDataWithPrivileges}
+        appService={mockAppService}
       />
     );
 
@@ -241,6 +253,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
     const { container } = render(
       <FormDisplayControl
         hostData={activeEncounterMockHostDataWithPrivileges}
+        appService={mockAppService}
       />
     );
 
@@ -259,6 +272,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
     const { container } = render(
       <FormDisplayControl
         hostData={activeEncounterMockHostDataWithPrivileges}
+        appService={mockAppService}
       />
     );
 
@@ -277,6 +291,7 @@ describe("FormDisplayControl Component with Accordion and Non-Accordion", () => 
     const { container } = render(
       <FormDisplayControl
         hostData={activeEncounterMockHostDataWithPrivileges}
+        appService={mockAppService}
       />
     );
 
