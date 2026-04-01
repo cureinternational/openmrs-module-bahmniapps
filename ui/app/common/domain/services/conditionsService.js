@@ -15,8 +15,8 @@ angular.module('bahmni.common.domain')
                     clinicalStatus: conditionToSave.status,
                     onsetDate: conditionToSave.onSetDate,
                     endDate: conditionToSave.endDate,
-                    additionalDetail: conditionToSave.additionalDetail,
-                    previousVersion: conditionToSave.previousConditionUuid
+                    additionalDetail: conditionToSave.additionalDetail
+                    // previousVersion: conditionToSave.previousConditionUuid
                 };
 
                 if (conditionToSave.isNonCoded && conditionToSave.conditionNonCoded) {
