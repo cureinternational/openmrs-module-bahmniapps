@@ -311,6 +311,7 @@ describe("ViewObservationForm", () => {
 
   it("should render actions history rows when getAllTasks returns data", async () => {
     axios.get.mockResolvedValue({
+      status: 200,
       data: {
         entry: [
           {

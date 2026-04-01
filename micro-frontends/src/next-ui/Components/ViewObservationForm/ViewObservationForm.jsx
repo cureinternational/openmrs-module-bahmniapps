@@ -18,8 +18,7 @@ import {
 import "./viewObservationForm.scss";
 import { FileViewer } from "./FileViewer/FileViewer";
 import CommentPanel from "./CommentPanel/CommentPanel";
-import axios from "axios";
-import { FHIR_URL } from "../../constants";
+import { getAllTasksForForm, saveTask } from "../../utils/FormDisplayControl/FormUtils";
 
 export const ViewObservationForm = (props) => {
   const intl = useIntl();
@@ -161,7 +160,7 @@ export const ViewObservationForm = (props) => {
       },
       note: [{"text": commentText}]
     }
-    return await axios.post(FHIR_URL, payload);
+    return await saveTask(payload);
   }
 
   const approve = async () => {
@@ -174,13 +173,13 @@ export const ViewObservationForm = (props) => {
         }]
       },
     }
-    return await axios.post(FHIR_URL, payload);
+    return await saveTask(payload);
   }
 
   const getAllTasks = async () => {
     setIsHistoryLoading(true);
-    const response = await axios.get(`${FHIR_URL}?encounter=${encounterUuid}&name=${formName}&_sort=-_lastUpdated`);
-    const actions = response.data.entry?.reduce((acc, {resource}) => {
+    const data = await getAllTasksForForm(formName, encounterUuid);
+    const actions = data?.entry?.reduce((acc, {resource}) => {
       if(resource.code && [FORM_COMMENT, FORM_APPROVAL].includes(resource.code.text))
         acc.push({
           action:   resource.code?.text,
@@ -191,7 +190,6 @@ export const ViewObservationForm = (props) => {
       return acc;
     },[]);
     setActionsHistory(actions || []);
-    return response;
   }
 
   return (
@@ -404,6 +402,7 @@ export const ViewObservationForm = (props) => {
 };
 
 ViewObservationForm.propTypes = {
+  formName: propTypes.string,
   formNameTranslations: propTypes.string,
   closeViewObservationForm: propTypes.func,
   formData: propTypes.array,
@@ -412,7 +411,7 @@ ViewObservationForm.propTypes = {
   printForm: propTypes.func,
   createdDateTime: propTypes.string,
   createdBy: propTypes.string,
-  currentUser: propTypes.string,
+  currentUser: propTypes.object,
   enableFormApprovalsAndComments: propTypes.bool,
   formActionsConceptIdMap: propTypes.object,
   encounterUuid: propTypes.string,
