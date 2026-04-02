@@ -8,6 +8,7 @@ import "./formDisplayControl.scss";
 import { FormattedMessage } from "react-intl";
 import {
   fetchFormData,
+  getAllTasksForPatient,
   getLatestPublishedForms,
 } from "../../utils/FormDisplayControl/FormUtils";
 import {
@@ -19,6 +20,8 @@ import { I18nProvider } from "../../Components/i18n/I18nProvider";
 import ViewObservationForm from "../../Components/ViewObservationForm/ViewObservationForm";
 import { formatDate } from "../../utils/utils";
 import EditObservationForm from "../../Components/EditObservationForm/EditObservationForm";
+import { FORM_APPROVAL, FORM_COMMENT, PATIENT } from "../../constants";
+import { Chat, CheckmarkFilled, ChevronDown, ChevronUp } from "@carbon/icons-react/next";
 
 /** NOTE: for reasons known only to react2angular,
  * any functions passed in as props will be undefined at the start, even ones inside other objects
@@ -29,7 +32,7 @@ export function FormDisplayControl(props) {
   const { appService } = props;
   
   const enableFormApprovalsAndComments = appService?.getAppDescriptor?.().getConfigValue("enableFormApprovalsAndComments");
-  const formActionsConceptIdMap = appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap");
+  let formActionsConceptIdMap;
 
   const noFormText = (
     <FormattedMessage
@@ -62,6 +65,8 @@ export function FormDisplayControl(props) {
   const [encounterUuid, setEncounterUuid] = useState("");
   const [createdDateTime, setCreatedDateTime] = useState("");
   const [createdBy, setCreatedBy] = useState("");
+  const [formActions, setFormActions] = useState({});
+  const [openAccordions, setOpenAccordions] = useState({});
 
   const buildResponseData = async () => {
     try {
@@ -102,10 +107,11 @@ export function FormDisplayControl(props) {
         });
       });
       setFormList(grouped);
+      setOpenAccordions(
+        Object.keys(grouped).reduce((acc, key) => ({ ...acc, [key]: false }), {})
+      );
     } catch (e) {
       console.log(e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -211,17 +217,64 @@ export function FormDisplayControl(props) {
     })
     props?.hostApi?.printForm(formData);
   };
+  const allExpanded = Object.values(openAccordions).length > 0 && Object.values(openAccordions).every(Boolean);
+
+  const toggleAllAccordions = () => {
+    setOpenAccordions(
+      Object.keys(openAccordions).reduce((acc, key) => ({ ...acc, [key]: !allExpanded }), {})
+    );
+  };
+
+  const toggleAccordion = (key) => {
+    setOpenAccordions((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   useEffect(() => {
     buildResponseData();
   }, []);
+  useEffect(() => {
+    formActionsConceptIdMap = appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap");
+    if(enableFormApprovalsAndComments) {
+      getAllTasksForPatient({
+        subject: `${PATIENT}/${props.hostData.patientUuid}`,
+        _sort: "-_lastUpdated",
+        code: `${formActionsConceptIdMap[FORM_APPROVAL]},${formActionsConceptIdMap[FORM_COMMENT]}`
+      }).then((res) => {
+        const result = (res.data.entry || []).reduce((acc, entry) => {
+          const resource = entry.resource;
+          const formName = resource.extension.find(
+            (e) => e.url === "http://fhir.bahmni.org/ext/task/name"
+          )?.valueString;
+          const codeType = resource.code?.text;
+          const encounterUuid = resource.encounter?.reference?.split("/")[1];
+
+          if (!formName || !codeType || !encounterUuid) return acc;
+
+          if (!acc[formName]) acc[formName] = {approval: new Set(), comment: new Set()};
+
+          if (codeType === FORM_APPROVAL) {
+            acc[formName].approval.add(encounterUuid);
+          } else if (codeType === FORM_COMMENT) {
+            acc[formName].comment.add(encounterUuid);
+          }
+          return acc;
+        }, {});
+        setFormActions(result);
+      }).finally(() => {
+        setLoading(false);
+      })
+    }
+  }, [appService]);
 
   return (
     <>
       <I18nProvider>
         <div>
-          <h2 className={"forms-display-control-section-title"}>
+          <h2 className={"section-title-next-ui"}>
             {formsHeading}
+            <div className={"add-button"} onClick={toggleAllAccordions} role="button">
+              {allExpanded ? <ChevronUp /> : <ChevronDown />}
+            </div>
           </h2>
           {isLoading ? (
             <div className="loading-message">{loadingMessage}</div>
@@ -229,18 +282,35 @@ export function FormDisplayControl(props) {
             <div className={"placeholder-text-forms-control"}>
               {Object.entries(formList).length > 0
                 ? Object.entries(formList).map(([key, value]) => {
-                    const moreThanOneEntry = value.length > 1;
-                    return moreThanOneEntry ? (
-                      <Accordion>
+                  const actions = formActions[key];
+                  let hasActions = false, approvals = new Set(), comments = new Set();
+                  if(actions){
+                    if(actions.approval.size > 0){
+                      approvals = actions.approval;
+                    }
+                    if(actions.comment.size > 0){
+                      comments = actions.comment;
+                    }
+                    hasActions = true;
+                  }
+                  return <Accordion>
                         <AccordionItem
-                          title={value[0].formNameTranslations}
+                          title={<div className={"form-accordion-title"}>
+                            <span className={"form-action-indicator"} style={{backgroundColor: hasActions ? "#198038" : "transparent"}}/>
+                            {value[0].formNameTranslations}
+                          </div>}
                           className={"form-accordion"}
-                          open
+                          open={openAccordions[key] ?? false}
+                          onHeadingClick={() => toggleAccordion(key)}
                         >
                           {value.map((entry, index) => {
                             return (
                               <div key={index} className={"row-accordion"}>
-                                <span className={"form-name-text"}>
+                                <div className={"form-name-text"}>
+                                  <div className={"form-approval-icon-container"}>
+                                    {approvals.has(entry.encounterUuid) ? <CheckmarkFilled className="success-banner-icon"/>
+                                      : <></>}
+                                  </div>
                                   {checkForPrivileges(entry, "view") ? (
                                     <a
                                       onClick={() =>
@@ -259,6 +329,7 @@ export function FormDisplayControl(props) {
                                   ) : (
                                     formatDate(entry.encounterDate)
                                   )}
+                                  {comments.has(entry.encounterUuid) && <Chat />}
                                   {checkForPrivileges(entry, "edit") &&
                                     showEdit(entry.encounterUuid) && (
                                       <i
@@ -272,7 +343,7 @@ export function FormDisplayControl(props) {
                                         }}
                                       ></i>
                                     )}
-                                </span>
+                                </div>
                                 <span className={"form-provider-text"}>
                                   {entry.providerName}
                                 </span>
@@ -281,59 +352,6 @@ export function FormDisplayControl(props) {
                           })}
                         </AccordionItem>
                       </Accordion>
-                    ) : (
-                      <div className={"form-display-control-row"}>
-                        <span
-                          className={
-                            "form-non-accordion-text form-heading form-name"
-                          }
-                        >
-                          {value[0].formNameTranslations}
-                        </span>
-                        <span
-                          className={
-                            "form-non-accordion-text form-date-align form-date-time"
-                          }
-                        >
-                          {checkForPrivileges(value[0], "view") ? (
-                            <a
-                              className="form-link"
-                              onClick={() =>
-                                openViewObservationForm(
-                                  key,
-                                  value[0].encounterUuid,
-                                  value[0].formNameTranslations,
-                                  value[0].encounterDate,
-                                  value[0].providerName
-                                )
-                              }
-                            >
-                              {formatDate(value[0].encounterDate)}
-                            </a>
-                          ) : (
-                            formatDate(value[0].encounterDate)
-                          )}
-                          {checkForPrivileges(value[0], "edit") &&
-                            showEdit(value[0].encounterUuid) && (
-                              <i
-                                className="fa fa-pencil"
-                                onClick={() => {
-                                  openEditObservationForm(
-                                    key,
-                                    value[0].encounterUuid,
-                                    value[0].formNameTranslations
-                                  );
-                                }}
-                              ></i>
-                            )}
-                        </span>
-                        <span
-                          className={"form-non-accordion-text provider-name"}
-                        >
-                          {value[0].providerName}
-                        </span>
-                      </div>
-                    );
                   })
                 : noFormText}
               {showViewObservationForm ? (
@@ -352,6 +370,7 @@ export function FormDisplayControl(props) {
                   encounterUuid={encounterUuid}
                   patient={props?.hostData?.patient}
                   formActionsConceptIdMap={formActionsConceptIdMap}
+                  appService={appService}
                 />
               ) : null}
               {showEditObservationForm ? (
@@ -380,4 +399,5 @@ export function FormDisplayControl(props) {
 FormDisplayControl.propTypes = {
   hostData: PropTypes.object.isRequired,
   hostApi: PropTypes.object.isRequired,
-  appService: PropTypes.object};
+  appService: PropTypes.object,
+};

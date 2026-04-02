@@ -20,6 +20,7 @@ import { FileViewer } from "./FileViewer/FileViewer";
 import CommentPanel from "./CommentPanel/CommentPanel";
 import { getAllTasksForForm, saveTask } from "../../utils/FormDisplayControl/FormUtils";
 import { ENCOUNTER, FORM_APPROVAL, FORM_COMMENT, PATIENT, PRACTITIONER } from "../../constants";
+import PropTypes from "prop-types";
 
 export const ViewObservationForm = (props) => {
   const intl = useIntl();
@@ -37,7 +38,7 @@ export const ViewObservationForm = (props) => {
     enableFormApprovalsAndComments,
     encounterUuid,
     patient,
-    formActionsConceptIdMap,
+    appService,
   } = props;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -64,6 +65,7 @@ export const ViewObservationForm = (props) => {
     owner: {"reference": `${PRACTITIONER}/${currentUser.uuid}`, "type": PRACTITIONER},
   }
   const scrollableContentRef = useRef(null);
+  const [formActionsConceptIdMap, setFormActionsConceptIdMap] = useState({});
 
   useEffect(() => {
     if (showSuccessBanner) {
@@ -75,13 +77,18 @@ export const ViewObservationForm = (props) => {
   }, [showSuccessBanner]);
 
   useEffect(() => {
-    getAllTasks()
-      .then(() => {setIsHistoryLoading(false)})
-      .catch((err) => {
-        console.error("Error fetching actions history", err);
-        setIsHistoryLoading(false);
+    setFormActionsConceptIdMap(appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap"));
+    if(formActionsConceptIdMap) {
+      getAllTasks()
+        .catch((err) => {
+          console.error("Error fetching actions history", err);
+        }).finally(() => {
+          setIsHistoryLoading(false);
       });
-  }, []);
+    }else{
+      setIsHistoryLoading(false);
+    }
+  }, [appService]);
 
   useEffect(() => {
     setShowSuccessBanner(false);
@@ -141,8 +148,8 @@ export const ViewObservationForm = (props) => {
       .then(() => {
         setIsCommentPanelOpen(false);
         setShowSuccessBanner(true);
-      }).then(getAllTasks).catch(() => {
-      console.log("Error saving comment");
+      }).then(getAllTasks).catch((error) => {
+      console.error("Error saving comment", error);
     }).finally(() => {
       setIsHistoryLoading(false);
     })
@@ -412,8 +419,8 @@ ViewObservationForm.propTypes = {
   createdBy: propTypes.string,
   currentUser: propTypes.object,
   enableFormApprovalsAndComments: propTypes.bool,
-  formActionsConceptIdMap: propTypes.object,
   encounterUuid: propTypes.string,
   patient: propTypes.object,
+  appService: PropTypes.object,
 };
 export default ViewObservationForm;

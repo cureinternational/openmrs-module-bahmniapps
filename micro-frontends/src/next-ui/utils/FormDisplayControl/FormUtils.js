@@ -1,5 +1,5 @@
 import axios from "axios";
-import { FHIR_URL, FORM_BASE_URL, LATEST_PUBLISHED_FORMS_URL } from "../../constants";
+import {FHIR_URL, FORM_APPROVAL, FORM_BASE_URL, FORM_COMMENT, LATEST_PUBLISHED_FORMS_URL} from "../../constants";
 
 export const fetchFormData = async (patientUuid, numberOfVisits) => {
   const apiURL = FORM_BASE_URL.replace('{patientUuid}',patientUuid);
@@ -35,6 +35,7 @@ export const getLatestPublishedForms = async (encounterUuid) => {
   }
 };
 
+
 export const saveTask = async (payload) => {
   try{
     const response = await axios.post(FHIR_URL, payload);
@@ -60,5 +61,15 @@ export const getAllTasksForForm = async (formName, encounterUuid) => {
     }
   }catch(error){
     console.error("Error fetching Tasks:", error);
+  }
+}
+
+export const getAllTasksForPatient = async (searchParams) => {
+  try {
+    return await axios.get(FHIR_URL, {
+      params: searchParams
+    })
+  }catch(error){
+    console.error("Error fetching Tasks for patient:", error);
   }
 }
