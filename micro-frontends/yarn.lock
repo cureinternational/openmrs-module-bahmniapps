@@ -3918,10 +3918,10 @@ bahmni-carbon-ui@0.1.6:
     prop-types "^15.8.1"
     react-intl "^6.4.4"
 
-bahmni-form-controls@^0.94.0:
-  version "0.94.0"
-  resolved "https://registry.yarnpkg.com/bahmni-form-controls/-/bahmni-form-controls-0.94.0.tgz#726dc8701bb1bc06c972f2bcc5d4d2f75f110fe9"
-  integrity sha512-CsSFIJNNKxu0Opfp/rYrMDYuVd+cOmsMulWyCfP21qvS8y2aY4hHo+b+oxmA58J3nF8ANJB20i60guW1TSOY8Q==
+bahmni-form-controls@^0.93.12:
+  version "0.93.20"
+  resolved "https://registry.yarnpkg.com/bahmni-form-controls/-/bahmni-form-controls-0.93.20.tgz#5964100945fe91f43814bc66a4cbd2abf20ff49d"
+  integrity sha512-N1X3TD7dmEQpAaZdvKwJFZXok/HnUSsgzql8TiqOqaSb4g4OTCYZeITrUN4nn5IUKA4ag2UzZB8MtRzPcHWTaQ==
   dependencies:
     base64-inline-loader "^1.1.0"
     classnames "^2.2.5"
@@ -8351,15 +8351,10 @@ lodash.uniq@4.5.0:
   resolved "https://registry.yarnpkg.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz#d0225373aeb652adc1bc82e4945339a842754773"
   integrity sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==
 
-lodash@4.17.12:
-  version "4.17.12"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.12.tgz#a712c74fdc31f7ecb20fe44f157d802d208097ef"
-  integrity sha512-+CiwtLnsJhX03p20mwXuvhoebatoh5B3tt+VvYlrPgZC1g36y+RRbkufX95Xa+X4I59aWEacDFYwnJZiyBh9gA==
-
-lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4:
-  version "4.17.21"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
-  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
+lodash@4.17.12, lodash@4.18.0, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4:
+  version "4.18.0"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.0.tgz#dfd726f07ab2e39dd763de28fcf66e395c03e440"
+  integrity sha512-l1mfj2atMqndAHI3ls7XqPxEjV2J9ZkcNyHpoZA3r2T1LLwDB69jgkMWh71YKwhBbK0G2f4WSn05ahmQXVxupA==
 
 loose-envify@^1.0.0, loose-envify@^1.1.0, loose-envify@^1.4.0:
   version "1.4.0"
