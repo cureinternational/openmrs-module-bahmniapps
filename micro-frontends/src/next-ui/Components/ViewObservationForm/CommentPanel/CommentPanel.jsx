@@ -10,7 +10,6 @@ export const CommentPanel = (props) => {
     onClose,
     onSaveComment,
     maxCharacters = COMMENT_MAX_CHARACTERS,
-    saveDelay = 1500,
   } = props;
 
   const intl = useIntl();
@@ -21,7 +20,6 @@ export const CommentPanel = (props) => {
   const handleSave = async () => {
     if (commentText.trim()) {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, saveDelay));
       onSaveComment(commentText);
       setCommentText("");
       setIsLoading(false);

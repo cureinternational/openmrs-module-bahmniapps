@@ -16,11 +16,19 @@ import { defaultDateTimeFormat } from "../../constants";
 const mockFetchFormData = jest.fn();
 const mockGetLatestPublishedForms = jest.fn();
 
+const mockFormActionsConceptIdMap = {
+  FORM_COMMENT: "comment-concept-uuid",
+  FORM_APPROVAL: "approval-concept-uuid",
+};
+
 const mockAppService = {
   getAppDescriptor: () => ({
     getConfigValue: (configName) => {
       if (configName === "enableFormApprovalsAndComments") {
         return true;
+      }
+      if (configName === "formActionsConceptIdMap") {
+        return mockFormActionsConceptIdMap;
       }
       return undefined;
     },

@@ -29,6 +29,7 @@ export function FormDisplayControl(props) {
   const { appService } = props;
   
   const enableFormApprovalsAndComments = appService?.getAppDescriptor?.().getConfigValue("enableFormApprovalsAndComments");
+  const formActionsConceptIdMap = appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap");
 
   const noFormText = (
     <FormattedMessage
@@ -153,6 +154,7 @@ export function FormDisplayControl(props) {
     setCreatedBy(providerName);
     setViewFormLoading(true);
     setViewObservationForm(true);
+    setEncounterUuid(encounterUuid);
     const data = await buildFormMap(formMap);
     setViewFormLoading(false);
     setFormData(data[0].value[0].groupMembers);
@@ -347,6 +349,9 @@ export function FormDisplayControl(props) {
                   createdBy={createdBy}
                   currentUser={props?.hostData?.currentUser}
                   enableFormApprovalsAndComments={enableFormApprovalsAndComments}
+                  encounterUuid={encounterUuid}
+                  patient={props?.hostData?.patient}
+                  formActionsConceptIdMap={formActionsConceptIdMap}
                 />
               ) : null}
               {showEditObservationForm ? (
