@@ -18,32 +18,51 @@ import {
 import "./viewObservationForm.scss";
 import { FileViewer } from "./FileViewer/FileViewer";
 import CommentPanel from "./CommentPanel/CommentPanel";
+import { getAllTasksForForm, saveTask } from "../../utils/FormDisplayControl/FormUtils";
+import { ENCOUNTER, FORM_APPROVAL, FORM_COMMENT, PATIENT, PRACTITIONER } from "../../constants";
 
 export const ViewObservationForm = (props) => {
   const intl = useIntl();
   const {
+    formName,
     formNameTranslations,
     closeViewObservationForm,
     formData,
     isViewFormLoading,
     showPrintOption,
     printForm,
-    onApprove,
-    onComment,
-    actionsHistory,
     createdDateTime,
     createdBy,
     currentUser,
     enableFormApprovalsAndComments,
+    encounterUuid,
+    patient,
+    formActionsConceptIdMap,
   } = props;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
-  const [comments, setComments] = useState([]);
+  const [actionsHistory, setActionsHistory] = useState([]);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [showConfirmationBanner, setShowConfirmationBanner] = useState(false);
   const [showApprovalNotification, setShowApprovalNotification] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [approvedFormName, setApprovedFormName] = useState("");
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const taskPayload = {
+    resourceType: "Task",
+    status: "completed",
+    intent: "order",
+    extension: [{
+      "url": "http://fhir.bahmni.org/ext/task/name",
+      "valueString": formName,
+    }],
+    for: {
+      "reference": `${PATIENT}/${patient.uuid}`,
+      "type": PATIENT
+    },
+    encounter: {"reference": `${ENCOUNTER}/${encounterUuid}`, "type": ENCOUNTER},
+    owner: {"reference": `${PRACTITIONER}/${currentUser.uuid}`, "type": PRACTITIONER},
+  }
   const scrollableContentRef = useRef(null);
 
   useEffect(() => {
@@ -56,6 +75,15 @@ export const ViewObservationForm = (props) => {
   }, [showSuccessBanner]);
 
   useEffect(() => {
+    getAllTasks()
+      .then(() => {setIsHistoryLoading(false)})
+      .catch((err) => {
+        console.error("Error fetching actions history", err);
+        setIsHistoryLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
     setShowSuccessBanner(false);
     if (showApprovalNotification) {
       setShowApprovalNotification(false);
@@ -65,21 +93,18 @@ export const ViewObservationForm = (props) => {
   }, [formData]);
 
   useEffect(() => {
-    if (comments.length > 0 && scrollableContentRef.current) {
+    if (actionsHistory.length > 0 && scrollableContentRef.current) {
       setTimeout(() => {
         scrollableContentRef.current.scrollTop = scrollableContentRef.current.scrollHeight;
       }, 0);
     }
-  }, [comments]);
+  }, [actionsHistory]);
 
   const imageItems = formData?.filter((member) => isValidFileFormat(member));
 
   const handleCommentClick = () => {
     setIsCommentPanelOpen(true);
     setShowSuccessBanner(false);
-    if (onComment) {
-      onComment();
-    }
   };
 
   const handleCloseCommentPanel = () => {
@@ -97,22 +122,74 @@ export const ViewObservationForm = (props) => {
   };
 
   const handleConfirmationSubmit = () => {
-    setShowConfirmationBanner(false);
-    setIsModalOpen(false);
-    setApprovedFormName(formNameTranslations);
-    setShowApprovalNotification(true);
+    setIsHistoryLoading(true);
+    approve()
+      .then(() => {
+        setShowConfirmationBanner(false);
+        setIsModalOpen(false);
+        setApprovedFormName(formNameTranslations);
+        setShowApprovalNotification(true);
+      }).catch((e) => {
+      console.error("Error approving the form", e);
+    }).finally(() => {
+      setIsHistoryLoading(false);
+    });
   };
 
   const handleSaveComment = (commentText) => {
-    const newComment = {
-      text: commentText,
-      author: currentUser?.username || currentUser?.person?.display,
-      date: moment().format("DD MMM YYYY hh:mm a"),
-    };
-    setComments([...comments, newComment]);
-    setIsCommentPanelOpen(false);
-    setShowSuccessBanner(true);
+    saveComment(commentText)
+      .then(() => {
+        setIsCommentPanelOpen(false);
+        setShowSuccessBanner(true);
+      }).then(getAllTasks).catch(() => {
+      console.log("Error saving comment");
+    }).finally(() => {
+      setIsHistoryLoading(false);
+    })
   };
+
+  const saveComment = async (commentText) => {
+    setIsHistoryLoading(true);
+    const payload = {
+      ...taskPayload,
+      code: {
+        coding: [{
+          code: formActionsConceptIdMap[FORM_COMMENT]
+        }]
+      },
+      note: [{"text": commentText}]
+    }
+    return await saveTask(payload);
+  }
+
+  const approve = async () => {
+    setIsHistoryLoading(true);
+    const payload = {
+      ...taskPayload,
+      code: {
+        coding: [{
+          code: formActionsConceptIdMap[FORM_APPROVAL]
+        }]
+      },
+    }
+    return await saveTask(payload);
+  }
+
+  const getAllTasks = async () => {
+    setIsHistoryLoading(true);
+    const data = await getAllTasksForForm(formName, encounterUuid);
+    const actions = data?.entry?.reduce((acc, {resource}) => {
+      if(resource.code && [FORM_COMMENT, FORM_APPROVAL].includes(resource.code.text))
+        acc.push({
+          action:   resource.code?.text,
+          username: resource.owner?.display,
+          dateTime: moment(resource.authoredOn).format("DD MMM YYYY HH:mm a"),
+          comment:  resource.note?.[0]?.text
+        });
+      return acc;
+    },[]);
+    setActionsHistory(actions || []);
+  }
 
   return (
     <I18nProvider>
@@ -131,7 +208,7 @@ export const ViewObservationForm = (props) => {
         <h2 className="section-title">{formNameTranslations}</h2>
         <div className="scrollable-content" ref={scrollableContentRef}>
           <section className="content-body">
-          {isViewFormLoading ? (
+          {isViewFormLoading || isHistoryLoading ? (
             <div>
               <Loading />
             </div>
@@ -210,23 +287,15 @@ export const ViewObservationForm = (props) => {
                   </thead>
                   <tbody>
                     {actionsHistory && actionsHistory.length > 0 &&
-                      [...actionsHistory].reverse().map((action, index) => (
+                      actionsHistory.map((action, index) => (
                         <tr key={index}>
-                          <td>{action.action}</td>
+                          <td>{intl.formatMessage({ id: action.action, defaultMessage: "Action" })}</td>
                           <td>{action.dateTime}</td>
                           <td>{action.username}</td>
-                          <td>{action.comments || "-"}</td>
+                          <td>{action.comment || "-"}</td>
                         </tr>
                       ))
                     }
-                    {comments && comments.length > 0 && (
-                      <tr>
-                        <td>{intl.formatMessage({ id: "COMMENT_ACTION", defaultMessage: "Comment" })}</td>
-                        <td>{comments[comments.length - 1].date}</td>
-                        <td>{comments[comments.length - 1].author}</td>
-                        <td>{comments[comments.length - 1].text}</td>
-                      </tr>
-                    )}
                     <tr className="creation-row">
                       <td>{intl.formatMessage({ id: "CREATION", defaultMessage: "Creation" })}</td>
                       <td>{createdDateTime}</td>
@@ -316,7 +385,6 @@ export const ViewObservationForm = (props) => {
             setShowApprovalNotification(false);
             setApprovedFormName("");
             closeViewObservationForm();
-            // window.location.reload();
           }}
           showMessage={showApprovalNotification}
           kind="success"
@@ -333,18 +401,19 @@ export const ViewObservationForm = (props) => {
 };
 
 ViewObservationForm.propTypes = {
+  formName: propTypes.string,
   formNameTranslations: propTypes.string,
   closeViewObservationForm: propTypes.func,
   formData: propTypes.array,
   isViewFormLoading: propTypes.bool,
   showPrintOption: propTypes.bool,
   printForm: propTypes.func,
-  onApprove: propTypes.func,
-  onComment: propTypes.func,
-  actionsHistory: propTypes.array,
   createdDateTime: propTypes.string,
   createdBy: propTypes.string,
-  currentUser: propTypes.string,
+  currentUser: propTypes.object,
   enableFormApprovalsAndComments: propTypes.bool,
+  formActionsConceptIdMap: propTypes.object,
+  encounterUuid: propTypes.string,
+  patient: propTypes.object,
 };
 export default ViewObservationForm;

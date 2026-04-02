@@ -43,9 +43,15 @@ export const FHIR_EXT_TASK_OWNER = "task-owner"
 export const FHIR_EXT_TASK_NOTE = "task-note"
 export const FHIR_EXT_CREATED_BY = "created-by"
 export const FHIR_EXT_ORDER_SHORT_NAME = "order-short-name"
+export const FHIR_URL = "/openmrs/ws/fhir2/R4/Task";
 export const DB_FULFILLER_STATUS_TO_UI_STATUS = {
     RECEIVED: 'Acknowledged',
     IN_PROGRESS: 'In Progress',
     COMPLETED: 'Completed',
     EXCEPTION: 'New',
 };
+export const FORM_COMMENT = "FORM_COMMENT";
+export const FORM_APPROVAL = "FORM_APPROVAL";
+export const ENCOUNTER = "Encounter";
+export const PRACTITIONER = "Practitioner";
+export const PATIENT = "Patient";
