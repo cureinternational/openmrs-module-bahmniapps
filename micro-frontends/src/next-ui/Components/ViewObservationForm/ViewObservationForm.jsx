@@ -19,6 +19,7 @@ import "./viewObservationForm.scss";
 import { FileViewer } from "./FileViewer/FileViewer";
 import CommentPanel from "./CommentPanel/CommentPanel";
 import { getAllTasksForForm, saveTask } from "../../utils/FormDisplayControl/FormUtils";
+import { ENCOUNTER, FORM_APPROVAL, FORM_COMMENT, PATIENT, PRACTITIONER } from "../../constants";
 
 export const ViewObservationForm = (props) => {
   const intl = useIntl();
@@ -47,8 +48,6 @@ export const ViewObservationForm = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [approvedFormName, setApprovedFormName] = useState("");
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  const FORM_COMMENT = "FORM_COMMENT";
-  const FORM_APPROVAL = "FORM_APPROVAL";
   const taskPayload = {
     resourceType: "Task",
     status: "completed",
@@ -58,11 +57,11 @@ export const ViewObservationForm = (props) => {
       "valueString": formName,
     }],
     for: {
-      "reference": `Patient/${patient.uuid}`,
-      "type": "Patient"
+      "reference": `${PATIENT}/${patient.uuid}`,
+      "type": PATIENT
     },
-    encounter: {"reference": `Encounter/${encounterUuid}`, "type": "Encounter"},
-    owner: {"reference": `Practitioner/${currentUser.uuid}`, "type": "Practitioner"},
+    encounter: {"reference": `${ENCOUNTER}/${encounterUuid}`, "type": ENCOUNTER},
+    owner: {"reference": `${PRACTITIONER}/${currentUser.uuid}`, "type": PRACTITIONER},
   }
   const scrollableContentRef = useRef(null);
 

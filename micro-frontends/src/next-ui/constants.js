@@ -49,3 +49,8 @@ export const DB_FULFILLER_STATUS_TO_UI_STATUS = {
     COMPLETED: 'Completed',
     EXCEPTION: 'New',
 };
+export const FORM_COMMENT = "FORM_COMMENT";
+export const FORM_APPROVAL = "FORM_APPROVAL";
+export const ENCOUNTER = "Encounter";
+export const PRACTITIONER = "Practitioner";
+export const PATIENT = "Patient";
