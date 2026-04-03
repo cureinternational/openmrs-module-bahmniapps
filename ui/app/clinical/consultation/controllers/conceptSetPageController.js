@@ -3,10 +3,10 @@
 angular.module('bahmni.clinical')
     .controller('ConceptSetPageController', ['$scope', '$rootScope', '$stateParams', 'conceptSetService',
         'clinicalAppConfigService', 'messagingService', 'configurations', '$state', 'spinner',
-        'contextChangeHandler', '$q', '$translate', 'formService',
+        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter',
         function ($scope, $rootScope, $stateParams, conceptSetService,
                   clinicalAppConfigService, messagingService, configurations, $state, spinner,
-                  contextChangeHandler, $q, $translate, formService) {
+                  contextChangeHandler, $q, $translate, formService, $timeout, $filter) {
             $scope.consultation.selectedObsTemplate = $scope.consultation.selectedObsTemplate || [];
             $scope.allTemplates = $scope.allTemplates || [];
             $scope.scrollingEnabled = false;
@@ -273,6 +273,45 @@ angular.module('bahmni.clinical')
                 return result;
             };
 
-            // Form Code :: End
+            // Update below when API integrations are done
+            var saveAsDraftSuccess = true;
+
+            var getDraftTimestamp = function () {
+                var now = new Date();
+                return $filter('date')(now, 'dd MMM yyyy, hh:mm a');
+            };
+
+            $scope.showDraftBanner = true;
+            $scope.draftTimestamp = getDraftTimestamp();
+            $scope.showDraftSpinner = false;
+            $scope.draftStatusMessage = null;
+            $scope.draftStatusParams = {};
+            $scope.draftStatusError = false;
+
+            $scope.saveAsDraft = function () {
+                $scope.showDraftSpinner = true;
+                $scope.draftStatusMessage = null;
+                $scope.draftStatusError = false;
+
+                $timeout(function () {
+                    if (saveAsDraftSuccess) {
+                        var now = new Date();
+                        var formattedTime = $filter('date')(now, 'dd MMM yyyy, hh:mm a');
+                        $scope.draftStatusMessage = 'SAVED_AS_DRAFT_KEY';
+                        $scope.draftStatusParams = {timestamp: formattedTime};
+                        $scope.draftTimestamp = formattedTime;
+                        $scope.showDraftBanner = true;
+                        // Broadcast event to update parent scope's draftTimestamp - update this during API integration
+                        $rootScope.$broadcast('draft:saved', formattedTime);
+                    } else {
+                        $scope.draftStatusMessage = 'CHANGES_NOT_SAVED_KEY';
+                        $scope.draftStatusError = true;
+                    }
+
+                    $scope.showDraftSpinner = false;
+                    saveAsDraftSuccess = !saveAsDraftSuccess;
+                }, 2000);
+            };
+
             init();
         }]);
