@@ -6,14 +6,14 @@
                     <div class="template-control-panel-right">
                         <div class="template-control-panel" >
                             <div class="template-control-panel-button">
-                                <div class="saving-draft-indicator" ng-show="showDraftSpinner">
+                                <div class="saving-draft-indicator" ng-show="showDraftSpinner && enableFormDraftFeature">
                                     <div class="carbon-loader">
                                         <div class="loader-circle"></div>
                                     </div>
                                     <span class="saving-text">{{::'SAVING_AS_DRAFT' | translate }}</span>
                                 </div>
-                                <span class="draft-status-text" ng-show="draftStatusMessage" ng-class="{'draft-status-error': draftStatusError}">{{ draftStatusMessage | translate: draftStatusParams }}</span>
-                                <button id="save-as-draft-button" class="save-draft-button" ng-click="saveAsDraft()">{{::'SAVE_AS_DRAFT'  | translate }}</button>
+                                <span class="draft-status-text" ng-show="draftStatusMessage && enableFormDraftFeature" ng-class="{'draft-status-error': draftStatusError}">{{ draftStatusMessage | translate: draftStatusParams }}</span>
+                                <button id="save-as-draft-button" class="save-draft-button" ng-click="saveAsDraft()" ng-show="enableFormDraftFeature">{{::'SAVE_AS_DRAFT'  | translate }}</button>
                                 <button id="template-control-panel-button" class="fr" bm-pop-over-trigger>{{::'ADD_NEW_OBSERVATION'  | translate }}</button>
                             </div>
                             <div class="primary-section-grid" bm-pop-over-target>

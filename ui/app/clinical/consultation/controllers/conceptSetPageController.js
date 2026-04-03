@@ -3,13 +3,14 @@
 angular.module('bahmni.clinical')
     .controller('ConceptSetPageController', ['$scope', '$rootScope', '$stateParams', 'conceptSetService',
         'clinicalAppConfigService', 'messagingService', 'configurations', '$state', 'spinner',
-        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter',
+        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService',
         function ($scope, $rootScope, $stateParams, conceptSetService,
                   clinicalAppConfigService, messagingService, configurations, $state, spinner,
-                  contextChangeHandler, $q, $translate, formService, $timeout, $filter) {
+                  contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService) {
             $scope.consultation.selectedObsTemplate = $scope.consultation.selectedObsTemplate || [];
             $scope.allTemplates = $scope.allTemplates || [];
             $scope.scrollingEnabled = false;
+            $scope.enableFormDraftFeature = appService.getAppDescriptor().getConfigValue('enableFormDraftFeature');
             var extensions = clinicalAppConfigService.getAllConceptSetExtensions($stateParams.conceptSetGroupName);
             var configs = clinicalAppConfigService.getAllConceptsConfig();
             var visitType = configurations.encounterConfig().getVisitTypeByUuid($scope.consultation.visitTypeUuid);
