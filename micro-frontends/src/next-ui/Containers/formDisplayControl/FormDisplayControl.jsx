@@ -20,7 +20,7 @@ import { I18nProvider } from "../../Components/i18n/I18nProvider";
 import ViewObservationForm from "../../Components/ViewObservationForm/ViewObservationForm";
 import { formatDate } from "../../utils/utils";
 import EditObservationForm from "../../Components/EditObservationForm/EditObservationForm";
-import { FORM_APPROVAL, FORM_COMMENT, PATIENT } from "../../constants";
+import { FORM_APPROVAL, FORM_COMMENT, MAX_TASK_COUNT, PATIENT } from "../../constants";
 import { Chat, CheckmarkFilled, ChevronDown, ChevronUp } from "@carbon/icons-react/next";
 
 /** NOTE: for reasons known only to react2angular,
@@ -232,38 +232,44 @@ export function FormDisplayControl(props) {
   useEffect(() => {
     buildResponseData();
   }, []);
+
+  function handleFormActions(formActionsConceptIdMap) {
+    getAllTasksForPatient({
+      subject: `${PATIENT}/${props.hostData.patientUuid}`,
+      _sort: "-_lastUpdated",
+      code: `${formActionsConceptIdMap[FORM_APPROVAL]},${formActionsConceptIdMap[FORM_COMMENT]}`,
+      _count: MAX_TASK_COUNT
+    }).then((res) => {
+      const result = (res.data.entry || []).reduce((acc, entry) => {
+        const resource = entry.resource;
+        const formName = resource.extension.find(
+          (e) => e.url === "http://fhir.bahmni.org/ext/task/name"
+        )?.valueString;
+        const codeType = resource.code?.text;
+        const encounterUuid = resource.encounter?.reference?.split("/")[1];
+
+        if (!formName || !codeType || !encounterUuid) return acc;
+
+        if (!acc[formName]) acc[formName] = {approval: new Set(), comment: new Set()};
+
+        if (codeType === FORM_APPROVAL) {
+          acc[formName].approval.add(encounterUuid);
+        } else if (codeType === FORM_COMMENT) {
+          acc[formName].comment.add(encounterUuid);
+        }
+        return acc;
+      }, {});
+      setFormActions(result);
+    }).finally(() => {
+      setLoading(false);
+    })
+  }
+
   useEffect(() => {
     const formActionsConceptIdMap = appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap");
     setFormActionsConceptIdMap(formActionsConceptIdMap);
     if(enableFormApprovalsAndComments) {
-      getAllTasksForPatient({
-        subject: `${PATIENT}/${props.hostData.patientUuid}`,
-        _sort: "-_lastUpdated",
-        code: `${formActionsConceptIdMap[FORM_APPROVAL]},${formActionsConceptIdMap[FORM_COMMENT]}`
-      }).then((res) => {
-        const result = (res.data.entry || []).reduce((acc, entry) => {
-          const resource = entry.resource;
-          const formName = resource.extension.find(
-            (e) => e.url === "http://fhir.bahmni.org/ext/task/name"
-          )?.valueString;
-          const codeType = resource.code?.text;
-          const encounterUuid = resource.encounter?.reference?.split("/")[1];
-
-          if (!formName || !codeType || !encounterUuid) return acc;
-
-          if (!acc[formName]) acc[formName] = {approval: new Set(), comment: new Set()};
-
-          if (codeType === FORM_APPROVAL) {
-            acc[formName].approval.add(encounterUuid);
-          } else if (codeType === FORM_COMMENT) {
-            acc[formName].comment.add(encounterUuid);
-          }
-          return acc;
-        }, {});
-        setFormActions(result);
-      }).finally(() => {
-        setLoading(false);
-      })
+      handleFormActions(formActionsConceptIdMap);
     }
   }, [appService]);
 
@@ -273,7 +279,7 @@ export function FormDisplayControl(props) {
         <div>
           <h2 className={"section-title-next-ui"}>
             {formsHeading}
-            <div className={"add-button"} onClick={toggleAllAccordions} role="button">
+            <div className={"form-display-control-accordion"} onClick={toggleAllAccordions} role="button">
               {allExpanded ? <ChevronUp /> : <ChevronDown />}
             </div>
           </h2>
@@ -371,6 +377,7 @@ export function FormDisplayControl(props) {
                   encounterUuid={encounterUuid}
                   patient={props?.hostData?.patient}
                   formActionsConceptIdMap={formActionsConceptIdMap}
+                  onAction={() => handleFormActions(formActionsConceptIdMap)}
                 />
               ) : null}
               {showEditObservationForm ? (

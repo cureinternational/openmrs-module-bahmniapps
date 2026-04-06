@@ -103,7 +103,7 @@
 .form-accordion-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .form-action-indicator {
@@ -115,4 +115,12 @@
 .form-approval-icon-container {
   height: 20px;
   width: 20px;
+}
+
+.form-display-control-accordion {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+  padding-right: 6px;
 }

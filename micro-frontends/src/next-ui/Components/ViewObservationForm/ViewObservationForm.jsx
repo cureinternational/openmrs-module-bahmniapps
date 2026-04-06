@@ -39,6 +39,7 @@ export const ViewObservationForm = (props) => {
     encounterUuid,
     patient,
     formActionsConceptIdMap,
+    onAction
   } = props;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -130,6 +131,11 @@ export const ViewObservationForm = (props) => {
     setIsHistoryLoading(true);
     approve()
       .then(() => {
+        if(onAction){
+          onAction();
+        }
+      })
+      .then(() => {
         setShowConfirmationBanner(false);
         setIsModalOpen(false);
         setApprovedFormName(formNameTranslations);
@@ -146,9 +152,14 @@ export const ViewObservationForm = (props) => {
       .then(() => {
         setIsCommentPanelOpen(false);
         setShowSuccessBanner(true);
-      }).then(getAllTasks).catch((error) => {
+      }).then(getAllTasks).then(() => {
+        setIsHistoryLoading(false);
+        if(onAction){
+          onAction();
+        }
+    })
+      .catch((error) => {
       console.error("Error saving comment", error);
-    }).finally(() => {
       setIsHistoryLoading(false);
     })
   };
@@ -420,5 +431,6 @@ ViewObservationForm.propTypes = {
   encounterUuid: propTypes.string,
   patient: propTypes.object,
   formActionsConceptIdMap: PropTypes.object,
+  onAction: PropTypes.func,
 };
 export default ViewObservationForm;

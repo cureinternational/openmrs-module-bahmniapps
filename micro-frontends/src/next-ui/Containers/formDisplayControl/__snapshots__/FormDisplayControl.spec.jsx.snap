@@ -9,7 +9,7 @@ exports[`FormDisplayControl Component should render the component 1`] = `
       >
         Observation Forms
         <div
-          class="add-button"
+          class="form-display-control-accordion"
           role="button"
         >
           <svg
