@@ -38,7 +38,7 @@ export const ViewObservationForm = (props) => {
     enableFormApprovalsAndComments,
     encounterUuid,
     patient,
-    appService,
+    formActionsConceptIdMap,
   } = props;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -65,7 +65,6 @@ export const ViewObservationForm = (props) => {
     owner: {"reference": `${PRACTITIONER}/${currentUser.uuid}`, "type": PRACTITIONER},
   }
   const scrollableContentRef = useRef(null);
-  const [formActionsConceptIdMap, setFormActionsConceptIdMap] = useState({});
 
   useEffect(() => {
     if (showSuccessBanner) {
@@ -77,7 +76,6 @@ export const ViewObservationForm = (props) => {
   }, [showSuccessBanner]);
 
   useEffect(() => {
-    setFormActionsConceptIdMap(appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap"));
     if(formActionsConceptIdMap) {
       getAllTasks()
         .catch((err) => {
@@ -88,7 +86,7 @@ export const ViewObservationForm = (props) => {
     }else{
       setIsHistoryLoading(false);
     }
-  }, [appService]);
+  }, []);
 
   useEffect(() => {
     setShowSuccessBanner(false);
@@ -421,6 +419,6 @@ ViewObservationForm.propTypes = {
   enableFormApprovalsAndComments: propTypes.bool,
   encounterUuid: propTypes.string,
   patient: propTypes.object,
-  appService: PropTypes.object,
+  formActionsConceptIdMap: PropTypes.object,
 };
 export default ViewObservationForm;

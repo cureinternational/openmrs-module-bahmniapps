@@ -32,7 +32,6 @@ export function FormDisplayControl(props) {
   const { appService } = props;
   
   const enableFormApprovalsAndComments = appService?.getAppDescriptor?.().getConfigValue("enableFormApprovalsAndComments");
-  let formActionsConceptIdMap;
 
   const noFormText = (
     <FormattedMessage
@@ -67,6 +66,7 @@ export function FormDisplayControl(props) {
   const [createdBy, setCreatedBy] = useState("");
   const [formActions, setFormActions] = useState({});
   const [openAccordions, setOpenAccordions] = useState({});
+  const [formActionsConceptIdMap, setFormActionsConceptIdMap] = useState({});
 
   const buildResponseData = async () => {
     try {
@@ -233,7 +233,8 @@ export function FormDisplayControl(props) {
     buildResponseData();
   }, []);
   useEffect(() => {
-    formActionsConceptIdMap = appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap");
+    const formActionsConceptIdMap = appService?.getAppDescriptor?.().getConfigValue("formActionsConceptIdMap");
+    setFormActionsConceptIdMap(formActionsConceptIdMap);
     if(enableFormApprovalsAndComments) {
       getAllTasksForPatient({
         subject: `${PATIENT}/${props.hostData.patientUuid}`,
@@ -370,7 +371,6 @@ export function FormDisplayControl(props) {
                   encounterUuid={encounterUuid}
                   patient={props?.hostData?.patient}
                   formActionsConceptIdMap={formActionsConceptIdMap}
-                  appService={appService}
                 />
               ) : null}
               {showEditObservationForm ? (
