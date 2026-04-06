@@ -1,115 +1,3 @@
-.bx--inline-notification {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    background-color: #f3f3f3;
-    border-left: 4px solid #0043CE;
-    border-radius: 0;
-    padding: 12px 16px;
-    gap: 16px;
-    width: 100% !important;
-    min-width: auto !important;
-    max-width: 100% !important;
-}
-
-.bx--inline-notification--info {
-    background-color: #EDF5FF;
-    border-left-color: #0043CE;
-
-    .bx--notification__icon {
-        color: #fff;
-        flex-shrink: 0;
-        margin-top: 0;
-        width: 16px;
-        height: 16px;
-        min-width: 16px;
-        border-radius: 50%;
-        background-color: #0043CE;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'IBM Plex Sans', sans-serif;
-        font-weight: bold;
-        font-size: 12px;
-        line-height: 1;
-    }
-
-    .bx--notification__title {
-        color: #161616;
-    }
-
-    .bx--notification__subtitle {
-        color: #161616;
-    }
-}
-
-.bx--notification__details {
-    display: flex;
-    gap: 12px;
-    flex: 1;
-    align-items: center;
-}
-
-.bx--notification__icon {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-}
-
-.bx--notification__text-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.bx--notification__title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-}
-
-.bx--notification__subtitle {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.bx--notification__action-button {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.bx--notification__close-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: inherit;
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    margin-top: 2px;
-
-    &:hover {
-        opacity: 0.8;
-    }
-
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-}
-
 .draft-notification {
     position: relative;
     z-index: 999;
@@ -131,6 +19,86 @@
         padding-right: 10px;
     }
 
+    &.bx--inline-notification {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        background-color: #f3f3f3;
+        border-left: 4px solid #0043CE;
+        border-radius: 0;
+        gap: 16px;
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
+    }
+
+    &.bx--inline-notification--info {
+        background-color: #EDF5FF;
+        border-left-color: #0043CE;
+
+        .bx--notification__icon {
+            color: #fff;
+            flex-shrink: 0;
+            margin-top: 0;
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            border-radius: 50%;
+            background-color: #0043CE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .bx--notification__title {
+            color: #161616;
+        }
+
+        .bx--notification__subtitle {
+            color: #161616;
+        }
+    }
+
+    .bx--notification__details {
+        display: flex;
+        gap: 12px;
+        flex: 1;
+        align-items: center;
+        margin-left: 16px;
+    }
+
+    .bx--notification__icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    .bx--notification__text-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .bx--notification__title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .bx--notification__subtitle {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
     .bx--notification__action-button {
         display: flex;
         gap: 0;
@@ -139,8 +107,28 @@
         margin-right: 0;
     }
 
-    .bx--notification__details {
-        margin-left: 16px;
+    .bx--notification__close-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: inherit;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+
+        &:hover {
+            opacity: 0.8;
+        }
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
     }
 
     .draft-notification-actions {
