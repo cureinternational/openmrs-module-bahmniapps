@@ -1,5 +1,10 @@
 import axios from "axios";
-import {FHIR_URL, FORM_APPROVAL, FORM_BASE_URL, FORM_COMMENT, LATEST_PUBLISHED_FORMS_URL} from "../../constants";
+import {
+  FHIR_URL,
+  FORM_BASE_URL,
+  LATEST_PUBLISHED_FORMS_URL,
+  MAX_TASK_COUNT
+} from "../../constants";
 
 export const fetchFormData = async (patientUuid, numberOfVisits) => {
   const apiURL = FORM_BASE_URL.replace('{patientUuid}',patientUuid);
@@ -52,8 +57,9 @@ export const getAllTasksForForm = async (formName, encounterUuid) => {
     const response = await axios.get(FHIR_URL, {
       params: {
         encounter: encounterUuid,
-        name:formName,
-        _sort:"-_lastUpdated"
+        name: formName,
+        _sort:"-_lastUpdated",
+        _count: MAX_TASK_COUNT
       }}
     )
     if(response.status === 200){
