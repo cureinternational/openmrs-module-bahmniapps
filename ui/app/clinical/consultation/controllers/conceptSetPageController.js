@@ -282,34 +282,34 @@ angular.module('bahmni.clinical')
                 return $filter('date')(now, 'dd MMM yyyy, hh:mm a');
             };
 
-            $scope.showDraftBanner = true;
-            $scope.draftTimestamp = getDraftTimestamp();
-            $scope.showDraftSpinner = false;
-            $scope.draftStatusMessage = null;
-            $scope.draftStatusParams = {};
-            $scope.draftStatusError = false;
+            $scope.formDraft = {
+                timestamp: getDraftTimestamp(),
+                showSpinner: false,
+                statusMessage: null,
+                statusParams: {},
+                statusError: false
+            };
 
             $scope.saveAsDraft = function () {
-                $scope.showDraftSpinner = true;
-                $scope.draftStatusMessage = null;
-                $scope.draftStatusError = false;
+                $scope.formDraft.showSpinner = true;
+                $scope.formDraft.statusMessage = null;
+                $scope.formDraft.statusError = false;
 
                 $timeout(function () {
                     if (saveAsDraftSuccess) {
                         var now = new Date();
                         var formattedTime = $filter('date')(now, 'dd MMM yyyy, hh:mm a');
-                        $scope.draftStatusMessage = 'SAVED_AS_DRAFT_KEY';
-                        $scope.draftStatusParams = {timestamp: formattedTime};
-                        $scope.draftTimestamp = formattedTime;
-                        $scope.showDraftBanner = true;
+                        $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
+                        $scope.formDraft.statusParams = {timestamp: formattedTime};
+                        $scope.formDraft.timestamp = formattedTime;
                         // Broadcast event to update parent scope's draftTimestamp - update this during API integration
                         $rootScope.$broadcast('draft:saved', formattedTime);
                     } else {
-                        $scope.draftStatusMessage = 'CHANGES_NOT_SAVED_KEY';
-                        $scope.draftStatusError = true;
+                        $scope.formDraft.statusMessage = 'CHANGES_NOT_SAVED_KEY';
+                        $scope.formDraft.statusError = true;
                     }
 
-                    $scope.showDraftSpinner = false;
+                    $scope.formDraft.showSpinner = false;
                     saveAsDraftSuccess = !saveAsDraftSuccess;
                 }, 2000);
             };

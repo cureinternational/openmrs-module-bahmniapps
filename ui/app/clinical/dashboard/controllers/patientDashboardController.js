@@ -20,7 +20,9 @@ angular.module('bahmni.clinical')
                 var now = new Date();
                 return $filter('date')(now, 'dd MMM yyyy, hh:mm a');
             };
-            $scope.draftTimestamp = getDraftTimestamp();
+            $scope.formDraft = {
+                timestamp: getDraftTimestamp()
+            };
             var programConfig = appService.getAppDescriptor().getConfigValue("program") || {};
             $state.discardChanges = false;
 
@@ -51,7 +53,7 @@ angular.module('bahmni.clinical')
 
             // Listen for draft saved event from ConceptSetPageController - change logic to use GET call once it is developed
             var cleanUpListenerDraftSaved = $scope.$on("draft:saved", function (event, timestamp) {
-                $scope.draftTimestamp = timestamp;
+                $scope.formDraft.timestamp = timestamp;
             });
 
             var cleanUpListenerPrintDashboard = $scope.$on("event:printDashboard", function (event, tab) {
