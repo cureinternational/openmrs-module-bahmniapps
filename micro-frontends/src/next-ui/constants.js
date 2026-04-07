@@ -55,3 +55,4 @@ export const FORM_APPROVAL = "FORM_APPROVAL";
 export const ENCOUNTER = "Encounter";
 export const PRACTITIONER = "Practitioner";
 export const PATIENT = "Patient";
+export const MAX_TASK_COUNT = 500;

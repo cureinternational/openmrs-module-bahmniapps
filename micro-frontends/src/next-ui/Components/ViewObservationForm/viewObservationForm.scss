@@ -266,13 +266,6 @@
     box-shadow: 0px -4px 4px 0px #0000000D;
   }
 
-  .success-banner-icon {
-    flex-shrink: 0;
-    background-color: #ffffff;
-    border-radius: 50%;
-    color: #24a148;
-  }
-
   .success-banner-text {
     font-size: 14px;
     font-weight: 500;
@@ -422,4 +415,10 @@
       color: #ffffff !important;
     }
   }
+}
+.success-banner-icon {
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-radius: 50%;
+  color: #198038;
 }

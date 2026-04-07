@@ -15,6 +15,7 @@ import { defaultDateTimeFormat } from "../../constants";
 
 const mockFetchFormData = jest.fn();
 const mockGetLatestPublishedForms = jest.fn();
+const mockGetAllTasksForPatient = jest.fn();
 
 const mockFormActionsConceptIdMap = {
   FORM_COMMENT: "comment-concept-uuid",
@@ -38,6 +39,7 @@ const mockAppService = {
 jest.mock("../../utils/FormDisplayControl/FormUtils", () => ({
   fetchFormData: () => mockFetchFormData(),
   getLatestPublishedForms: () => mockGetLatestPublishedForms(),
+  getAllTasksForPatient: (...args) => mockGetAllTasksForPatient(...args),
 }));
 
 jest.mock("../../Components/i18n/I18nProvider", () => ({
@@ -63,6 +65,10 @@ const activeEncounterMockHostDataWithPrivileges = {
     ],
   },
 };
+
+beforeEach(() => {
+  mockGetAllTasksForPatient.mockResolvedValue({ data: { entry: [] } });
+});
 
 describe("FormDisplayControl Component for empty mock data", () => {
   it("should show no-forms-message when form entries are empty", async () => {
@@ -106,76 +112,81 @@ describe("FormDisplayControl Component", () => {
   });
 });
 
-describe("FormDisplayControl Component with Accordion and Non-Accordion", () => {
+describe("FormDisplayControl Component with Accordion", () => {
   beforeEach(() => {
     mockFetchFormData.mockResolvedValue(mockFormResponseData);
     mockGetLatestPublishedForms.mockResolvedValue(mockLatestPublishedForms);
   });
-  // TODO: fix this test
-  //  it("should render the component with form data", async() => {
-  //   mockFetchFormData.mockResolvedValueOnce(mockFormResponseData);
-  //   const { container } = render(<FormDisplayControl hostData={mockHostData} />);
-  //   await waitFor(() => {
-  //     expect(container).toMatchSnapshot();
-  //   });
-  // });
 
-  it("should render accordion form entries when loading is done", async () => {
+  it("should render all form groups in accordion format when loading is done", async () => {
     const { container } = render(
       <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
-      expect(container.querySelectorAll(".bx--accordion__title")).toHaveLength(
-        1
-      );
-      expect(
-        container.querySelector(".bx--accordion__title").innerHTML
-      ).toEqual("Pre Anaesthesia Assessment");
-      expect(
-        container.querySelector(".row-accordion > .form-name-text > .form-link")
-          .innerHTML
-      ).toEqual(moment(1693217959000).format(defaultDateTimeFormat));
-      expect(
-        container.querySelector(".row-accordion > .form-provider-text")
-          .innerHTML
-      ).toEqual("Doctor One");
+      expect(container.querySelectorAll(".bx--accordion__title")).toHaveLength(3);
+      const titles = container.querySelectorAll(".form-accordion-title");
+      expect(titles[0].textContent.trim()).toContain("Orthopaedic Triage");
+      expect(titles[1].textContent.trim()).toContain("Pre Anaesthesia Assessment");
+      expect(titles[2].textContent.trim()).toContain("Patient Progress Notes and Orders");
     });
   });
 
-  it("should render non-accordion form entries when loading is done", async () => {
+  it("should render form entries with date links and providers inside accordion rows", async () => {
     const { container } = render(
       <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
     );
 
     await waitFor(() => {
-      expect(
-        container.querySelectorAll(".form-non-accordion-text")
-      ).toHaveLength(6);
-      expect(
-        container.querySelectorAll(".form-non-accordion-text.form-heading")[0]
-          .innerHTML
-      ).toEqual("Orthopaedic Triage");
-      expect(
-        container.querySelectorAll(
-          ".form-non-accordion-text.form-date-align > a"
-        )[0].innerHTML
-      ).toEqual(moment(1693277657000).format(defaultDateTimeFormat));
-      expect(
-        container.querySelectorAll(".form-non-accordion-text")[2].innerHTML
-      ).toEqual("Doctor Two");
-      expect(
-        container.querySelectorAll(".form-non-accordion-text.form-heading")[1]
-          .innerHTML
-      ).toEqual("Patient Progress Notes and Orders");
-      expect(
-        container.querySelectorAll(
-          ".form-non-accordion-text.form-date-align > a"
-        )[1].innerHTML
-      ).toEqual(moment(1693277657000).format(defaultDateTimeFormat));
-      expect(
-        container.querySelectorAll(".form-non-accordion-text")[5].innerHTML
-      ).toEqual("Doctor One");
+      // 4 total rows: 1 Orthopaedic Triage + 2 Pre Anaesthesia Assessment (sorted desc) + 1 PPNO
+      expect(container.querySelectorAll(".row-accordion")).toHaveLength(4);
+      const links = container.querySelectorAll(".form-link");
+      expect(links[0].innerHTML).toEqual(moment(1693277657000).format(defaultDateTimeFormat));
+      expect(links[1].innerHTML).toEqual(moment(1693217959000).format(defaultDateTimeFormat));
+      expect(links[2].innerHTML).toEqual(moment(1692950695000).format(defaultDateTimeFormat));
+      expect(links[3].innerHTML).toEqual(moment(1693277657000).format(defaultDateTimeFormat));
+      const providers = container.querySelectorAll(".form-provider-text");
+      expect(providers[0].innerHTML).toEqual("Doctor Two");
+      expect(providers[1].innerHTML).toEqual("Doctor One");
+      expect(providers[3].innerHTML).toEqual("Doctor One");
+    });
+  });
+
+  it("should show approval and comment indicators when tasks exist for a form entry", async () => {
+    mockGetAllTasksForPatient.mockResolvedValueOnce({
+      data: {
+        entry: [
+          {
+            resource: {
+              code: { text: "FORM_APPROVAL" },
+              extension: [{ url: "http://fhir.bahmni.org/ext/task/name", valueString: "Orthopaedic Triage" }],
+              encounter: { reference: "Encounter/6e52cecd-a095-457f-9515-38cf9178cb50" },
+            },
+          },
+          {
+            resource: {
+              code: { text: "FORM_COMMENT" },
+              extension: [{ url: "http://fhir.bahmni.org/ext/task/name", valueString: "Orthopaedic Triage" }],
+              encounter: { reference: "Encounter/6e52cecd-a095-457f-9515-38cf9178cb50" },
+            },
+          },
+        ],
+      },
+    });
+
+    const { container } = render(
+      <FormDisplayControl hostData={mockHostData} appService={mockAppService} />
+    );
+
+    await waitFor(() => {
+      // Approval indicator: CheckmarkFilled icon for approved encounter
+      expect(container.querySelector(".form-approval-icon-container .success-banner-icon")).not.toBeNull();
+      // Form action indicator: green dot on accordion title when form has actions
+      const actionIndicators = container.querySelectorAll(".form-action-indicator");
+      const greenIndicator = Array.from(actionIndicators).find(
+        (el) => el.style.backgroundColor === "rgb(25, 128, 56)"
+      );
+      expect(greenIndicator).not.toBeUndefined();
     });
   });
 
