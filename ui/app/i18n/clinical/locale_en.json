@@ -71,8 +71,8 @@
   "ADD_NEW_OBSERVATION": "Add New Obs Form",
   "SAVE_AS_DRAFT": "Save as Draft",
   "SAVING_AS_DRAFT": "Saving as Draft...",
-  "SAVED_AS_DRAFT_KEY": "Saved as draft at {{ timestamp }}",
-  "CHANGES_NOT_SAVED_KEY": "Changes not saved",
+  "SAVED_AS_DRAFT_KEY": "Saved as draft on {{ draftDate }} at {{ draftTime }}",
+  "CHANGES_NOT_SAVED_KEY": "Changes are not saved due to a system error",
   "CONCEPT_SET_GROUP_PIN_UNPIN_KEY": "Pin/Unpin",
   "CONCEPT_SET_GROUP_REMOVE_KEY": "Remove",
   "CONCEPT_SET_GROUP_SEARCH_LABEL": "Search Obs Form",
@@ -439,5 +439,5 @@
   "RESUME": "Resume",
   "DISCARD_DRAFT": "Discard Draft",
   "FORMS_DRAFT_BANNER_TITLE": "Observation Forms are in Progress",
-  "FORMS_DRAFT_BANNER_SUBTITLE": "Your inputs were saved as a draft at {{ draftTimestamp }}. Click Resume to continue where you left off or Discard to start over."
+  "FORMS_DRAFT_BANNER_SUBTITLE": "Your inputs were saved as a draft on {{ draftDate }} at {{ draftTime }}. Click Resume to continue where you left off or Discard Draft to start over."
 }

@@ -5,7 +5,7 @@
         <div class="bx--notification__icon">ℹ</div>
         <div class="bx--notification__text-wrapper">
             <h3 class="bx--notification__title">{{ 'FORMS_DRAFT_BANNER_TITLE' | translate }}</h3>
-            <p class="bx--notification__subtitle">{{ 'FORMS_DRAFT_BANNER_SUBTITLE' | translate: {draftTimestamp: formDraft.timestamp} }}</p>
+            <p class="bx--notification__subtitle">{{ 'FORMS_DRAFT_BANNER_SUBTITLE' | translate: {draftDate: formDraft.draftDate, draftTime: formDraft.draftTime} }}</p>
         </div>
     </div>
     <div class="bx--notification__action-button">

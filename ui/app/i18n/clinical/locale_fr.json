@@ -69,9 +69,8 @@
     "ADD_NEW_OBSERVATION": "Ajouter un nouveau formulaire d'observation",
     "SAVE_AS_DRAFT": "Enregistrer comme brouillon",
     "SAVING_AS_DRAFT": "Enregistrement en cours...",
-
-    "SAVED_AS_DRAFT_KEY": "Enregistré comme brouillon à {{ timestamp }}",
-    "CHANGES_NOT_SAVED_KEY": "Les modifications n'ont pas été enregistrées",
+    "SAVED_AS_DRAFT_KEY": "Enregistré comme brouillon le {{ draftDate }} à {{ draftTime }}",
+    "CHANGES_NOT_SAVED_KEY": "Les modifications n'ont pas été enregistrées en raison d'une erreur système",
     "CONCEPT_SET_GROUP_PIN_UNPIN_KEY": "Épingler / Désolidariser",
     "CONCEPT_SET_GROUP_REMOVE_KEY": "Supprimer",
     "CONCEPT_SET_GROUP_SEARCH_LABEL": "Rechercher un formulaire d'observation",
@@ -432,5 +431,5 @@
     "RESUME": "Reprendre",
     "DISCARD_DRAFT": "Rejeter le brouillon",
     "FORMS_DRAFT_BANNER_TITLE": "Formulaires d'observation en cours",
-    "FORMS_DRAFT_BANNER_SUBTITLE": "Vos entrées ont été enregistrées comme brouillon à {{ draftTimestamp }}. Cliquez sur Reprendre pour continuer là où vous vous étiez arrêté ou sur Abandonner pour recommencer."
+    "FORMS_DRAFT_BANNER_SUBTITLE": "Vos entrées ont été enregistrées comme brouillon le {{ draftDate }} à {{ draftTime }}. Cliquez sur Reprendre pour continuer là où vous vous étiez arrêté ou sur Abandonner pour recommencer."
 }

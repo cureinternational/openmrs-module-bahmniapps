@@ -279,11 +279,15 @@ angular.module('bahmni.clinical')
 
             var getDraftTimestamp = function () {
                 var now = new Date();
-                return $filter('date')(now, 'dd MMM yyyy, hh:mm a');
+                return {
+                    date: $filter('date')(now, 'dd MMM yyyy'),
+                    time: $filter('date')(now, 'hh:mm a')
+                };
             };
 
             $scope.formDraft = {
-                timestamp: getDraftTimestamp(),
+                draftDate: getDraftTimestamp().date,
+                draftTime: getDraftTimestamp().time,
                 showSpinner: false,
                 statusMessage: null,
                 statusParams: {},
@@ -298,12 +302,14 @@ angular.module('bahmni.clinical')
                 $timeout(function () {
                     if (saveAsDraftSuccess) {
                         var now = new Date();
-                        var formattedTime = $filter('date')(now, 'dd MMM yyyy, hh:mm a');
+                        var draftDate = $filter('date')(now, 'dd MMM yyyy');
+                        var draftTime = $filter('date')(now, 'hh:mm a');
                         $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
-                        $scope.formDraft.statusParams = {timestamp: formattedTime};
-                        $scope.formDraft.timestamp = formattedTime;
-                        // Broadcast event to update parent scope's draftTimestamp - update this during API integration
-                        $rootScope.$broadcast('draft:saved', formattedTime);
+                        $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
+                        $scope.formDraft.draftDate = draftDate;
+                        $scope.formDraft.draftTime = draftTime;
+                        // Broadcast event to update parent scope's draft date and time - update this during API integration
+                        $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
                     } else {
                         $scope.formDraft.statusMessage = 'CHANGES_NOT_SAVED_KEY';
                         $scope.formDraft.statusError = true;

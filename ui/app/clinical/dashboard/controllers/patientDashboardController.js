@@ -18,10 +18,15 @@ angular.module('bahmni.clinical')
             // Draft timestamp initialization - can be removed after API integration
             var getDraftTimestamp = function () {
                 var now = new Date();
-                return $filter('date')(now, 'dd MMM yyyy, hh:mm a');
+                return {
+                    date: $filter('date')(now, 'dd MMM yyyy'),
+                    time: $filter('date')(now, 'hh:mm a')
+                };
             };
+            var draftTimestampObj = getDraftTimestamp();
             $scope.formDraft = {
-                timestamp: getDraftTimestamp()
+                draftDate: draftTimestampObj.date,
+                draftTime: draftTimestampObj.time
             };
             var programConfig = appService.getAppDescriptor().getConfigValue("program") || {};
             $state.discardChanges = false;
@@ -52,8 +57,11 @@ angular.module('bahmni.clinical')
             });
 
             // Listen for draft saved event from ConceptSetPageController - change logic to use GET call once it is developed
-            var cleanUpListenerDraftSaved = $scope.$on("draft:saved", function (event, timestamp) {
-                $scope.formDraft.timestamp = timestamp;
+            var cleanUpListenerDraftSaved = $scope.$on("draft:saved", function (event, draftTimestamp) {
+                if (draftTimestamp && typeof draftTimestamp === 'object') {
+                    $scope.formDraft.draftDate = draftTimestamp.draftDate;
+                    $scope.formDraft.draftTime = draftTimestamp.draftTime;
+                }
             });
 
             var cleanUpListenerPrintDashboard = $scope.$on("event:printDashboard", function (event, tab) {
