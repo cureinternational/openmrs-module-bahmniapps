@@ -20,6 +20,7 @@ import { FileViewer } from "./FileViewer/FileViewer";
 import CommentPanel from "./CommentPanel/CommentPanel";
 import { getAllTasksForForm, saveTask } from "../../utils/FormDisplayControl/FormUtils";
 import { ENCOUNTER, FORM_APPROVAL, FORM_COMMENT, PATIENT, PRACTITIONER } from "../../constants";
+import PropTypes from "prop-types";
 
 export const ViewObservationForm = (props) => {
   const intl = useIntl();
@@ -38,6 +39,7 @@ export const ViewObservationForm = (props) => {
     encounterUuid,
     patient,
     formActionsConceptIdMap,
+    onAction
   } = props;
 
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -75,12 +77,16 @@ export const ViewObservationForm = (props) => {
   }, [showSuccessBanner]);
 
   useEffect(() => {
-    getAllTasks()
-      .then(() => {setIsHistoryLoading(false)})
-      .catch((err) => {
-        console.error("Error fetching actions history", err);
-        setIsHistoryLoading(false);
+    if(formActionsConceptIdMap) {
+      getAllTasks()
+        .catch((err) => {
+          console.error("Error fetching actions history", err);
+        }).finally(() => {
+          setIsHistoryLoading(false);
       });
+    }else{
+      setIsHistoryLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -125,6 +131,11 @@ export const ViewObservationForm = (props) => {
     setIsHistoryLoading(true);
     approve()
       .then(() => {
+        if(onAction){
+          onAction();
+        }
+      })
+      .then(() => {
         setShowConfirmationBanner(false);
         setIsModalOpen(false);
         setApprovedFormName(formNameTranslations);
@@ -141,9 +152,14 @@ export const ViewObservationForm = (props) => {
       .then(() => {
         setIsCommentPanelOpen(false);
         setShowSuccessBanner(true);
-      }).then(getAllTasks).catch(() => {
-      console.log("Error saving comment");
-    }).finally(() => {
+      }).then(getAllTasks).then(() => {
+        setIsHistoryLoading(false);
+        if(onAction){
+          onAction();
+        }
+    })
+      .catch((error) => {
+      console.error("Error saving comment", error);
       setIsHistoryLoading(false);
     })
   };
@@ -412,8 +428,9 @@ ViewObservationForm.propTypes = {
   createdBy: propTypes.string,
   currentUser: propTypes.object,
   enableFormApprovalsAndComments: propTypes.bool,
-  formActionsConceptIdMap: propTypes.object,
   encounterUuid: propTypes.string,
   patient: propTypes.object,
+  formActionsConceptIdMap: PropTypes.object,
+  onAction: PropTypes.func,
 };
 export default ViewObservationForm;

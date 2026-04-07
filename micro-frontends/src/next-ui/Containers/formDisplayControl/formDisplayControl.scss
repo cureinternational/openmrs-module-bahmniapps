@@ -13,7 +13,6 @@
 
 .placeholder-text-forms-control {
   background: #fff;
-  padding: 5px;
   color: #444 !important;
 
   .form-name {
@@ -41,11 +40,10 @@
 .row-accordion {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
+  padding: 10px 6px 5px;
   border-bottom-style: solid;
   border-bottom-color: #d9d7d7;
   border-bottom-width: thin;
-  padding-bottom: 5px;
   &:last-child {
     border-bottom: none;
   }
@@ -73,7 +71,8 @@
 }
 
 .form-name-text {
-  padding-left: 15px;
+  display: flex;
+  gap: 4px;
 }
 
 .bx-accordion__arrow {
@@ -98,4 +97,30 @@
 
 .fa-pencil:hover {
   color: #669999;
+}
+
+
+.form-accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-action-indicator {
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+}
+
+.form-approval-icon-container {
+  height: 20px;
+  width: 20px;
+}
+
+.form-display-control-accordion {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+  padding-right: 6px;
 }
