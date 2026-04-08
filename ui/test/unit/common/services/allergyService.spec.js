@@ -1,5 +1,5 @@
 describe('allergyService', function() {
-    var _$http, appService;
+    var _$http, appService, $rootScope, $q;
 
     beforeEach(module('bahmni.common.util'));
     
@@ -21,8 +21,10 @@ describe('allergyService', function() {
         $provide.value('appService',appService);
     }));
 
-    beforeEach(inject(['allergyService', function (allergyServiceInjected) {
+    beforeEach(inject(['allergyService', '$rootScope', '$q', function (allergyServiceInjected, _$rootScope_, _$q_) {
         allergyService = allergyServiceInjected;
+        $rootScope = _$rootScope_;
+        $q = _$q_;
     }]));
 
     describe('getAllergyForPatient', function() {
@@ -531,11 +533,14 @@ describe('allergyService', function() {
             });
         });
 
-        it('should filter out no known allergy entry by UUID when other specific allergies exist', function(done) {
+        it('should filter out no known allergy entry by UUID when other specific allergies exist', function() {
             var noKnownAllergyUuid = 'no-known-uuid-123';
-            _$http.get.and.callFake(function (url) {
-                if (url.indexOf('AllergyIntolerance') !== -1) {
-                    return Promise.resolve({
+            var callCount = 0;
+            var result;
+            _$http.get.and.callFake(function () {
+                callCount++;
+                if (callCount === 1) {
+                    return $q.when({
                         status: 200,
                         data: {
                             entry: [
@@ -545,20 +550,23 @@ describe('allergyService', function() {
                         }
                     });
                 }
-                return Promise.resolve({ data: noKnownAllergyUuid });
+                return $q.when({ data: noKnownAllergyUuid });
             });
 
-            allergyService.fetchAndProcessAllergies('patient-1').then(function (result) {
-                expect(result).toBe('Pollen');
-                done();
-            });
+            allergyService.fetchAndProcessAllergies('patient-1').then(function (r) { result = r; });
+            $rootScope.$apply();
+
+            expect(result).toBe('Pollen');
         });
 
-        it('should keep no known allergy entry when it is the only allergy', function(done) {
+        it('should keep no known allergy entry when it is the only allergy', function() {
             var noKnownAllergyUuid = 'no-known-uuid-123';
-            _$http.get.and.callFake(function (url) {
-                if (url.indexOf('AllergyIntolerance') !== -1) {
-                    return Promise.resolve({
+            var callCount = 0;
+            var result;
+            _$http.get.and.callFake(function () {
+                callCount++;
+                if (callCount === 1) {
+                    return $q.when({
                         status: 200,
                         data: {
                             entry: [
@@ -567,13 +575,13 @@ describe('allergyService', function() {
                         }
                     });
                 }
-                return Promise.resolve({ data: noKnownAllergyUuid });
+                return $q.when({ data: noKnownAllergyUuid });
             });
 
-            allergyService.fetchAndProcessAllergies('patient-1').then(function (result) {
-                expect(result).toBe('Aucune allergie connue');
-                done();
-            });
+            allergyService.fetchAndProcessAllergies('patient-1').then(function (r) { result = r; });
+            $rootScope.$apply();
+
+            expect(result).toBe('Aucune allergie connue');
         });
 
         it('should fetch and process allergies correctly', function() {
