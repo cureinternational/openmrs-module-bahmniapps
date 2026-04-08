@@ -372,7 +372,7 @@ export function FormDisplayControl(props) {
                   printForm={printForm}
                   createdDateTime={createdDateTime}
                   createdBy={createdBy}
-                  currentUser={props?.hostData?.currentUser}
+                  currentProvider={props?.hostData?.currentProvider}
                   enableFormApprovalsAndComments={enableFormApprovalsAndComments}
                   encounterUuid={encounterUuid}
                   patient={props?.hostData?.patient}

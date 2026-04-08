@@ -69,7 +69,7 @@ const initialProps = {
   enableFormApprovalsAndComments: true,
   encounterUuid: "test-encounter-uuid",
   patient: { uuid: "test-patient-uuid" },
-  currentUser: { uuid: "test-user-uuid" },
+  currentProvider: { uuid: "test-user-uuid" },
   formActionsConceptIdMap: {
     FORM_COMMENT: "comment-concept-id",
     FORM_APPROVAL: "approval-concept-id",
