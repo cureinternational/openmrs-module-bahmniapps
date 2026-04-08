@@ -22,6 +22,11 @@ angular.module('bahmni.common.util')
                         }
                     });
                 }
+                if (allergiesList.length > 1) {
+                    allergiesList = allergiesList.filter(function (allergy) {
+                        return allergy.toLowerCase().indexOf('no known allergy') === -1;
+                    });
+                }
                 return allergiesList.join(", ");
             });
         };

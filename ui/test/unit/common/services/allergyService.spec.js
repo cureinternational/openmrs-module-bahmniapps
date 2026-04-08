@@ -531,6 +531,53 @@ describe('allergyService', function() {
             });
         });
 
+        it('should filter out "No Known Allergy" when other specific allergies exist', function(done) {
+            var mockResponse = {
+                status: 200,
+                data: {
+                    entry: [
+                        {
+                            resource: {
+                                code: { coding: [{ code: 'allergy-uuid-1', display: 'Pollen' }] }
+                            }
+                        },
+                        {
+                            resource: {
+                                code: { coding: [{ code: 'no-known-uuid', display: 'No Known Allergy' }] }
+                            }
+                        }
+                    ]
+                }
+            };
+            _$http.get.and.returnValue(Promise.resolve(mockResponse));
+
+            allergyService.fetchAndProcessAllergies('patient-1').then(function (result) {
+                expect(result).toBe('Pollen');
+                done();
+            });
+        });
+
+        it('should keep "No Known Allergy" when it is the only entry', function(done) {
+            var mockResponse = {
+                status: 200,
+                data: {
+                    entry: [
+                        {
+                            resource: {
+                                code: { coding: [{ code: 'no-known-uuid', display: 'No Known Allergy' }] }
+                            }
+                        }
+                    ]
+                }
+            };
+            _$http.get.and.returnValue(Promise.resolve(mockResponse));
+
+            allergyService.fetchAndProcessAllergies('patient-1').then(function (result) {
+                expect(result).toBe('No Known Allergy');
+                done();
+            });
+        });
+
         it('should fetch and process allergies correctly', function() {
             var patientUuid = '12345';
             var mockResponse = {
