@@ -531,25 +531,22 @@ describe('allergyService', function() {
             });
         });
 
-        it('should filter out "No Known Allergy" when other specific allergies exist', function(done) {
-            var mockResponse = {
-                status: 200,
-                data: {
-                    entry: [
-                        {
-                            resource: {
-                                code: { coding: [{ code: 'allergy-uuid-1', display: 'Pollen' }] }
-                            }
-                        },
-                        {
-                            resource: {
-                                code: { coding: [{ code: 'no-known-uuid', display: 'No Known Allergy' }] }
-                            }
+        it('should filter out no known allergy entry by UUID when other specific allergies exist', function(done) {
+            var noKnownAllergyUuid = 'no-known-uuid-123';
+            _$http.get.and.callFake(function (url) {
+                if (url.indexOf('AllergyIntolerance') !== -1) {
+                    return Promise.resolve({
+                        status: 200,
+                        data: {
+                            entry: [
+                                { resource: { code: { coding: [{ code: 'allergy-uuid-1', display: 'Pollen' }] } } },
+                                { resource: { code: { coding: [{ code: noKnownAllergyUuid, display: 'Aucune allergie connue' }] } } }
+                            ]
                         }
-                    ]
+                    });
                 }
-            };
-            _$http.get.and.returnValue(Promise.resolve(mockResponse));
+                return Promise.resolve({ data: noKnownAllergyUuid });
+            });
 
             allergyService.fetchAndProcessAllergies('patient-1').then(function (result) {
                 expect(result).toBe('Pollen');
@@ -557,23 +554,24 @@ describe('allergyService', function() {
             });
         });
 
-        it('should keep "No Known Allergy" when it is the only entry', function(done) {
-            var mockResponse = {
-                status: 200,
-                data: {
-                    entry: [
-                        {
-                            resource: {
-                                code: { coding: [{ code: 'no-known-uuid', display: 'No Known Allergy' }] }
-                            }
+        it('should keep no known allergy entry when it is the only allergy', function(done) {
+            var noKnownAllergyUuid = 'no-known-uuid-123';
+            _$http.get.and.callFake(function (url) {
+                if (url.indexOf('AllergyIntolerance') !== -1) {
+                    return Promise.resolve({
+                        status: 200,
+                        data: {
+                            entry: [
+                                { resource: { code: { coding: [{ code: noKnownAllergyUuid, display: 'Aucune allergie connue' }] } } }
+                            ]
                         }
-                    ]
+                    });
                 }
-            };
-            _$http.get.and.returnValue(Promise.resolve(mockResponse));
+                return Promise.resolve({ data: noKnownAllergyUuid });
+            });
 
             allergyService.fetchAndProcessAllergies('patient-1').then(function (result) {
-                expect(result).toBe('No Known Allergy');
+                expect(result).toBe('Aucune allergie connue');
                 done();
             });
         });
