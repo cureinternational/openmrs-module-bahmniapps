@@ -34,7 +34,7 @@ export const ViewObservationForm = (props) => {
     printForm,
     createdDateTime,
     createdBy,
-    currentUser,
+    currentProvider,
     enableFormApprovalsAndComments,
     encounterUuid,
     patient,
@@ -63,7 +63,7 @@ export const ViewObservationForm = (props) => {
       "type": PATIENT
     },
     encounter: {"reference": `${ENCOUNTER}/${encounterUuid}`, "type": ENCOUNTER},
-    owner: {"reference": `${PRACTITIONER}/${currentUser.uuid}`, "type": PRACTITIONER},
+    owner: {"reference": `${PRACTITIONER}/${currentProvider.uuid}`, "type": PRACTITIONER},
   }
   const scrollableContentRef = useRef(null);
 
@@ -199,7 +199,7 @@ export const ViewObservationForm = (props) => {
         acc.push({
           action:   resource.code?.text,
           username: resource.owner?.display,
-          dateTime: moment(resource.authoredOn).format("DD MMM YYYY HH:mm a"),
+          dateTime: moment(resource.authoredOn).format("DD MMM YYYY hh:mm a"),
           comment:  resource.note?.[0]?.text
         });
       return acc;
@@ -426,7 +426,7 @@ ViewObservationForm.propTypes = {
   printForm: propTypes.func,
   createdDateTime: propTypes.string,
   createdBy: propTypes.string,
-  currentUser: propTypes.object,
+  currentProvider: propTypes.object,
   enableFormApprovalsAndComments: propTypes.bool,
   encounterUuid: propTypes.string,
   patient: propTypes.object,
