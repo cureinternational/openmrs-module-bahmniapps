@@ -360,7 +360,9 @@ export function FormDisplayControl(props) {
                         </AccordionItem>
                       </Accordion>
                   })
-                : noFormText}
+                : <div className={"no-forms-message"}>
+                  {noFormText}
+              </div>}
               {showViewObservationForm ? (
                 <ViewObservationForm
                   isViewFormLoading={isViewFormLoading}
