@@ -29,7 +29,8 @@ angular.module('bahmni.common.uicontrols.programmanagment')
                 numberOfVisits: observationFormsConfig.numberOfVisits || 10,
                 hasNoHierarchy: $scope.hasNoHierarchy,
                 patient: $scope.patient,
-                currentUser: $rootScope.currentUser
+                currentUser: $rootScope.currentUser,
+                currentProvider: $rootScope.currentProvider
             };
 
             var updateActiveProgramsList = function () {
