@@ -55,3 +55,4 @@ export const ENCOUNTER = "Encounter";
 export const PRACTITIONER = "Practitioner";
 export const PATIENT = "Patient";
 export const MAX_TASK_COUNT = 500;
+export const FORM_DRAFT_LIST_URL = RESTWS_V1 + "/formDraftList";

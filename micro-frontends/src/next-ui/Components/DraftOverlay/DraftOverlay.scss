@@ -1,0 +1,92 @@
+.draft-overlay {
+    background: #ffffff;
+    width: 271px;
+    border-radius: 4px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    &__title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #161616;
+    }
+
+    &__close-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        color: #161616;
+
+        &:hover {
+            background: #e0e0e0;
+            border-radius: 2px;
+        }
+    }
+
+    &__content {
+        max-height: 360px;
+        overflow-y: auto;
+    }
+
+    &__row {
+        padding: 12px 16px 0;
+    }
+
+    &__patient-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #161616;
+        margin: 0 0 4px;
+    }
+
+    &__row-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 12px;
+    }
+
+    &__identifier {
+        font-size: 12px;
+        color: #0669fe;
+    }
+
+    &__timestamp {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.68);
+    }
+
+    &__divider {
+        height: 1px;
+        background: #e0e0e0;
+    }
+
+    &__empty-state {
+        padding: 24px 16px;
+        text-align: left;
+    }
+
+    &__empty-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #161616;
+        margin: 0 0 4px;
+    }
+
+    &__empty-message {
+        font-size: 12px;
+        color: #6f6f6f;
+        margin: 0;
+    }
+}

@@ -1,0 +1,172 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DraftOverlay matches snapshot with drafts 1`] = `
+<div>
+  <div
+    class="draft-overlay"
+  >
+    <div
+      class="draft-overlay__header"
+    >
+      <span
+        class="draft-overlay__title"
+      >
+        Observation Drafts (3)
+      </span>
+      <button
+        aria-label="Close drafts overlay"
+        class="draft-overlay__close-button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          focusable="false"
+          height="16"
+          preserveAspectRatio="xMidYMid meet"
+          viewBox="0 0 32 32"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M24 9.4L22.6 8 16 14.6 9.4 8 8 9.4 14.6 16 8 22.6 9.4 24 16 17.4 22.6 24 24 22.6 17.4 16 24 9.4z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div
+      class="draft-overlay__content"
+    >
+      <div
+        class="draft-overlay__row"
+      >
+        <p
+          class="draft-overlay__patient-name"
+        >
+          Helina Zekariyas
+        </p>
+        <div
+          class="draft-overlay__row-details"
+        >
+          <span
+            class="draft-overlay__identifier"
+          >
+            ET73635
+          </span>
+          <span
+            class="draft-overlay__timestamp"
+          >
+            23 Feb 2026, 12:30 PM
+          </span>
+        </div>
+        <div
+          class="draft-overlay__divider"
+        />
+      </div>
+      <div
+        class="draft-overlay__row"
+      >
+        <p
+          class="draft-overlay__patient-name"
+        >
+          Amen Dawit
+        </p>
+        <div
+          class="draft-overlay__row-details"
+        >
+          <span
+            class="draft-overlay__identifier"
+          >
+            ET73636
+          </span>
+          <span
+            class="draft-overlay__timestamp"
+          >
+            23 Feb 2026, 10:15 AM
+          </span>
+        </div>
+        <div
+          class="draft-overlay__divider"
+        />
+      </div>
+      <div
+        class="draft-overlay__row"
+      >
+        <p
+          class="draft-overlay__patient-name"
+        >
+          Ibrahim Abdul
+        </p>
+        <div
+          class="draft-overlay__row-details"
+        >
+          <span
+            class="draft-overlay__identifier"
+          >
+            ET73637
+          </span>
+          <span
+            class="draft-overlay__timestamp"
+          >
+            22 Feb 2026, 09:45 AM
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`DraftOverlay matches snapshot with empty state 1`] = `
+<div>
+  <div
+    class="draft-overlay"
+  >
+    <div
+      class="draft-overlay__header"
+    >
+      <span
+        class="draft-overlay__title"
+      >
+        Observation Drafts (0)
+      </span>
+      <button
+        aria-label="Close drafts overlay"
+        class="draft-overlay__close-button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          focusable="false"
+          height="16"
+          preserveAspectRatio="xMidYMid meet"
+          viewBox="0 0 32 32"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M24 9.4L22.6 8 16 14.6 9.4 8 8 9.4 14.6 16 8 22.6 9.4 24 16 17.4 22.6 24 24 22.6 17.4 16 24 9.4z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div
+      class="draft-overlay__content"
+    >
+      <div
+        class="draft-overlay__empty-state"
+      >
+        <p
+          class="draft-overlay__empty-title"
+        >
+          No drafts yet
+        </p>
+        <p
+          class="draft-overlay__empty-message"
+        >
+          You don't have any saved drafts
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
