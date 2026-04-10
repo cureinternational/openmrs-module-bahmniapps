@@ -4,7 +4,6 @@ import { FormDisplayControl } from "./Containers/formDisplayControl/FormDisplayC
 import { ProviderNotifications } from "./Containers/providerNotifications/ProviderNotifications";
 import { OtNotesSavePopup, OtNotesDeletePopup } from "./Containers/otNotes/OtNotes";
 import { OrdersDisplayControl } from "./Containers/OrdersDisplayControl/OrdersDisplayControl";
-import { DraftIndicator } from "./Containers/draftIndicator/DraftIndicator";
 
 const MODULE_NAME = "bahmni.mfe.nextUi";
 
@@ -45,7 +44,3 @@ builder.createComponentWithTranslationForwarding(
     OrdersDisplayControl
 );
 
-builder.createComponentWithTranslationForwarding(
-    "DraftIndicator",
-    DraftIndicator
-);
