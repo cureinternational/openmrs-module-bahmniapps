@@ -79,8 +79,8 @@ mfe-next-ui-draft-indicator {
     background: #669999;
     border: 1px solid #527a7a;
     border-radius: 3px;
-    padding: 7px 14px;
-    height: auto;
+    padding: 0px 14px;
+    height: 43px;
 
     &:hover {
         background: #669999;
@@ -93,12 +93,17 @@ mfe-next-ui-draft-indicator {
 
 .hidden-mobile .draft-indicator__icon,
 .dashboard-header-right-wrapper .draft-indicator__icon {
-    width: 20px;
-    height: 27px;
+    width: 24px;
+    height: 24px;
 }
 
 .hidden-mobile .draft-indicator__red-dot,
 .dashboard-header-right-wrapper .draft-indicator__red-dot {
     top: 0;
     right: 0;
+}
+
+.dashboard header .draft-indicator__button {
+    height: 52px;
+    padding: 14px;
 }

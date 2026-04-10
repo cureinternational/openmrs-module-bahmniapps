@@ -12,6 +12,7 @@ export function DraftIndicator() {
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
     const [overlayPosition, setOverlayPosition] = useState({ top: 0, right: 0 });
     const buttonRef = useRef(null);
+    const overlayRef = useRef(null);
 
     useEffect(() => {
         const initialize = async () => {
@@ -23,6 +24,19 @@ export function DraftIndicator() {
             }
         };
         initialize();
+    }, []);
+
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (
+                buttonRef.current && !buttonRef.current.contains(event.target) &&
+                overlayRef.current && !overlayRef.current.contains(event.target)
+            ) {
+                setIsOverlayOpen(false);
+            }
+        };
+        document.addEventListener("click", handleOutsideClick);
+        return () => document.removeEventListener("click", handleOutsideClick);
     }, []);
 
     const toggleOverlay = () => {
@@ -55,6 +69,7 @@ export function DraftIndicator() {
                 </button>
                 {isOverlayOpen && ReactDOM.createPortal(
                     <div
+                        ref={overlayRef}
                         className="draft-indicator__overlay-wrapper"
                         style={{ top: overlayPosition.top, right: overlayPosition.right }}
                     >
