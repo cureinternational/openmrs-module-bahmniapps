@@ -43,3 +43,4 @@ builder.createComponentWithTranslationForwarding(
     "OrdersDisplayControl",
     OrdersDisplayControl
 );
+
