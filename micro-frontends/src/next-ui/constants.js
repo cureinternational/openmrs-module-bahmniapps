@@ -41,7 +41,7 @@ export const FHIR_EXT_ORDER_STATUS = "order-status"
 export const FHIR_EXT_TASK_OWNER = "task-owner"
 export const FHIR_EXT_TASK_NOTE = "task-note"
 export const FHIR_EXT_CREATED_BY = "created-by"
-
+export const FHIR_EXT_ORDER_SHORT_NAME = "order-short-name"
 export const DB_FULFILLER_STATUS_TO_UI_STATUS = {
     RECEIVED: 'Acknowledged',
     IN_PROGRESS: 'In Progress',
