@@ -44,7 +44,7 @@ Bahmni.OT.SurgicalBlockMapper = function () {
                 var parsedDate = currentObsDate && Bahmni.Common.Util.DateUtil.parseServerDateToDate(currentObsDate);
                 if (!latestDate || (parsedDate && parsedDate > latestDate)) {
                     if (obs.value) {
-                        latestValue = obs.value.display || obs.value;
+                        latestValue = obs.value.name || obs.value.display || obs.value;
                     }
                     if (parsedDate) {
                         latestDate = parsedDate;
