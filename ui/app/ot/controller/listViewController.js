@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.ot')
-    .controller('listViewController', ['$scope', '$rootScope', '$q', '$window', 'spinner', 'surgicalAppointmentService', 'appService', 'surgicalAppointmentHelper', 'surgicalBlockFilter', 'printer', 'otUtils',
-        function ($scope, $rootScope, $q, $window, spinner, surgicalAppointmentService, appService, surgicalAppointmentHelper, surgicalBlockFilter, printer, otUtils) {
+    .controller('listViewController', ['$scope', '$rootScope', '$q', '$window', '$filter', 'spinner', 'surgicalAppointmentService', 'appService', 'surgicalAppointmentHelper', 'surgicalBlockFilter', 'printer', 'otUtils',
+        function ($scope, $rootScope, $q, $window, $filter, spinner, surgicalAppointmentService, appService, surgicalAppointmentHelper, surgicalBlockFilter, printer, otUtils) {
             var startDatetime = moment($scope.viewDate).toDate();
             var surgicalBlockMapper = new Bahmni.OT.SurgicalBlockMapper();
             var endDatetime = moment(startDatetime).endOf('day').toDate();
@@ -12,7 +12,10 @@ angular.module('bahmni.ot')
             $scope.conceptFormatDropdownConstants = Bahmni.OT.Constants.notApplicableValues;
             $scope.filteredSurgicalAttributeTypes = getFilteredSurgicalAttributeTypes();
 
-            var listViewObservationColumns = appService.getAppDescriptor().getConfigValue("listViewObservationColumns") || [];
+            var listViewObservationColumns = (appService.getAppDescriptor().getConfigValue("listViewObservationColumns") || []).map(function (entry) {
+                var resolvedConcept = $filter('translate')(entry.concept);
+                return angular.extend({}, entry, { concept: resolvedConcept });
+            });
 
             $scope.filteredObservationColumns = listViewObservationColumns.map(function (entry) {
                 return {
