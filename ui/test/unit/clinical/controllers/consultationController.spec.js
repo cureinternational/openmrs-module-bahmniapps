@@ -264,6 +264,9 @@ describe("ConsultationController", function () {
     };
     beforeEach(module('bahmni.common.util'));
     beforeEach(module('bahmni.clinical'));
+    beforeEach(module(function ($provide) {
+        $provide.value('formDraftService', jasmine.createSpyObj('formDraftService', ['getDraft', 'saveDraft', 'markDraftAsSaved']));
+    }));
     beforeEach(function () {
         inject(function ($controller, $rootScope, _$window_) {
             _window_ = _$window_;

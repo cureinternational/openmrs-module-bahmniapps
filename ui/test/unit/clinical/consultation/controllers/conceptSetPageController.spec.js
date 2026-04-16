@@ -1,7 +1,7 @@
 'use strict';
 
 describe('ConceptSetPageController', function () {
-    var scope, controller, rootScope, conceptSetService, configurations, clinicalAppConfigService, state, encounterConfig, spinner, messagingService, translate, stateParams, formService, appService;
+    var scope, controller, rootScope, conceptSetService, configurations, clinicalAppConfigService, state, encounterConfig, spinner, messagingService, translate, stateParams, formService, appService, formDraftService;
     stateParams = {conceptSetGroupName: "concept set group name"};
     var extension = {"extension": {
         extensionParams: {}
@@ -23,10 +23,23 @@ describe('ConceptSetPageController', function () {
 
         var register = function () {
         };
+        var handlers = {};
+        var fire = function () {
+            Object.keys(handlers).forEach(function (key) {
+                handlers[key]();
+            });
+        };
 
         scope.consultation = {
             preSaveHandler: {
-                register: register
+                register: register,
+                fire: fire
+            },
+            postSaveHandler: {
+                register: function (key, handler) {
+                    handlers[key] = handler;
+                },
+                fire: fire
             }
         };
 
@@ -56,6 +69,17 @@ describe('ConceptSetPageController', function () {
         var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
         appDescriptor.getConfigValue.and.returnValue(false);
         appService.getAppDescriptor.and.returnValue(appDescriptor);
+        formDraftService = jasmine.createSpyObj('formDraftService', ['saveDraft', 'getDraft']);
+        // Configure getDraft to return a rejected promise by default (no existing draft)
+        formDraftService.getDraft.and.returnValue({
+            then: function (success, error) {
+                if (error) error();
+                return this;
+            },
+            catch: function () {
+                return this;
+            }
+        });
     };
 
     beforeEach(initController);
@@ -74,7 +98,8 @@ describe('ConceptSetPageController', function () {
             $state: state,
             spinner: spinner,
             $translate: translate,
-            appService: appService
+            appService: appService,
+            formDraftService: formDraftService
         });
     };
 
@@ -561,7 +586,7 @@ describe('ConceptSetPageController', function () {
         var createControllerWithTimeoutAndFilter;
 
         beforeEach(inject(function ($timeout) {
-            createControllerWithTimeoutAndFilter = function (timeoutMock, filterMock) {
+            createControllerWithTimeoutAndFilter = function (timeoutMock, filterMock, formDraftServiceMock) {
                 var defaultFilterMock = function () {
                     return function () {
                         return 'mocked-time';
@@ -582,7 +607,8 @@ describe('ConceptSetPageController', function () {
                     $translate: translate,
                     appService: appService,
                     $timeout: timeoutMock || $timeout,
-                    $filter: filterMock || defaultFilterMock
+                    $filter: filterMock || defaultFilterMock,
+                    formDraftService: formDraftServiceMock || formDraftService
                 });
             };
         }));
@@ -626,6 +652,384 @@ describe('ConceptSetPageController', function () {
             observationValue = 'updated-value';
             scope.$digest();
             expect(scope.formDraft.isDirty).toBe(true);
+        });
+
+        it('should call formDraftService.saveDraft with patient uuid and provider uuid on saveAsDraft', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            scope.patient = {uuid: 'test-patient-uuid'};
+            rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+            createControllerWithTimeoutAndFilter();
+            scope.saveAsDraft();
+
+            expect(formDraftService.saveDraft).toHaveBeenCalled();
+            var callArgs = formDraftService.saveDraft.calls.mostRecent().args;
+            expect(callArgs[0]).toBe('test-patient-uuid');
+            expect(callArgs[1]).toBe('test-provider-uuid');
+        });
+
+        it('should set showSpinner to true when saveAsDraft is called', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter();
+            scope.saveAsDraft();
+
+            expect(scope.formDraft.showSpinner).toBe(true);
+        });
+
+        it('should update status message with server timestamp on successful save', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var serverTimestamp = new Date(2026, 3, 8, 10, 30, 0).getTime();
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            var filterCallCount = 0;
+            var filterMock = function () {
+                return function (date, format) {
+                    filterCallCount++;
+                    if (format === 'dd MMM yyyy') return '08 Apr 2026';
+                    if (format === 'hh:mm a') return '10:30 AM';
+                    return '';
+                };
+            };
+
+            createControllerWithTimeoutAndFilter(undefined, filterMock);
+            scope.saveAsDraft();
+
+            saveDraftPromise.callThenCallBack({data: {timestamp: serverTimestamp, uuid: 'draft-uuid', markedAsSaved: true}});
+
+            expect(scope.formDraft.statusMessage).toBe('SAVED_AS_DRAFT_KEY');
+            expect(scope.formDraft.statusParams.draftDate).toBe('08 Apr 2026');
+            expect(scope.formDraft.statusParams.draftTime).toBe('10:30 AM');
+            expect(scope.formDraft.isDirty).toBe(false);
+            expect(scope.formDraft.statusError).toBe(false);
+        });
+
+        it('should set showSpinner to false after successful save', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter();
+            scope.saveAsDraft();
+
+            expect(scope.formDraft.showSpinner).toBe(true);
+            saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: true}});
+            saveDraftPromise['finally'].calls.mostRecent().args[0]();
+
+            expect(scope.formDraft.showSpinner).toBe(false);
+        });
+
+        it('should display error message and set statusError on failed save', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter();
+            scope.saveAsDraft();
+
+            // The controller uses .then(successFn, errorFn) - trigger the error via the second argument
+            var thenArgs = saveDraftPromise.then.calls.mostRecent().args;
+            thenArgs[1]({status: 500, data: {error: {message: 'Server error'}}});
+
+            expect(scope.formDraft.statusMessage).toBe('CHANGES_NOT_SAVED_KEY');
+            expect(scope.formDraft.statusError).toBe(true);
+        });
+
+        it('should set showSpinner to false after failed save', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter();
+            scope.saveAsDraft();
+
+            expect(scope.formDraft.showSpinner).toBe(true);
+            saveDraftPromise['finally'].calls.mostRecent().args[0]();
+
+            expect(scope.formDraft.showSpinner).toBe(false);
+        });
+
+        it('should broadcast draft:saved event with date and time on successful save', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            var filterMock = function () {
+                return function (date, format) {
+                    if (format === 'dd MMM yyyy') return '08 Apr 2026';
+                    if (format === 'hh:mm a') return '10:30 AM';
+                    return '';
+                };
+            };
+
+            var broadcastSpy = spyOn(rootScope, '$broadcast').and.callThrough();
+            createControllerWithTimeoutAndFilter(undefined, filterMock);
+            scope.saveAsDraft();
+
+            saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: true}});
+
+            expect(broadcastSpy).toHaveBeenCalledWith('draft:saved', {draftDate: '08 Apr 2026', draftTime: '10:30 AM'});
+        });
+
+        it('should disable Save as Draft button (isDirty = false) when post-save handler is executed', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+            createController();
+
+            scope.formDraft.isDirty = true;
+            var postSaveHandler = scope.consultation.postSaveHandler;
+            expect(postSaveHandler).toBeDefined();
+
+            // Execute the post-save handler
+            postSaveHandler.fire();
+
+            expect(scope.formDraft.isDirty).toBe(false);
+        });
+
+        it('should clear draft message immediately when post-save handler is executed', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+            createController();
+
+            scope.formDraft.isDirty = true;
+            scope.formDraft.hasDrafts = true;
+            scope.formDraft.draftDate = '08 Apr 2026';
+            scope.formDraft.draftTime = '10:30 AM';
+            scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
+            scope.formDraft.statusParams = {draftDate: '08 Apr 2026', draftTime: '10:30 AM'};
+            scope.formDraft.statusError = true;
+
+            scope.consultation.postSaveHandler.fire();
+
+            expect(scope.formDraft.isDirty).toBe(false);
+            expect(scope.formDraft.hasDrafts).toBe(false);
+            expect(scope.formDraft.draftDate).toBeNull();
+            expect(scope.formDraft.draftTime).toBeNull();
+            expect(scope.formDraft.statusMessage).toBeNull();
+            expect(scope.formDraft.statusParams).toEqual({});
+            expect(scope.formDraft.statusError).toBe(false);
+        });
+
+        it('should clear draft status and disable Save as Draft when consultation save succeeds', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+            createController();
+
+            scope.formDraft.isDirty = true;
+            scope.formDraft.hasDrafts = true;
+            scope.formDraft.draftDate = '08 Apr 2026';
+            scope.formDraft.draftTime = '10:30 AM';
+            scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
+            scope.formDraft.statusParams = {draftDate: '08 Apr 2026', draftTime: '10:30 AM'};
+            scope.formDraft.statusError = true;
+            scope.formDraft.showSpinner = true;
+
+            rootScope.$broadcast('event:save-successful');
+
+            expect(scope.formDraft.isDirty).toBe(false);
+            expect(scope.formDraft.showSpinner).toBe(false);
+            expect(scope.formDraft.hasDrafts).toBe(false);
+            expect(scope.formDraft.draftDate).toBeNull();
+            expect(scope.formDraft.draftTime).toBeNull();
+            expect(scope.formDraft.statusMessage).toBeNull();
+            expect(scope.formDraft.statusParams).toEqual({});
+            expect(scope.formDraft.statusError).toBe(false);
+        });
+
+        it('should ignore drafts that are already marked as saved when checking existing drafts', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            scope.patient = {uuid: 'test-patient-uuid'};
+            rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0 || delay === 500) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            formDraftService.getDraft.and.returnValue({
+                then: function (success) {
+                    success({data: {uuid: 'draft-uuid', markedAsSaved: true, timestamp: Date.now()}});
+                    return this;
+                },
+                catch: function () {
+                    return this;
+                }
+            });
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            expect(scope.formDraft.hasDrafts).toBe(false);
+            expect(scope.formDraft.statusMessage).toBeNull();
+            expect(scope.formDraft.draftDate).toBeNull();
+            expect(scope.formDraft.draftTime).toBeNull();
+            expect(rootScope.draftData).toBeNull();
+        });
+
+        describe('Form2 Dirty Tracking', function () {
+            var intervalMock, timeoutMock;
+
+            beforeEach(inject(function ($interval, $timeout) {
+                intervalMock = jasmine.createSpy('$interval').and.callFake(function (fn, delay) {
+                    return 'interval-promise-id';
+                });
+                intervalMock.cancel = jasmine.createSpy('cancel');
+
+                timeoutMock = function (callback, delay) {
+                    if (delay === 0) {
+                        callback();
+                    }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+            }));
+
+            it('should start form2 sync interval when form2 components exist', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                var form2Data = [{
+                    name: "Test Form",
+                    uuid: "test-form-uuid-1",
+                    version: "1",
+                    published: true,
+                    id: null,
+                    resources: null,
+                    nameTranslation: null,
+                    privileges: []
+                }];
+                mockformService(form2Data);
+
+                var ctlr = controller("ConceptSetPageController", {
+                    $scope: scope,
+                    $rootScope: rootScope,
+                    $stateParams: stateParams,
+                    conceptSetService: conceptSetService,
+                    formService: formService,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    messagingService: messagingService,
+                    configurations: configurations,
+                    $state: state,
+                    spinner: spinner,
+                    $translate: translate,
+                    appService: appService,
+                    $timeout: timeoutMock,
+                    $filter: function () { return function () { return 'mocked-time'; }; },
+                    formDraftService: formDraftService,
+                    $interval: intervalMock
+                });
+
+                scope.$digest();
+                expect(intervalMock).toHaveBeenCalledWith(jasmine.any(Function), 500);
+            });
+
+            it('should safely handle sync when no form2 components exist', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService([]);
+
+                var ctlr = controller("ConceptSetPageController", {
+                    $scope: scope,
+                    $rootScope: rootScope,
+                    $stateParams: stateParams,
+                    conceptSetService: conceptSetService,
+                    formService: formService,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    messagingService: messagingService,
+                    configurations: configurations,
+                    $state: state,
+                    spinner: spinner,
+                    $translate: translate,
+                    appService: appService,
+                    $timeout: timeoutMock,
+                    $filter: function () { return function () { return 'mocked-time'; }; },
+                    formDraftService: formDraftService,
+                    $interval: intervalMock
+                });
+
+                scope.$digest();
+                // Interval is still started but won't have any forms to sync
+                expect(intervalMock).toHaveBeenCalledWith(jasmine.any(Function), 500);
+                // Verify the sync callback handles empty observationForms gracefully
+                var intervalCallback = intervalMock.calls.mostRecent().args[0];
+                expect(function() { intervalCallback(); }).not.toThrow();
+            });
+
+            it('should cancel form2 sync interval on controller destroy', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                var form2Data = [{
+                    name: "Test Form",
+                    uuid: "test-form-uuid-1",
+                    version: "1",
+                    published: true,
+                    id: null,
+                    resources: null,
+                    nameTranslation: null,
+                    privileges: []
+                }];
+                mockformService(form2Data);
+
+                var ctlr = controller("ConceptSetPageController", {
+                    $scope: scope,
+                    $rootScope: rootScope,
+                    $stateParams: stateParams,
+                    conceptSetService: conceptSetService,
+                    formService: formService,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    messagingService: messagingService,
+                    configurations: configurations,
+                    $state: state,
+                    spinner: spinner,
+                    $translate: translate,
+                    appService: appService,
+                    $timeout: timeoutMock,
+                    $filter: function () { return function () { return 'mocked-time'; }; },
+                    formDraftService: formDraftService,
+                    $interval: intervalMock
+                });
+
+                scope.$digest();
+                expect(intervalMock).toHaveBeenCalled();
+
+                // Destroy the scope
+                scope.$destroy();
+                expect(intervalMock.cancel).toHaveBeenCalled();
+            });
         });
     });
 });
