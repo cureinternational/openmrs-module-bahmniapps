@@ -15,6 +15,9 @@ describe('listViewController', function () {
 
     beforeEach(function () {
         module('bahmni.ot');
+        module(function ($provide) {
+            $provide.value('translateFilter', function (key) { return key; });
+        });
         inject(function ($controller, $rootScope, $q) {
             controller = $controller;
             rootScope = $rootScope;
