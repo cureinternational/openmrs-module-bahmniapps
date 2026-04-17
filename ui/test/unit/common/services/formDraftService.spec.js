@@ -2,7 +2,7 @@
 
 describe('FormDraftService', function () {
     var formDraftService;
-    var mockHttp = jasmine.createSpyObj('$http', ['get', 'post']);
+    var mockHttp = jasmine.createSpyObj('$http', ['get', 'post', 'patch']);
 
     beforeEach(function () {
         module('bahmni.common.services');
@@ -51,6 +51,21 @@ describe('FormDraftService', function () {
                 },
                 suppressError: true
             }
+        );
+    });
+
+    it('should PATCH to formdraft endpoint with correct params on markDraftAsSaved', function () {
+        var patientUuid = 'patient-uuid-123';
+        var providerUuid = 'provider-uuid-456';
+        var mockResponse = {data: {uuid: 'draft-uuid', timestamp: 1234567890000, markedAsSaved: true}};
+        mockHttp.patch.and.returnValue(specUtil.respondWith(mockResponse));
+
+        formDraftService.markDraftAsSaved(patientUuid, providerUuid);
+
+        expect(mockHttp.patch).toHaveBeenCalledWith(
+            '/openmrs/ws/rest/v1/bahmnicore/formdraft?patientUuid=' + patientUuid + '&providerUuid=' + providerUuid,
+            {},
+            {suppressError: true}
         );
     });
 });

@@ -901,6 +901,126 @@ describe('ConceptSetPageController', function () {
             expect(rootScope.draftData).toBeNull();
         });
 
+        it('should load existing unsaved draft and set banner timestamp when checking existing drafts', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            scope.patient = {uuid: 'test-patient-uuid'};
+            rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0 || delay === 500) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            var filterMock = function () {
+                return function (date, format) {
+                    if (format === 'dd MMM yyyy') return '08 Apr 2026';
+                    if (format === 'hh:mm a') return '10:30 AM';
+                    return '';
+                };
+            };
+
+            formDraftService.getDraft.and.returnValue({
+                then: function (success) {
+                    success({data: {uuid: 'draft-uuid', markedAsSaved: false, timestamp: Date.now(), formData: '{"obs":[]}'}});
+                    return this;
+                },
+                catch: function () {
+                    return this;
+                }
+            });
+
+            createControllerWithTimeoutAndFilter(timeoutMock, filterMock);
+
+            expect(formDraftService.getDraft).toHaveBeenCalledWith('test-patient-uuid', 'test-provider-uuid');
+            expect(scope.formDraft.hasDrafts).toBe(true);
+            expect(scope.formDraft.statusMessage).toBe('SAVED_AS_DRAFT_KEY');
+            expect(scope.formDraft.statusParams.draftDate).toBe('08 Apr 2026');
+            expect(scope.formDraft.statusParams.draftTime).toBe('10:30 AM');
+            expect(rootScope.draftData.uuid).toBe('draft-uuid');
+        });
+
+        it('should load existing unsaved draft without setting banner timestamp when timestamp is absent', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            scope.patient = {uuid: 'test-patient-uuid'};
+            rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0 || delay === 500) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            formDraftService.getDraft.and.returnValue({
+                then: function (success) {
+                    success({data: {uuid: 'draft-uuid', markedAsSaved: false, formData: '{"obs":[]}'}});
+                    return this;
+                },
+                catch: function () {
+                    return this;
+                }
+            });
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            expect(scope.formDraft.hasDrafts).toBe(true);
+            expect(scope.formDraft.statusMessage).toBeNull();
+            expect(scope.formDraft.statusParams).toEqual({});
+            expect(rootScope.draftData.uuid).toBe('draft-uuid');
+        });
+
+        it('should not call getDraft while checking drafts when patient uuid is missing', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            scope.patient = null;
+            rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0 || delay === 500) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            expect(formDraftService.getDraft).not.toHaveBeenCalled();
+        });
+
+        it('should not call getDraft while checking drafts when provider uuid is missing', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            scope.patient = {uuid: 'test-patient-uuid'};
+            rootScope.currentProvider = null;
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0 || delay === 500) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            expect(formDraftService.getDraft).not.toHaveBeenCalled();
+        });
+
         describe('Form2 Dirty Tracking', function () {
             var intervalMock, timeoutMock;
 
