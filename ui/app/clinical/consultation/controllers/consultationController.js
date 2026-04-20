@@ -338,7 +338,6 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                 if ($scope.lastConsultationTabUrl.url) {
                     $location.url($scope.lastConsultationTabUrl.url);
                 } else {
-                    // Default tab
                     getUrl($scope.availableBoards[0]);
                 }
             };
@@ -568,15 +567,11 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                                             consultationWithDiagnosis.conditions = $scope.consultation.conditions;
                                         }).then(function () {
                                             copyConsultationToScope(consultationWithDiagnosis);
-                                            // Mark draft as saved and broadcast event BEFORE state transition
                                             var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                                             var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
                                             if (patientUuid && providerUuid) {
                                                 formDraftService.markDraftAsSaved(patientUuid, providerUuid);
-                                                // Clear draft state from rootScope
                                                 $rootScope.draftData = null;
-                                                // COMMENTED OUT: Resume draft functionality disabled
-                                                // $rootScope.resumeDraftOnLoad = false;
                                             }
                                             $rootScope.$broadcast('event:save-successful');
                                             if ($scope.targetUrl) {

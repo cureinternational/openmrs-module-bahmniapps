@@ -15,7 +15,6 @@ angular.module('bahmni.clinical')
             $scope.enrollment = $stateParams.enrollment;
             $scope.isDashboardPrinting = false;
 
-            // Draft timestamp initialization - can be removed after API integration
             var getDraftTimestamp = function () {
                 var now = new Date();
                 return {
@@ -70,7 +69,6 @@ angular.module('bahmni.clinical')
                 // }
             };
 
-            // Check for existing drafts on page load
             var checkForExistingDrafts = function () {
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
@@ -80,9 +78,7 @@ angular.module('bahmni.clinical')
                         function (response) {
                             if (response.data && response.data.uuid && !response.data.markedAsSaved) {
                                 $scope.formDraft.hasDrafts = true;
-                                // Store draft data for use in ConceptSetPageController
                                 $rootScope.draftData = response.data;
-                                // Pre-populate draft timestamp if draft exists
                                 var serverTimestamp = response.data.timestamp;
                                 if (serverTimestamp) {
                                     var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
@@ -98,14 +94,12 @@ angular.module('bahmni.clinical')
                             }
                         },
                         function () {
-                            // No draft found - suppress error silently
                             $scope.formDraft.hasDrafts = false;
                             $scope.formDraft.draftDate = null;
                             $scope.formDraft.draftTime = null;
                             $rootScope.draftData = null;
                         }
                     ).catch(function () {
-                        // Catch any unhandled errors to prevent error notifications
                         $scope.formDraft.hasDrafts = false;
                         $scope.formDraft.draftDate = null;
                         $scope.formDraft.draftTime = null;
@@ -118,7 +112,6 @@ angular.module('bahmni.clinical')
                 $scope.init(dashboard);
             });
 
-            // Listen for draft saved event from ConceptSetPageController
             var cleanUpListenerDraftSaved = $scope.$on("draft:saved", function (event, draftTimestamp) {
                 if (draftTimestamp && typeof draftTimestamp === 'object') {
                     $scope.formDraft.hasDrafts = true;
@@ -127,9 +120,7 @@ angular.module('bahmni.clinical')
                 }
             });
 
-            // Listen for successful save and clear draft
             var cleanUpListenerSaveSuccessful = $scope.$on("event:save-successful", function () {
-                // Clear draft state when consultation is saved
                 $scope.formDraft.hasDrafts = false;
                 $scope.formDraft.draftDate = null;
                 $scope.formDraft.draftTime = null;

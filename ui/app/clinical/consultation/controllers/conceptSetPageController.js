@@ -32,7 +32,6 @@ angular.module('bahmni.clinical')
                             showOnlyTemplatesFilledInProgram();
                         }
 
-                        // Retrieve Form Details
                         if (!($scope.consultation.observationForms !== undefined && $scope.consultation.observationForms.length > 0)) {
                             spinner.forPromise(formService.getFormList($scope.consultation.encounterUuid)
                                 .then(function (response) {
@@ -66,18 +65,6 @@ angular.module('bahmni.clinical')
                 }
                 $timeout(setupDirtyTracking, 0);
                 templatesReadyForPopulation = true;
-
-                // Trigger auto-populate if data is already available
-                // COMMENTED OUT: Resume draft functionality disabled
-                // if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
-                //     $timeout(function () {
-                //         populateFormWithDraftData($rootScope.draftData.formData);
-                //         dirtyTrackingState.cleanState = getObsValues();
-                //         $scope.formDraft.isDirty = false;
-                //         messagingService.showMessage("info", $translate.instant("DRAFT_RESUMED_KEY"));
-                //         $rootScope.resumeDraftOnLoad = false;
-                //     }, 100);
-                // }
             };
 
             var addTemplatesInSavedOrder = function () {
@@ -239,7 +226,6 @@ angular.module('bahmni.clinical')
             };
 
             $scope.consultation.preSaveHandler.register("collectObservationsFromConceptSets", collectObservationsFromConceptSets);
-            // Form Code :: Start
             var getObservationForms = function (observationsForms) {
                 var forms = [];
                 var observations = $scope.consultation.observations || [];
@@ -324,15 +310,12 @@ angular.module('bahmni.clinical')
             };
 
             var getTemplateObservationsForDirtyTracking = function (template) {
-                // For form2 forms (with component), prefer component's observations
                 if (template.component && angular.isFunction(template.component.getValue)) {
                     var formValue = template.component.getValue() || {};
                     if (formValue.observations && formValue.observations.length > 0) {
                         return formValue.observations;
                     }
-                    // If component has no observations, fall through to template.observations
                 }
-                // For standard forms or when component observations are empty, use template observations
                 return template.observations || [];
             };
 
@@ -383,7 +366,6 @@ angular.module('bahmni.clinical')
                             if (formValue.observations) {
                                 var newObsJson = angular.toJson(formValue.observations);
                                 var oldObsJson = angular.toJson(form.observations || []);
-                                // Only update if observations actually changed to avoid infinite digest loops
                                 if (newObsJson !== oldObsJson) {
                                     form.observations = formValue.observations;
                                 }
@@ -447,7 +429,6 @@ angular.module('bahmni.clinical')
                     }
                 });
 
-                // Sync form2 values when users interact with React controls.
                 registerForm2SyncListeners();
             };
 
@@ -529,7 +510,6 @@ angular.module('bahmni.clinical')
 
             var draftContextWatchDeregister = null;
 
-            // Check for existing drafts when patient and provider context is available
             var checkForExistingDrafts = function () {
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
@@ -542,9 +522,7 @@ angular.module('bahmni.clinical')
                     function (response) {
                         if (response.data && response.data.uuid && !response.data.markedAsSaved) {
                             $scope.formDraft.hasDrafts = true;
-                            // Store draft data in rootScope for use across controllers
                             $rootScope.draftData = response.data;
-                            // Pre-populate draft timestamp if draft exists
                             var serverTimestamp = response.data.timestamp;
                             if (serverTimestamp) {
                                 var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
@@ -560,12 +538,10 @@ angular.module('bahmni.clinical')
                         }
                     },
                     function () {
-                        // No draft found - suppress error silently
                         $rootScope.draftData = null;
                         clearDraftStatus();
                     }
                 ).catch(function () {
-                    // Catch any unhandled errors to prevent error notifications
                     $rootScope.draftData = null;
                     clearDraftStatus();
                 });
@@ -594,13 +570,11 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            // Recursively populate observation values from draft
             var populateObservationValues = function (templateObs, draftObs) {
                 if (!templateObs || !draftObs) {
                     return;
                 }
 
-                // Copy simple value properties
                 if (draftObs.value !== undefined && draftObs.value !== null) {
                     templateObs.value = draftObs.value;
                 }
@@ -609,22 +583,18 @@ angular.module('bahmni.clinical')
                     templateObs.comment = draftObs.comment;
                 }
 
-                // Handle multi-select observations
                 if (draftObs.isMultiSelect && draftObs.selectedObs) {
                     templateObs.selectedObs = angular.copy(draftObs.selectedObs);
                 }
 
-                // Handle group member observations - recursively populate values
                 if (draftObs.groupMembers && draftObs.groupMembers.length > 0 &&
                     templateObs.groupMembers && templateObs.groupMembers.length > 0) {
                     var draftGroupMap = {};
-                    // Build a map of draft group members by concept UUID
                     _.each(draftObs.groupMembers, function (draftMember) {
                         if (draftMember.concept && draftMember.concept.uuid) {
                             draftGroupMap[draftMember.concept.uuid] = draftMember;
                         }
                     });
-                    // Populate template group members with values from draft
                     _.each(templateObs.groupMembers, function (templateMember) {
                         var conceptUuid = templateMember.concept ? templateMember.concept.uuid : null;
                         if (conceptUuid && draftGroupMap[conceptUuid]) {
@@ -634,7 +604,6 @@ angular.module('bahmni.clinical')
                 }
             };
 
-            // Populate form fields with draft data
             var populateFormWithDraftData = function (draftFormData) {
                 try {
                     var draftedObservations = JSON.parse(draftFormData);
@@ -642,7 +611,6 @@ angular.module('bahmni.clinical')
                         return;
                     }
 
-                    // Create a map of concept UUIDs to drafted observations for quick lookup
                     var draftMap = {};
                     _.each(draftedObservations, function (obs) {
                         if (obs.concept && obs.concept.uuid) {
@@ -653,14 +621,12 @@ angular.module('bahmni.clinical')
                         }
                     });
 
-                    // Iterate through templates and populate them with draft data
                     _.each($scope.consultation.selectedObsTemplate, function (template) {
                         if (template.observations && template.observations.length > 0) {
                             _.each(template.observations, function (templateObs) {
                                 var conceptUuid = templateObs.concept ? templateObs.concept.uuid : null;
                                 if (conceptUuid && draftMap[conceptUuid]) {
-                                    var draftObs = draftMap[conceptUuid][0]; // Get first matching draft observation
-                                    // Populate values without replacing the observation object
+                                    var draftObs = draftMap[conceptUuid][0];
                                     populateObservationValues(templateObs, draftObs);
                                 }
                             });
@@ -675,7 +641,6 @@ angular.module('bahmni.clinical')
                 }
             };
 
-            // Disable Save as Draft button after successful form save
             var resetDraftStateAfterSave = function () {
                 resetDirtyTracking();
                 suppressDirtyTrackingDuringSaveRefresh();
@@ -683,33 +648,7 @@ angular.module('bahmni.clinical')
             };
             $scope.consultation.postSaveHandler.register("resetDraftStateAfterSave", resetDraftStateAfterSave);
 
-            // Watch for draft data becoming available if resuming and templates are ready
-            // COMMENTED OUT: Resume draft functionality disabled
-            // dirtyTrackingState.draftResumeWatchDeregister = $scope.$watch(function () {
-            //     return $rootScope.draftData && $rootScope.resumeDraftOnLoad;
-            // }, function (newVal) {
-            //     if (newVal && templatesReadyForPopulation && $rootScope.resumeDraftOnLoad) {
-            //         // Data and templates are both ready, populate form
-            //         $timeout(function () {
-            //             if ($rootScope.draftData && $rootScope.draftData.formData) {
-            //                 populateFormWithDraftData($rootScope.draftData.formData);
-            //                 dirtyTrackingState.cleanState = getObsValues();
-            //                 $scope.formDraft.isDirty = false;
-            //                 messagingService.showMessage("info", $translate.instant("DRAFT_RESUMED_KEY"));
-            //                 $rootScope.resumeDraftOnLoad = false;
-            //                 // Stop watching after successful population
-            //                 if (dirtyTrackingState.draftResumeWatchDeregister) {
-            //                     dirtyTrackingState.draftResumeWatchDeregister();
-            //                     dirtyTrackingState.draftResumeWatchDeregister = null;
-            //                 }
-            //             }
-            //         }, 50);
-            //     }
-            // });
-
-            // Listen for successful save and disable Save as Draft button
             var saveSuccessfulListener = $rootScope.$on('event:save-successful', function () {
-                // Disable the Save as Draft button
                 resetDirtyTracking();
                 suppressDirtyTrackingDuringSaveRefresh();
                 $scope.formDraft.showSpinner = false;
@@ -741,13 +680,7 @@ angular.module('bahmni.clinical')
             });
 
             init();
-            // COMMENTED OUT: Resume draft functionality disabled - now always check for drafts
-            // if (resuming draft from banner, don't wait for checkForExistingDrafts)
-            // The data should already be in $rootScope from the dashboard controller
-            // Otherwise, check for drafts immediately or when context becomes available
-            // if (!$rootScope.resumeDraftOnLoad) {
             if (!checkForExistingDrafts()) {
                 registerDraftContextWatcher();
             }
-            // }
         }]);
