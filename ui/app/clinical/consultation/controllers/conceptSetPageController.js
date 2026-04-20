@@ -3,10 +3,10 @@
 angular.module('bahmni.clinical')
     .controller('ConceptSetPageController', ['$scope', '$rootScope', '$stateParams', 'conceptSetService',
         'clinicalAppConfigService', 'messagingService', 'configurations', '$state', 'spinner',
-        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService', 'formDraftService', '$interval',
+        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService', 'formDraftService',
         function ($scope, $rootScope, $stateParams, conceptSetService,
                   clinicalAppConfigService, messagingService, configurations, $state, spinner,
-                  contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService, $interval) {
+              contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService) {
             $scope.consultation.selectedObsTemplate = $scope.consultation.selectedObsTemplate || [];
             $scope.allTemplates = $scope.allTemplates || [];
             $scope.scrollingEnabled = false;
@@ -309,7 +309,9 @@ angular.module('bahmni.clinical')
                 suppressTracking: false,
                 suppressionUnsuppressPromise: null,
                 suppressionWindowMs: 1500,
-                form2SyncIntervalPromise: null
+                form2SyncListenerRegistered: false,
+                form2InputListener: null,
+                form2ChangeListener: null
             };
 
             var clearDraftStatus = function () {
@@ -391,6 +393,42 @@ angular.module('bahmni.clinical')
                 }
             };
 
+            var form2SyncEvents = ['input', 'change', 'keyup', 'click'];
+
+            var registerForm2SyncListeners = function () {
+                if (dirtyTrackingState.form2SyncListenerRegistered) {
+                    return;
+                }
+
+                var doc = window.document;
+                if (!doc || !doc.addEventListener) {
+                    return;
+                }
+
+                var syncOnForm2Interaction = function () {
+                    $scope.$evalAsync(syncForm2Observations);
+                };
+
+                dirtyTrackingState.form2InputListener = syncOnForm2Interaction;
+                dirtyTrackingState.form2ChangeListener = syncOnForm2Interaction;
+                _.each(form2SyncEvents, function (eventName) {
+                    doc.addEventListener(eventName, syncOnForm2Interaction, true);
+                });
+                dirtyTrackingState.form2SyncListenerRegistered = true;
+            };
+
+            var unregisterForm2SyncListeners = function () {
+                var doc = window.document;
+                if (dirtyTrackingState.form2SyncListenerRegistered && doc && doc.removeEventListener) {
+                    _.each(form2SyncEvents, function (eventName) {
+                        doc.removeEventListener(eventName, dirtyTrackingState.form2InputListener, true);
+                    });
+                }
+                dirtyTrackingState.form2SyncListenerRegistered = false;
+                dirtyTrackingState.form2InputListener = null;
+                dirtyTrackingState.form2ChangeListener = null;
+            };
+
             var setupDirtyTracking = function () {
                 if (dirtyTrackingState.initialized) {
                     return;
@@ -409,11 +447,8 @@ angular.module('bahmni.clinical')
                     }
                 });
 
-                // Periodically sync form2 (React) component observations to trigger change detection
-                // This handles React updates that occur outside Angular's digest cycle
-                if (!dirtyTrackingState.form2SyncIntervalPromise) {
-                    dirtyTrackingState.form2SyncIntervalPromise = $interval(syncForm2Observations, 500);
-                }
+                // Sync form2 values when users interact with React controls.
+                registerForm2SyncListeners();
             };
 
             var suppressDirtyTrackingDuringSaveRefresh = function () {
@@ -436,10 +471,7 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.watchDeregister();
                     dirtyTrackingState.watchDeregister = null;
                 }
-                if (dirtyTrackingState.form2SyncIntervalPromise) {
-                    $interval.cancel(dirtyTrackingState.form2SyncIntervalPromise);
-                    dirtyTrackingState.form2SyncIntervalPromise = null;
-                }
+                unregisterForm2SyncListeners();
                 dirtyTrackingState.initialized = false;
                 dirtyTrackingState.suppressTracking = false;
                 if (dirtyTrackingState.suppressionUnsuppressPromise) {
@@ -495,44 +527,71 @@ angular.module('bahmni.clinical')
 
             $scope.saveAsDraft = saveFormDraft;
 
-            // Check for existing drafts on page load
+            var draftContextWatchDeregister = null;
+
+            // Check for existing drafts when patient and provider context is available
             var checkForExistingDrafts = function () {
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
 
-                if (patientUuid && providerUuid) {
-                    formDraftService.getDraft(patientUuid, providerUuid).then(
-                        function (response) {
-                            if (response.data && response.data.uuid && !response.data.markedAsSaved) {
-                                $scope.formDraft.hasDrafts = true;
-                                // Store draft data in rootScope for use across controllers
-                                $rootScope.draftData = response.data;
-                                // Pre-populate draft timestamp if draft exists
-                                var serverTimestamp = response.data.timestamp;
-                                if (serverTimestamp) {
-                                    var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
-                                    var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
-                                    $scope.formDraft.draftDate = draftDate;
-                                    $scope.formDraft.draftTime = draftTime;
-                                    $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
-                                    $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
-                                }
-                            } else {
-                                $rootScope.draftData = null;
-                                clearDraftStatus();
+                if (!(patientUuid && providerUuid)) {
+                    return false;
+                }
+
+                formDraftService.getDraft(patientUuid, providerUuid).then(
+                    function (response) {
+                        if (response.data && response.data.uuid && !response.data.markedAsSaved) {
+                            $scope.formDraft.hasDrafts = true;
+                            // Store draft data in rootScope for use across controllers
+                            $rootScope.draftData = response.data;
+                            // Pre-populate draft timestamp if draft exists
+                            var serverTimestamp = response.data.timestamp;
+                            if (serverTimestamp) {
+                                var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
+                                var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
+                                $scope.formDraft.draftDate = draftDate;
+                                $scope.formDraft.draftTime = draftTime;
+                                $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
+                                $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
                             }
-                        },
-                        function () {
-                            // No draft found - suppress error silently
+                        } else {
                             $rootScope.draftData = null;
                             clearDraftStatus();
                         }
-                    ).catch(function () {
-                        // Catch any unhandled errors to prevent error notifications
+                    },
+                    function () {
+                        // No draft found - suppress error silently
                         $rootScope.draftData = null;
                         clearDraftStatus();
-                    });
+                    }
+                ).catch(function () {
+                    // Catch any unhandled errors to prevent error notifications
+                    $rootScope.draftData = null;
+                    clearDraftStatus();
+                });
+
+                return true;
+            };
+
+            var registerDraftContextWatcher = function () {
+                if (draftContextWatchDeregister) {
+                    return;
                 }
+
+                draftContextWatchDeregister = $scope.$watchGroup([
+                    function () {
+                        return $scope.patient && $scope.patient.uuid;
+                    },
+                    function () {
+                        return $rootScope.currentProvider && $rootScope.currentProvider.uuid;
+                    }
+                ], function (newValues) {
+                    if (newValues[0] && newValues[1]) {
+                        checkForExistingDrafts();
+                        draftContextWatchDeregister();
+                        draftContextWatchDeregister = null;
+                    }
+                });
             };
 
             // Recursively populate observation values from draft
@@ -657,6 +716,11 @@ angular.module('bahmni.clinical')
                 clearDraftStatus();
             });
 
+            var saveStartedListener = $rootScope.$on('event:save-started', function () {
+                $scope.formDraft.showSpinner = false;
+                clearDraftStatus();
+            });
+
             $scope.$on('$destroy', function () {
                 if (dirtyTrackingState.watchDeregister) {
                     dirtyTrackingState.watchDeregister();
@@ -667,18 +731,23 @@ angular.module('bahmni.clinical')
                 if (dirtyTrackingState.suppressionUnsuppressPromise) {
                     $timeout.cancel(dirtyTrackingState.suppressionUnsuppressPromise);
                 }
-                if (dirtyTrackingState.form2SyncIntervalPromise) {
-                    $interval.cancel(dirtyTrackingState.form2SyncIntervalPromise);
+                unregisterForm2SyncListeners();
+                if (draftContextWatchDeregister) {
+                    draftContextWatchDeregister();
+                    draftContextWatchDeregister = null;
                 }
                 saveSuccessfulListener();
+                saveStartedListener();
             });
 
             init();
             // COMMENTED OUT: Resume draft functionality disabled - now always check for drafts
             // if (resuming draft from banner, don't wait for checkForExistingDrafts)
             // The data should already be in $rootScope from the dashboard controller
-            // Otherwise, check for drafts with a slight delay
+            // Otherwise, check for drafts immediately or when context becomes available
             // if (!$rootScope.resumeDraftOnLoad) {
-            $timeout(checkForExistingDrafts, 500);
+            if (!checkForExistingDrafts()) {
+                registerDraftContextWatcher();
+            }
             // }
         }]);

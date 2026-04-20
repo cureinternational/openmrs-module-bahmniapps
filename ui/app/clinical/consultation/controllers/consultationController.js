@@ -514,6 +514,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                     $scope.$parent.$parent.$broadcast("event:errorsOnForm");
                     return $q.when({});
                 }
+                $rootScope.$broadcast('event:save-started');
                 try {
                     var alerts = angular.copy($rootScope.cdssAlerts) || [];
                     var activeAlerts = alerts.filter(function (alert) {

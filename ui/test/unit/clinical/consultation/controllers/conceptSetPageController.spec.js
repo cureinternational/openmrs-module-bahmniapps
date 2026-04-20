@@ -1022,14 +1022,9 @@ describe('ConceptSetPageController', function () {
         });
 
         describe('Form2 Dirty Tracking', function () {
-            var intervalMock, timeoutMock;
+            var timeoutMock;
 
-            beforeEach(inject(function ($interval, $timeout) {
-                intervalMock = jasmine.createSpy('$interval').and.callFake(function (fn, delay) {
-                    return 'interval-promise-id';
-                });
-                intervalMock.cancel = jasmine.createSpy('cancel');
-
+            beforeEach(inject(function ($timeout) {
                 timeoutMock = function (callback, delay) {
                     if (delay === 0) {
                         callback();
@@ -1039,7 +1034,7 @@ describe('ConceptSetPageController', function () {
                 timeoutMock.cancel = jasmine.createSpy('cancel');
             }));
 
-            it('should start form2 sync interval when form2 components exist', function () {
+            it('should register DOM listeners for form2 sync when dirty tracking starts', function () {
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
                 mockConceptSetService(conceptResponseData);
                 var form2Data = [{
@@ -1053,6 +1048,8 @@ describe('ConceptSetPageController', function () {
                     privileges: []
                 }];
                 mockformService(form2Data);
+
+                var addEventListenerSpy = spyOn(document, 'addEventListener').and.callThrough();
 
                 var ctlr = controller("ConceptSetPageController", {
                     $scope: scope,
@@ -1069,19 +1066,23 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock,
                     $filter: function () { return function () { return 'mocked-time'; }; },
-                    formDraftService: formDraftService,
-                    $interval: intervalMock
+                    formDraftService: formDraftService
                 });
 
                 scope.$digest();
-                expect(intervalMock).toHaveBeenCalledWith(jasmine.any(Function), 500);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('input', jasmine.any(Function), true);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('change', jasmine.any(Function), true);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('keyup', jasmine.any(Function), true);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('click', jasmine.any(Function), true);
             });
 
-            it('should safely handle sync when no form2 components exist', function () {
+            it('should still register sync listeners when no form2 components exist', function () {
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
                 mockConceptSetService(conceptResponseData);
                 mockformService([]);
 
+                var addEventListenerSpy = spyOn(document, 'addEventListener').and.callThrough();
+
                 var ctlr = controller("ConceptSetPageController", {
                     $scope: scope,
                     $rootScope: rootScope,
@@ -1097,19 +1098,17 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock,
                     $filter: function () { return function () { return 'mocked-time'; }; },
-                    formDraftService: formDraftService,
-                    $interval: intervalMock
+                    formDraftService: formDraftService
                 });
 
                 scope.$digest();
-                // Interval is still started but won't have any forms to sync
-                expect(intervalMock).toHaveBeenCalledWith(jasmine.any(Function), 500);
-                // Verify the sync callback handles empty observationForms gracefully
-                var intervalCallback = intervalMock.calls.mostRecent().args[0];
-                expect(function() { intervalCallback(); }).not.toThrow();
+                expect(addEventListenerSpy).toHaveBeenCalledWith('input', jasmine.any(Function), true);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('change', jasmine.any(Function), true);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('keyup', jasmine.any(Function), true);
+                expect(addEventListenerSpy).toHaveBeenCalledWith('click', jasmine.any(Function), true);
             });
 
-            it('should cancel form2 sync interval on controller destroy', function () {
+            it('should unregister form2 sync listeners on controller destroy', function () {
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
                 mockConceptSetService(conceptResponseData);
                 var form2Data = [{
@@ -1124,6 +1123,8 @@ describe('ConceptSetPageController', function () {
                 }];
                 mockformService(form2Data);
 
+                var removeEventListenerSpy = spyOn(document, 'removeEventListener').and.callThrough();
+
                 var ctlr = controller("ConceptSetPageController", {
                     $scope: scope,
                     $rootScope: rootScope,
@@ -1139,16 +1140,17 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock,
                     $filter: function () { return function () { return 'mocked-time'; }; },
-                    formDraftService: formDraftService,
-                    $interval: intervalMock
+                    formDraftService: formDraftService
                 });
 
                 scope.$digest();
-                expect(intervalMock).toHaveBeenCalled();
 
                 // Destroy the scope
                 scope.$destroy();
-                expect(intervalMock.cancel).toHaveBeenCalled();
+                expect(removeEventListenerSpy).toHaveBeenCalledWith('input', jasmine.any(Function), true);
+                expect(removeEventListenerSpy).toHaveBeenCalledWith('change', jasmine.any(Function), true);
+                expect(removeEventListenerSpy).toHaveBeenCalledWith('keyup', jasmine.any(Function), true);
+                expect(removeEventListenerSpy).toHaveBeenCalledWith('click', jasmine.any(Function), true);
             });
         });
     });

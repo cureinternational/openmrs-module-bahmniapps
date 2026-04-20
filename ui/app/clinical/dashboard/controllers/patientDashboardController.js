@@ -135,6 +135,12 @@ angular.module('bahmni.clinical')
                 $scope.formDraft.draftTime = null;
             });
 
+            var cleanUpListenerSaveStarted = $scope.$on("event:save-started", function () {
+                $scope.formDraft.hasDrafts = false;
+                $scope.formDraft.draftDate = null;
+                $scope.formDraft.draftTime = null;
+            });
+
             var cleanUpListenerPrintDashboard = $scope.$on("event:printDashboard", function (event, tab) {
                 var printScope = $scope.$new();
                 printScope.isDashboardPrinting = true;
@@ -156,6 +162,7 @@ angular.module('bahmni.clinical')
                 cleanUpListenerSwitchDashboard();
                 cleanUpListenerDraftSaved();
                 cleanUpListenerSaveSuccessful();
+                cleanUpListenerSaveStarted();
                 cleanUpListenerPrintDashboard();
             });
 
