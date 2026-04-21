@@ -23,13 +23,23 @@ angular.module('bahmni.common.services')
         };
 
         var discardDraft = function (patientUuid, providerUuid) {
-            var url = formDraftUrl + '?patientUuid=' + patientUuid + '&providerUuid=' + providerUuid;
-            return $http.delete(url, {suppressError: true});
+            return $http.delete(formDraftUrl, {
+                params: {
+                    patientUuid: patientUuid,
+                    providerUuid: providerUuid
+                },
+                suppressError: true
+            });
         };
 
         var markDraftAsSaved = function (patientUuid, providerUuid) {
-            var url = formDraftUrl + '?patientUuid=' + patientUuid + '&providerUuid=' + providerUuid;
-            return $http.patch(url, {}, {suppressError: true});
+            return $http.patch(formDraftUrl, {}, {
+                params: {
+                    patientUuid: patientUuid,
+                    providerUuid: providerUuid
+                },
+                suppressError: true
+            });
         };
 
         return {

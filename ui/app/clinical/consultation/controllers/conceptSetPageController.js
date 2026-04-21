@@ -3,10 +3,10 @@
 angular.module('bahmni.clinical')
     .controller('ConceptSetPageController', ['$scope', '$rootScope', '$stateParams', 'conceptSetService',
         'clinicalAppConfigService', 'messagingService', 'configurations', '$state', 'spinner',
-        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService', 'formDraftService',
+        'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService', 'formDraftService', 'dirtyStateService',
         function ($scope, $rootScope, $stateParams, conceptSetService,
                   clinicalAppConfigService, messagingService, configurations, $state, spinner,
-              contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService) {
+              contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService, dirtyStateService) {
             $scope.consultation.selectedObsTemplate = $scope.consultation.selectedObsTemplate || [];
             $scope.allTemplates = $scope.allTemplates || [];
             $scope.scrollingEnabled = false;
@@ -68,9 +68,19 @@ angular.module('bahmni.clinical')
             };
 
             var addTemplatesInSavedOrder = function () {
-                var templatePreference = JSON.parse(localStorage.getItem("templatePreference"));
+                var templatePreference = null;
+                try {
+                    var stored = localStorage.getItem("templatePreference");
+                    if (stored) {
+                        templatePreference = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    templatePreference = null;
+                }
+
+                var currentProviderUuid = $rootScope.currentProvider && $rootScope.currentProvider.uuid;
                 if (templatePreference && templatePreference.patientUuid === $scope.patient.uuid &&
-                    !_.isEmpty(templatePreference.templates) && $rootScope.currentProvider.uuid === templatePreference.providerUuid) {
+                    !_.isEmpty(templatePreference.templates) && currentProviderUuid === templatePreference.providerUuid) {
                     insertInSavedOrder(templatePreference);
                 } else {
                     insertInDefaultOrder();
@@ -287,17 +297,16 @@ angular.module('bahmni.clinical')
                 hasDrafts: false
             };
 
+            var suppressionWindowMs = 1500;
+
             var dirtyTrackingState = {
                 cleanState: null,
                 initialized: false,
                 watchDeregister: null,
-                draftResumeWatchDeregister: null,
                 suppressTracking: false,
                 suppressionUnsuppressPromise: null,
-                suppressionWindowMs: 1500,
-                form2SyncListenerRegistered: false,
-                form2InputListener: null,
-                form2ChangeListener: null
+                form2ListenerState: null,
+                isSaving: false
             };
 
             var clearDraftStatus = function () {
@@ -309,142 +318,47 @@ angular.module('bahmni.clinical')
                 $scope.formDraft.statusError = false;
             };
 
-            var getTemplateObservationsForDirtyTracking = function (template) {
-                if (template.component && angular.isFunction(template.component.getValue)) {
-                    var formValue = template.component.getValue() || {};
-                    if (formValue.observations && formValue.observations.length > 0) {
-                        return formValue.observations;
-                    }
-                }
-                return template.observations || [];
-            };
-
-            var collectObsValues = function (obs, values) {
-                if (!obs) {
-                    return;
-                }
-                if (obs.isMultiSelect) {
-                    var selectedKeys = _.keys(obs.selectedObs || {}).filter(function (k) {
-                        return k.indexOf('$') !== 0;
-                    });
-                    if (selectedKeys.length > 0) {
-                        values.push(obs.selectedObs);
-                    }
-                    return;
-                }
-                if (obs.groupMembers && obs.groupMembers.length > 0) {
-                    _.each(obs.groupMembers, function (member) {
-                        collectObsValues(member, values);
-                    });
-                    return;
-                }
-                if (obs.value !== null && obs.value !== undefined) {
-                    values.push(obs.value);
-                }
-            };
-
-            var getObsValues = function () {
-                var values = [];
-                if ($scope.consultation.selectedObsTemplate) {
-                    _.each($scope.consultation.selectedObsTemplate, function (template) {
-                        var observations = getTemplateObservationsForDirtyTracking(template);
-                        if (observations.length > 0) {
-                            _.each(observations, function (obs) {
-                                collectObsValues(obs, values);
-                            });
-                        }
-                    });
-                }
-                return angular.toJson(values);
-            };
-
-            var syncForm2Observations = function () {
-                if ($scope.consultation.observationForms) {
-                    _.each($scope.consultation.observationForms, function (form) {
-                        if (form.component && angular.isFunction(form.component.getValue)) {
-                            var formValue = form.component.getValue() || {};
-                            if (formValue.observations) {
-                                var newObsJson = angular.toJson(formValue.observations);
-                                var oldObsJson = angular.toJson(form.observations || []);
-                                if (newObsJson !== oldObsJson) {
-                                    form.observations = formValue.observations;
-                                }
-                            }
-                        }
-                    });
-                }
-            };
-
-            var form2SyncEvents = ['input', 'change', 'keyup', 'click'];
-
-            var registerForm2SyncListeners = function () {
-                if (dirtyTrackingState.form2SyncListenerRegistered) {
-                    return;
-                }
-
-                var doc = window.document;
-                if (!doc || !doc.addEventListener) {
-                    return;
-                }
-
-                var syncOnForm2Interaction = function () {
-                    $scope.$evalAsync(syncForm2Observations);
-                };
-
-                dirtyTrackingState.form2InputListener = syncOnForm2Interaction;
-                dirtyTrackingState.form2ChangeListener = syncOnForm2Interaction;
-                _.each(form2SyncEvents, function (eventName) {
-                    doc.addEventListener(eventName, syncOnForm2Interaction, true);
-                });
-                dirtyTrackingState.form2SyncListenerRegistered = true;
-            };
-
-            var unregisterForm2SyncListeners = function () {
-                var doc = window.document;
-                if (dirtyTrackingState.form2SyncListenerRegistered && doc && doc.removeEventListener) {
-                    _.each(form2SyncEvents, function (eventName) {
-                        doc.removeEventListener(eventName, dirtyTrackingState.form2InputListener, true);
-                    });
-                }
-                dirtyTrackingState.form2SyncListenerRegistered = false;
-                dirtyTrackingState.form2InputListener = null;
-                dirtyTrackingState.form2ChangeListener = null;
-            };
-
             var setupDirtyTracking = function () {
                 if (dirtyTrackingState.initialized) {
                     return;
                 }
                 dirtyTrackingState.initialized = true;
-                dirtyTrackingState.cleanState = getObsValues();
+                dirtyTrackingState.cleanState = dirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
 
-                dirtyTrackingState.watchDeregister = $scope.$watch(getObsValues, function (newVal, oldVal) {
-                    if (newVal !== oldVal) {
-                        if (dirtyTrackingState.suppressTracking) {
-                            dirtyTrackingState.cleanState = newVal;
-                            $scope.formDraft.isDirty = false;
-                            return;
+                dirtyTrackingState.watchDeregister = $scope.$watch(
+                    function () { return dirtyStateService.getObsValues($scope.consultation.selectedObsTemplate); },
+                    function (newVal, oldVal) {
+                        if (newVal !== oldVal) {
+                            if (dirtyTrackingState.suppressTracking) {
+                                dirtyTrackingState.cleanState = newVal;
+                                $scope.formDraft.isDirty = false;
+                                return;
+                            }
+                            $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
                         }
-                        $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
                     }
-                });
+                );
 
-                registerForm2SyncListeners();
+                dirtyTrackingState.form2ListenerState = dirtyStateService.registerForm2SyncListeners(function () {
+                    $scope.$evalAsync(function () {
+                        dirtyStateService.syncForm2Observations($scope.consultation.observationForms);
+                    });
+                });
             };
 
             var suppressDirtyTrackingDuringSaveRefresh = function () {
                 dirtyTrackingState.suppressTracking = true;
                 $scope.formDraft.isDirty = false;
-                dirtyTrackingState.cleanState = getObsValues();
+                dirtyTrackingState.cleanState = dirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                 if (dirtyTrackingState.suppressionUnsuppressPromise) {
                     $timeout.cancel(dirtyTrackingState.suppressionUnsuppressPromise);
                 }
                 dirtyTrackingState.suppressionUnsuppressPromise = $timeout(function () {
-                    dirtyTrackingState.cleanState = getObsValues();
+                    dirtyTrackingState.cleanState = dirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     $scope.formDraft.isDirty = false;
                     dirtyTrackingState.suppressTracking = false;
                     dirtyTrackingState.suppressionUnsuppressPromise = null;
-                }, dirtyTrackingState.suppressionWindowMs);
+                }, suppressionWindowMs);
             };
 
             var resetDirtyTracking = function (restartTracking) {
@@ -452,7 +366,8 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.watchDeregister();
                     dirtyTrackingState.watchDeregister = null;
                 }
-                unregisterForm2SyncListeners();
+                dirtyStateService.unregisterForm2SyncListeners(dirtyTrackingState.form2ListenerState);
+                dirtyTrackingState.form2ListenerState = null;
                 dirtyTrackingState.initialized = false;
                 dirtyTrackingState.suppressTracking = false;
                 if (dirtyTrackingState.suppressionUnsuppressPromise) {
@@ -466,23 +381,21 @@ angular.module('bahmni.clinical')
             };
 
             var serializeFormData = function () {
-                var observations = [];
-                if ($scope.consultation.selectedObsTemplate) {
-                    _.each($scope.consultation.selectedObsTemplate, function (template) {
-                        var templateObs = getTemplateObservationsForDirtyTracking(template);
-                        observations = observations.concat(templateObs);
-                    });
-                }
-                return angular.toJson(observations);
+                return dirtyStateService.serializeFormData($scope.consultation.selectedObsTemplate);
             };
 
             var saveFormDraft = function () {
+                if (dirtyTrackingState.isSaving) {
+                    return;
+                }
+
+                dirtyTrackingState.isSaving = true;
                 $scope.formDraft.statusError = false;
                 $scope.formDraft.showSpinner = true;
 
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
-                var formData = serializeFormData();
+                var formData = dirtyStateService.serializeFormData($scope.consultation.selectedObsTemplate);
 
                 formDraftService.saveDraft(patientUuid, providerUuid, formData).then(function (response) {
                     var serverTimestamp = response.data.timestamp;
@@ -496,13 +409,14 @@ angular.module('bahmni.clinical')
                     $scope.formDraft.draftTime = draftTime;
                     $scope.formDraft.isDirty = false;
                     $scope.formDraft.hasDrafts = true;
-                    dirtyTrackingState.cleanState = getObsValues();
+                    dirtyTrackingState.cleanState = dirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
                 }, function () {
                     $scope.formDraft.statusMessage = 'CHANGES_NOT_SAVED_KEY';
                     $scope.formDraft.statusError = true;
                 }).finally(function () {
                     $scope.formDraft.showSpinner = false;
+                    dirtyTrackingState.isSaving = false;
                 });
             };
 
@@ -518,13 +432,20 @@ angular.module('bahmni.clinical')
                     return false;
                 }
 
+                var justSavedDraft = sessionStorage.getItem('formSaveCompleted');
+                if (justSavedDraft) {
+                    sessionStorage.removeItem('formSaveCompleted');
+                    clearDraftStatus();
+                    return true;
+                }
+
                 formDraftService.getDraft(patientUuid, providerUuid).then(
                     function (response) {
                         if (response.data && response.data.uuid && !response.data.markedAsSaved) {
                             $scope.formDraft.hasDrafts = true;
                             $rootScope.draftData = response.data;
                             var serverTimestamp = response.data.timestamp;
-                            if (serverTimestamp) {
+                            if (serverTimestamp && !isNaN(new Date(serverTimestamp).getTime())) {
                                 var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
                                 var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
                                 $scope.formDraft.draftDate = draftDate;
@@ -570,74 +491,13 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            var populateObservationValues = function (templateObs, draftObs) {
-                if (!templateObs || !draftObs) {
-                    return;
-                }
-
-                if (draftObs.value !== undefined && draftObs.value !== null) {
-                    templateObs.value = draftObs.value;
-                }
-
-                if (draftObs.comment) {
-                    templateObs.comment = draftObs.comment;
-                }
-
-                if (draftObs.isMultiSelect && draftObs.selectedObs) {
-                    templateObs.selectedObs = angular.copy(draftObs.selectedObs);
-                }
-
-                if (draftObs.groupMembers && draftObs.groupMembers.length > 0 &&
-                    templateObs.groupMembers && templateObs.groupMembers.length > 0) {
-                    var draftGroupMap = {};
-                    _.each(draftObs.groupMembers, function (draftMember) {
-                        if (draftMember.concept && draftMember.concept.uuid) {
-                            draftGroupMap[draftMember.concept.uuid] = draftMember;
-                        }
-                    });
-                    _.each(templateObs.groupMembers, function (templateMember) {
-                        var conceptUuid = templateMember.concept ? templateMember.concept.uuid : null;
-                        if (conceptUuid && draftGroupMap[conceptUuid]) {
-                            populateObservationValues(templateMember, draftGroupMap[conceptUuid]);
-                        }
-                    });
-                }
-            };
-
             var populateFormWithDraftData = function (draftFormData) {
-                try {
-                    var draftedObservations = JSON.parse(draftFormData);
-                    if (!draftedObservations || draftedObservations.length === 0) {
-                        return;
-                    }
-
-                    var draftMap = {};
-                    _.each(draftedObservations, function (obs) {
-                        if (obs.concept && obs.concept.uuid) {
-                            if (!draftMap[obs.concept.uuid]) {
-                                draftMap[obs.concept.uuid] = [];
-                            }
-                            draftMap[obs.concept.uuid].push(obs);
-                        }
-                    });
-
-                    _.each($scope.consultation.selectedObsTemplate, function (template) {
-                        if (template.observations && template.observations.length > 0) {
-                            _.each(template.observations, function (templateObs) {
-                                var conceptUuid = templateObs.concept ? templateObs.concept.uuid : null;
-                                if (conceptUuid && draftMap[conceptUuid]) {
-                                    var draftObs = draftMap[conceptUuid][0];
-                                    populateObservationValues(templateObs, draftObs);
-                                }
-                            });
-                        }
-                    });
-
-                    $scope.formDraft.isDraftResumed = true;
-                } catch (e) {
-                    console.error('Error parsing draft data:', e);
+                var result = dirtyStateService.populateFormWithDraftData(draftFormData, $scope.consultation.selectedObsTemplate);
+                if (!result.success) {
                     $scope.formDraft.statusMessage = 'ERROR_LOADING_DRAFT_KEY';
                     $scope.formDraft.statusError = true;
+                } else {
+                    $scope.formDraft.isDraftResumed = true;
                 }
             };
 
@@ -664,13 +524,10 @@ angular.module('bahmni.clinical')
                 if (dirtyTrackingState.watchDeregister) {
                     dirtyTrackingState.watchDeregister();
                 }
-                if (dirtyTrackingState.draftResumeWatchDeregister) {
-                    dirtyTrackingState.draftResumeWatchDeregister();
-                }
                 if (dirtyTrackingState.suppressionUnsuppressPromise) {
                     $timeout.cancel(dirtyTrackingState.suppressionUnsuppressPromise);
                 }
-                unregisterForm2SyncListeners();
+                dirtyStateService.unregisterForm2SyncListeners(dirtyTrackingState.form2ListenerState);
                 if (draftContextWatchDeregister) {
                     draftContextWatchDeregister();
                     draftContextWatchDeregister = null;

@@ -2,7 +2,7 @@
 
 describe('FormDraftService', function () {
     var formDraftService;
-    var mockHttp = jasmine.createSpyObj('$http', ['get', 'post', 'patch']);
+    var mockHttp = jasmine.createSpyObj('$http', ['get', 'post', 'patch', 'delete']);
 
     beforeEach(function () {
         module('bahmni.common.services');
@@ -63,9 +63,35 @@ describe('FormDraftService', function () {
         formDraftService.markDraftAsSaved(patientUuid, providerUuid);
 
         expect(mockHttp.patch).toHaveBeenCalledWith(
-            '/openmrs/ws/rest/v1/bahmnicore/formdraft?patientUuid=' + patientUuid + '&providerUuid=' + providerUuid,
+            '/openmrs/ws/rest/v1/bahmnicore/formdraft',
             {},
-            {suppressError: true}
+            {
+                params: {
+                    patientUuid: patientUuid,
+                    providerUuid: providerUuid
+                },
+                suppressError: true
+            }
+        );
+    });
+
+    it('should DELETE formdraft endpoint with correct params on discardDraft', function () {
+        var patientUuid = 'patient-uuid-123';
+        var providerUuid = 'provider-uuid-456';
+        var mockResponse = {data: {success: true}};
+        mockHttp.delete.and.returnValue(specUtil.respondWith(mockResponse));
+
+        formDraftService.discardDraft(patientUuid, providerUuid);
+
+        expect(mockHttp.delete).toHaveBeenCalledWith(
+            '/openmrs/ws/rest/v1/bahmnicore/formdraft',
+            {
+                params: {
+                    patientUuid: patientUuid,
+                    providerUuid: providerUuid
+                },
+                suppressError: true
+            }
         );
     });
 });

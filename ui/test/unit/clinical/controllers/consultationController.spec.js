@@ -268,11 +268,12 @@ describe("ConsultationController", function () {
         $provide.value('formDraftService', jasmine.createSpyObj('formDraftService', ['getDraft', 'saveDraft', 'markDraftAsSaved']));
     }));
     beforeEach(function () {
-        inject(function ($controller, $rootScope, _$window_) {
+        inject(function ($controller, $rootScope, _$window_, $q, formDraftService) {
             _window_ = _$window_;
             scope = $rootScope.$new();
             rootScope = $rootScope;
             controller = $controller;
+            formDraftService.markDraftAsSaved.and.returnValue($q.when({}));
         });
         appDescriptor = {
             formatUrl: function (url) {

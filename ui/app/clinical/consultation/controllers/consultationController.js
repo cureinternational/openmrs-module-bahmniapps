@@ -513,6 +513,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                     $scope.$parent.$parent.$broadcast("event:errorsOnForm");
                     return $q.when({});
                 }
+                sessionStorage.setItem('formSaveCompleted', 'true');
                 $rootScope.$broadcast('event:save-started');
                 try {
                     var alerts = angular.copy($rootScope.cdssAlerts) || [];
@@ -570,7 +571,8 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                                             var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                                             var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
                                             if (patientUuid && providerUuid) {
-                                                formDraftService.markDraftAsSaved(patientUuid, providerUuid);
+                                                formDraftService.markDraftAsSaved(patientUuid, providerUuid).catch(function () {
+                                                });
                                                 $rootScope.draftData = null;
                                             }
                                             $rootScope.$broadcast('event:save-successful');
