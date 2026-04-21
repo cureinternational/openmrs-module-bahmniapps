@@ -1,5 +1,10 @@
 import axios from "axios";
-import { FORM_BASE_URL, LATEST_PUBLISHED_FORMS_URL } from "../../constants";
+import {
+  FHIR_URL,
+  FORM_BASE_URL,
+  LATEST_PUBLISHED_FORMS_URL,
+  MAX_TASK_COUNT
+} from "../../constants";
 
 export const fetchFormData = async (patientUuid, numberOfVisits) => {
   const apiURL = FORM_BASE_URL.replace('{patientUuid}',patientUuid);
@@ -34,3 +39,43 @@ export const getLatestPublishedForms = async (encounterUuid) => {
       return error;
   }
 };
+
+
+export const saveTask = async (payload) => {
+  try{
+    const response = await axios.post(FHIR_URL, payload);
+    if (response.status === 201) {
+      return response.data;
+    }
+  }catch(error){
+    console.error("Error saving Task:", error);
+  }
+}
+
+export const getAllTasksForForm = async (formName, encounterUuid) => {
+  try{
+    const response = await axios.get(FHIR_URL, {
+      params: {
+        encounter: encounterUuid,
+        name: formName,
+        _sort:"-_lastUpdated",
+        _count: MAX_TASK_COUNT
+      }}
+    )
+    if(response.status === 200){
+      return response.data;
+    }
+  }catch(error){
+    console.error("Error fetching Tasks:", error);
+  }
+}
+
+export const getAllTasksForPatient = async (searchParams) => {
+  try {
+    return await axios.get(FHIR_URL, {
+      params: searchParams
+    })
+  }catch(error){
+    console.error("Error fetching Tasks for patient:", error);
+  }
+}

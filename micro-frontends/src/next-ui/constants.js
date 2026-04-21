@@ -1,5 +1,6 @@
 export const defaultDateFormat = "DD MMM YYYY";
 export const defaultDateTimeFormat = "DD MMM YYYY hh:mm a";
+export const COMMENT_MAX_CHARACTERS = 256;
 
 export const LS_LANG_KEY = "NG_TRANSLATE_LANG_KEY";
 export const MEDICATION_ACKNOWLEDGE_SQL_PROPERTY = "emrapi.sqlSearch.emergencyMedicationToAcknowledge";
@@ -41,10 +42,17 @@ export const FHIR_EXT_ORDER_STATUS = "order-status"
 export const FHIR_EXT_TASK_OWNER = "task-owner"
 export const FHIR_EXT_TASK_NOTE = "task-note"
 export const FHIR_EXT_CREATED_BY = "created-by"
-
+export const FHIR_URL = "/openmrs/ws/fhir2/R4/Task";
+export const FHIR_EXT_ORDER_SHORT_NAME = "order-short-name"
 export const DB_FULFILLER_STATUS_TO_UI_STATUS = {
     RECEIVED: 'Acknowledged',
     IN_PROGRESS: 'In Progress',
     COMPLETED: 'Completed',
     EXCEPTION: 'New',
 };
+export const FORM_COMMENT = "FORM_COMMENT";
+export const FORM_APPROVAL = "FORM_APPROVAL";
+export const ENCOUNTER = "Encounter";
+export const PRACTITIONER = "Practitioner";
+export const PATIENT = "Patient";
+export const MAX_TASK_COUNT = 500;

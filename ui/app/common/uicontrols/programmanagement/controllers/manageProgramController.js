@@ -2,9 +2,9 @@
 
 angular.module('bahmni.common.uicontrols.programmanagment')
     .controller('ManageProgramController', ['$scope', 'retrospectiveEntryService', '$window', 'programService', '$translate',
-        'spinner', 'messagingService', '$stateParams', '$q', 'confirmBox', '$state',
+        'spinner', 'messagingService', '$stateParams', '$q', 'confirmBox', '$state', '$rootScope',
         function ($scope, retrospectiveEntryService, $window, programService, $translate,
-            spinner, messagingService, $stateParams, $q, confirmBox, $state) {
+            spinner, messagingService, $stateParams, $q, confirmBox, $state, $rootScope) {
             var DateUtil = Bahmni.Common.Util.DateUtil;
             $scope.programSelected = {};
             $scope.workflowStateSelected = {};
@@ -27,7 +27,10 @@ angular.module('bahmni.common.uicontrols.programmanagment')
                 patientUuid: $scope.patient.uuid,
                 showEditForActiveEncounter: true,
                 numberOfVisits: observationFormsConfig.numberOfVisits || 10,
-                hasNoHierarchy: $scope.hasNoHierarchy
+                hasNoHierarchy: $scope.hasNoHierarchy,
+                patient: $scope.patient,
+                currentUser: $rootScope.currentUser,
+                currentProvider: $rootScope.currentProvider
             };
 
             var updateActiveProgramsList = function () {

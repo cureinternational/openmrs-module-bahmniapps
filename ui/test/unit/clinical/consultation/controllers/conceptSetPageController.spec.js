@@ -1,7 +1,7 @@
 'use strict';
 
 describe('ConceptSetPageController', function () {
-    var scope, controller, rootScope, conceptSetService, configurations, clinicalAppConfigService, state, encounterConfig, spinner, messagingService, translate, stateParams, formService;
+    var scope, controller, rootScope, conceptSetService, configurations, clinicalAppConfigService, state, encounterConfig, spinner, messagingService, translate, stateParams, formService, appService;
     stateParams = {conceptSetGroupName: "concept set group name"};
     var extension = {"extension": {
         extensionParams: {}
@@ -51,7 +51,11 @@ describe('ConceptSetPageController', function () {
         formService = jasmine.createSpyObj("formService", ["getFormList"]);
         spinner = jasmine.createSpyObj("spinner", ["forPromise"]);
         messagingService = jasmine.createSpyObj('messagingService', ['showMessage']);
-        translate = jasmine.createSpyObj('$translate',['instant']);
+        translate = jasmine.createSpyObj('$translate', ['instant']);
+        appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
+        var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+        appDescriptor.getConfigValue.and.returnValue(false);
+        appService.getAppDescriptor.and.returnValue(appDescriptor);
     };
 
     beforeEach(initController);
@@ -69,7 +73,8 @@ describe('ConceptSetPageController', function () {
             configurations: configurations,
             $state: state,
             spinner: spinner,
-            $translate : translate
+            $translate: translate,
+            appService: appService
         });
     };
 
@@ -478,6 +483,149 @@ describe('ConceptSetPageController', function () {
             expect(scope.consultation.selectedObsTemplate[1].isOpen).toBeTruthy();
             expect(scope.consultation.selectedObsTemplate[1].isLoaded).toBeTruthy();
             expect(scope.consultation.selectedObsTemplate[1].klass).toBe("active");
-        })
+        });
+    });
+
+    describe('Feature Toggle - enableFormDraftFeature', function () {
+        it("should set enableFormDraftFeature to true when config value is true", function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: "abcd"}, uuid: 123}]
+                    }
+                ]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+            var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+            appDescriptor.getConfigValue.and.returnValue(true);
+            appService.getAppDescriptor.and.returnValue(appDescriptor);
+            rootScope.currentUser = {
+                isFavouriteObsTemplate: function () {
+                    return false;
+                }
+            };
+
+            createController();
+
+            expect(scope.enableFormDraftFeature).toBe(true);
+        });
+
+        it("should set enableFormDraftFeature to false when config value is false", function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: "abcd"}, uuid: 123}]
+                    }
+                ]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+            var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+            appDescriptor.getConfigValue.and.returnValue(false);
+            appService.getAppDescriptor.and.returnValue(appDescriptor);
+            rootScope.currentUser = {
+                isFavouriteObsTemplate: function () {
+                    return false;
+                }
+            };
+
+            createController();
+
+            expect(scope.enableFormDraftFeature).toBe(false);
+        });
+
+        it("should call appService.getAppDescriptor().getConfigValue() with enableFormDraftFeature", function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: "abcd"}, uuid: 123}]
+                    }
+                ]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+            rootScope.currentUser = {
+                isFavouriteObsTemplate: function () {
+                    return false;
+                }
+            };
+
+            createController();
+
+            expect(appService.getAppDescriptor).toHaveBeenCalled();
+        });
     })
+
+    describe('Save As Draft', function () {
+        var createControllerWithTimeoutAndFilter;
+
+        beforeEach(inject(function ($timeout) {
+            createControllerWithTimeoutAndFilter = function (timeoutMock, filterMock) {
+                var defaultFilterMock = function () {
+                    return function () {
+                        return 'mocked-time';
+                    };
+                };
+                clinicalAppConfigService.getAllConceptSetExtensions.and.returnValue(extension);
+                return controller("ConceptSetPageController", {
+                    $scope: scope,
+                    $rootScope: rootScope,
+                    $stateParams: stateParams,
+                    conceptSetService: conceptSetService,
+                    formService: formService,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    messagingService: messagingService,
+                    configurations: configurations,
+                    $state: state,
+                    spinner: spinner,
+                    $translate: translate,
+                    appService: appService,
+                    $timeout: timeoutMock || $timeout,
+                    $filter: filterMock || defaultFilterMock
+                });
+            };
+        }));
+
+        it('should set dirty true when form component observation changes', function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: 'abcd'}, uuid: 123}]
+                    }
+                ]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var observationValue;
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            scope.consultation.selectedObsTemplate = [{
+                component: {
+                    getValue: function () {
+                        return {
+                            observations: [{value: observationValue}]
+                        };
+                    }
+                },
+                observations: []
+            }];
+
+            scope.$digest();
+            expect(scope.formDraft.isDirty).toBe(false);
+
+            observationValue = 'updated-value';
+            scope.$digest();
+            expect(scope.formDraft.isDirty).toBe(true);
+        });
+    });
 });

@@ -32,5 +32,22 @@
   "NO_KNOWN_ALLERGY": "Aucune allergie connue",
   "KNOWN_ALLERGY_QUESTION": "Le patient a-t-il des allergies connues?",
   "YES": "Oui",
-  "NO": "Non"
+  "NO": "Non",
+  "APPROVE": "Approuver",
+  "COMMENT": "Commenter",
+  "COMMENT_ADDED_SUCCESSFULLY": "Commentaire ajouté avec succès!",
+  "CONFIRMATION": "Confirmation",
+  "APPROVE_FORM_CONFIRMATION": "Voulez-vous procéder à l'approbation de ce formulaire?",
+  "CANCEL": "Annuler",
+  "SUBMIT": "Soumettre",
+  "APPROVED_SUCCESSFULLY": "{formName} approuvé avec succès",
+  "ACTIONS": "Actions",
+  "CREATION": "Création",
+  "COMMENT_ACTION": "Commentaire",
+  "ADD_COMMENT": "Ajouter un commentaire",
+  "COMMENT_PLACEHOLDER": "Entrez un maximum de {maxCharacters} caractères",
+  "ACTION": "Action",
+  "DATE_TIME": "Date et Heure",
+  "PROVIDER": "Prestataire",
+  "COMMENTS_COLUMN": "Commentaires"
 }
