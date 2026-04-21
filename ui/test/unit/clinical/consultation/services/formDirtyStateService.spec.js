@@ -1,26 +1,26 @@
 'use strict';
 
-describe('dirtyStateService', function () {
-    var dirtyStateService;
+describe('formDirtyStateService', function () {
+    var formDirtyStateService;
 
     beforeEach(module('bahmni.clinical'));
 
-    beforeEach(inject(function (_dirtyStateService_) {
-        dirtyStateService = _dirtyStateService_;
+    beforeEach(inject(function (_formDirtyStateService_) {
+        formDirtyStateService = _formDirtyStateService_;
     }));
 
     describe('collectObsValues', function () {
         it('should collect scalar observation values', function () {
             var values = [];
             var obs = {value: 'test-value'};
-            dirtyStateService.collectObsValues(obs, values);
+            formDirtyStateService.collectObsValues(obs, values);
             expect(values).toEqual(['test-value']);
         });
 
         it('should not collect null or undefined values', function () {
             var values = [];
-            dirtyStateService.collectObsValues({value: null}, values);
-            dirtyStateService.collectObsValues({value: undefined}, values);
+            formDirtyStateService.collectObsValues({value: null}, values);
+            formDirtyStateService.collectObsValues({value: undefined}, values);
             expect(values).toEqual([]);
         });
 
@@ -30,7 +30,7 @@ describe('dirtyStateService', function () {
                 isMultiSelect: true,
                 selectedObs: {option1: true, option2: false}
             };
-            dirtyStateService.collectObsValues(obs, values);
+            formDirtyStateService.collectObsValues(obs, values);
             expect(values.length).toBe(1);
             expect(values[0]).toEqual({option1: true, option2: false});
         });
@@ -41,7 +41,7 @@ describe('dirtyStateService', function () {
                 isMultiSelect: true,
                 selectedObs: {option1: true, $special: 'ignore'}
             };
-            dirtyStateService.collectObsValues(obs, values);
+            formDirtyStateService.collectObsValues(obs, values);
             expect(values.length).toBe(1);
             expect(values[0]).toEqual({option1: true, $special: 'ignore'});
         });
@@ -52,7 +52,7 @@ describe('dirtyStateService', function () {
                 isMultiSelect: true,
                 selectedObs: {}
             };
-            dirtyStateService.collectObsValues(obs, values);
+            formDirtyStateService.collectObsValues(obs, values);
             expect(values).toEqual([]);
         });
 
@@ -64,13 +64,13 @@ describe('dirtyStateService', function () {
                     {value: 'member2-value'}
                 ]
             };
-            dirtyStateService.collectObsValues(obs, values);
+            formDirtyStateService.collectObsValues(obs, values);
             expect(values).toEqual(['member1-value', 'member2-value']);
         });
 
         it('should handle null input gracefully', function () {
             var values = [];
-            dirtyStateService.collectObsValues(null, values);
+            formDirtyStateService.collectObsValues(null, values);
             expect(values).toEqual([]);
         });
     });
@@ -80,13 +80,13 @@ describe('dirtyStateService', function () {
             var template = {
                 observations: [{value: 'obs1'}, {value: 'obs2'}]
             };
-            var result = dirtyStateService.getTemplateObservationsForDirtyTracking(template);
+            var result = formDirtyStateService.getTemplateObservationsForDirtyTracking(template);
             expect(result).toEqual([{value: 'obs1'}, {value: 'obs2'}]);
         });
 
         it('should return empty array when no observations', function () {
             var template = {};
-            var result = dirtyStateService.getTemplateObservationsForDirtyTracking(template);
+            var result = formDirtyStateService.getTemplateObservationsForDirtyTracking(template);
             expect(result).toEqual([]);
         });
 
@@ -100,7 +100,7 @@ describe('dirtyStateService', function () {
                 component: mockComponent,
                 observations: [{value: 'fallback'}]
             };
-            var result = dirtyStateService.getTemplateObservationsForDirtyTracking(template);
+            var result = formDirtyStateService.getTemplateObservationsForDirtyTracking(template);
             expect(mockComponent.getValue).toHaveBeenCalled();
             expect(result).toEqual([{value: 'form2-obs'}]);
         });
@@ -113,7 +113,7 @@ describe('dirtyStateService', function () {
                 component: mockComponent,
                 observations: [{value: 'fallback'}]
             };
-            var result = dirtyStateService.getTemplateObservationsForDirtyTracking(template);
+            var result = formDirtyStateService.getTemplateObservationsForDirtyTracking(template);
             expect(result).toEqual([{value: 'fallback'}]);
         });
     });
@@ -128,19 +128,19 @@ describe('dirtyStateService', function () {
                     observations: [{value: 'obs3'}]
                 }
             ];
-            var result = dirtyStateService.getObsValues(templates);
+            var result = formDirtyStateService.getObsValues(templates);
             var parsed = JSON.parse(result);
             expect(parsed).toEqual(['obs1', 'obs2', 'obs3']);
         });
 
         it('should return empty JSON array when no templates', function () {
-            var result = dirtyStateService.getObsValues(null);
+            var result = formDirtyStateService.getObsValues(null);
             expect(result).toBe('[]');
         });
 
         it('should handle templates with no observations', function () {
             var templates = [{observations: []}];
-            var result = dirtyStateService.getObsValues(templates);
+            var result = formDirtyStateService.getObsValues(templates);
             expect(result).toBe('[]');
         });
 
@@ -155,7 +155,7 @@ describe('dirtyStateService', function () {
                     }]
                 }
             ];
-            var result = dirtyStateService.getObsValues(templates);
+            var result = formDirtyStateService.getObsValues(templates);
             var parsed = JSON.parse(result);
             expect(parsed).toEqual(['member1', 'member2']);
         });
@@ -174,7 +174,7 @@ describe('dirtyStateService', function () {
             };
             var forms = [form];
 
-            dirtyStateService.syncForm2Observations(forms);
+            formDirtyStateService.syncForm2Observations(forms);
 
             expect(form.observations).toEqual([{value: 'new-obs'}]);
         });
@@ -192,7 +192,7 @@ describe('dirtyStateService', function () {
             };
             var forms = [form];
 
-            dirtyStateService.syncForm2Observations(forms);
+            formDirtyStateService.syncForm2Observations(forms);
 
             expect(form.observations).toEqual([obs]);
         });
@@ -206,7 +206,7 @@ describe('dirtyStateService', function () {
                 }
             ];
             expect(function () {
-                dirtyStateService.syncForm2Observations(forms);
+                formDirtyStateService.syncForm2Observations(forms);
             }).not.toThrow();
         });
 
@@ -217,7 +217,7 @@ describe('dirtyStateService', function () {
             };
             var forms = [form];
 
-            dirtyStateService.syncForm2Observations(forms);
+            formDirtyStateService.syncForm2Observations(forms);
 
             expect(form.observations).toEqual([{value: 'original'}]);
         });
@@ -231,7 +231,7 @@ describe('dirtyStateService', function () {
         });
 
         it('should return state object with registered flag set to true', function () {
-            var state = dirtyStateService.registerForm2SyncListeners(callbackSpy);
+            var state = formDirtyStateService.registerForm2SyncListeners(callbackSpy);
 
             expect(state.registered).toBe(true);
             expect(state.listener).toBeDefined();
@@ -239,7 +239,7 @@ describe('dirtyStateService', function () {
         });
 
         it('should return listener function that invokes callback', function () {
-            var state = dirtyStateService.registerForm2SyncListeners(callbackSpy);
+            var state = formDirtyStateService.registerForm2SyncListeners(callbackSpy);
 
             expect(state.listener).toBeDefined();
             state.listener();
@@ -248,7 +248,7 @@ describe('dirtyStateService', function () {
         });
 
         it('should handle multiple callback executions', function () {
-            var state = dirtyStateService.registerForm2SyncListeners(callbackSpy);
+            var state = formDirtyStateService.registerForm2SyncListeners(callbackSpy);
             state.listener();
             state.listener();
 
@@ -259,7 +259,7 @@ describe('dirtyStateService', function () {
     describe('unregisterForm2SyncListeners', function () {
         it('should handle null listener state gracefully', function () {
             expect(function () {
-                dirtyStateService.unregisterForm2SyncListeners(null);
+                formDirtyStateService.unregisterForm2SyncListeners(null);
             }).not.toThrow();
         });
 
@@ -271,7 +271,7 @@ describe('dirtyStateService', function () {
             };
 
             expect(function () {
-                dirtyStateService.unregisterForm2SyncListeners(listenerState);
+                formDirtyStateService.unregisterForm2SyncListeners(listenerState);
             }).not.toThrow();
         });
 
@@ -282,7 +282,7 @@ describe('dirtyStateService', function () {
             };
 
             expect(function () {
-                dirtyStateService.unregisterForm2SyncListeners(listenerState);
+                formDirtyStateService.unregisterForm2SyncListeners(listenerState);
             }).not.toThrow();
         });
 
@@ -295,7 +295,7 @@ describe('dirtyStateService', function () {
             };
 
             expect(function () {
-                dirtyStateService.unregisterForm2SyncListeners(listenerState);
+                formDirtyStateService.unregisterForm2SyncListeners(listenerState);
             }).not.toThrow();
         });
     });
@@ -310,7 +310,7 @@ describe('dirtyStateService', function () {
                     observations: [{uuid: 'obs2', value: 'val2'}]
                 }
             ];
-            var result = dirtyStateService.serializeFormData(templates);
+            var result = formDirtyStateService.serializeFormData(templates);
             var parsed = JSON.parse(result);
             expect(parsed.length).toBe(2);
             expect(parsed[0].uuid).toBe('obs1');
@@ -318,13 +318,13 @@ describe('dirtyStateService', function () {
         });
 
         it('should return empty array when no templates', function () {
-            var result = dirtyStateService.serializeFormData(null);
+            var result = formDirtyStateService.serializeFormData(null);
             expect(result).toBe('[]');
         });
 
         it('should handle templates with no observations', function () {
             var templates = [{observations: []}];
-            var result = dirtyStateService.serializeFormData(templates);
+            var result = formDirtyStateService.serializeFormData(templates);
             expect(result).toBe('[]');
         });
 
@@ -333,7 +333,7 @@ describe('dirtyStateService', function () {
                 {observations: [{value: 1}, {value: 2}]},
                 {observations: [{value: 3}]}
             ];
-            var result = dirtyStateService.serializeFormData(templates);
+            var result = formDirtyStateService.serializeFormData(templates);
             var parsed = JSON.parse(result);
             expect(parsed.length).toBe(3);
         });
@@ -344,7 +344,7 @@ describe('dirtyStateService', function () {
             var templateObs = {value: 'old'};
             var draftObs = {value: 'new'};
 
-            dirtyStateService.populateObservationValues(templateObs, draftObs);
+            formDirtyStateService.populateObservationValues(templateObs, draftObs);
 
             expect(templateObs.value).toBe('new');
         });
@@ -353,7 +353,7 @@ describe('dirtyStateService', function () {
             var templateObs = {comment: 'old'};
             var draftObs = {comment: 'new'};
 
-            dirtyStateService.populateObservationValues(templateObs, draftObs);
+            formDirtyStateService.populateObservationValues(templateObs, draftObs);
 
             expect(templateObs.comment).toBe('new');
         });
@@ -362,7 +362,7 @@ describe('dirtyStateService', function () {
             var templateObs = {isMultiSelect: true, selectedObs: {old: true}};
             var draftObs = {isMultiSelect: true, selectedObs: {new: true}};
 
-            dirtyStateService.populateObservationValues(templateObs, draftObs);
+            formDirtyStateService.populateObservationValues(templateObs, draftObs);
 
             expect(templateObs.selectedObs).toEqual({new: true});
         });
@@ -381,7 +381,7 @@ describe('dirtyStateService', function () {
                 ]
             };
 
-            dirtyStateService.populateObservationValues(templateObs, draftObs);
+            formDirtyStateService.populateObservationValues(templateObs, draftObs);
 
             expect(templateObs.groupMembers[0].value).toBe('new1');
             expect(templateObs.groupMembers[1].value).toBe('new2');
@@ -389,9 +389,9 @@ describe('dirtyStateService', function () {
 
         it('should handle null observations gracefully', function () {
             expect(function () {
-                dirtyStateService.populateObservationValues(null, null);
-                dirtyStateService.populateObservationValues({value: 'test'}, null);
-                dirtyStateService.populateObservationValues(null, {value: 'test'});
+                formDirtyStateService.populateObservationValues(null, null);
+                formDirtyStateService.populateObservationValues({value: 'test'}, null);
+                formDirtyStateService.populateObservationValues(null, {value: 'test'});
             }).not.toThrow();
         });
     });
@@ -409,7 +409,7 @@ describe('dirtyStateService', function () {
                 {concept: {uuid: 'obs1-uuid'}, value: 'draft1', comment: 'test'}
             ]);
 
-            var result = dirtyStateService.populateFormWithDraftData(draftData, templates);
+            var result = formDirtyStateService.populateFormWithDraftData(draftData, templates);
 
             expect(result.success).toBe(true);
             expect(templates[0].observations[0].value).toBe('draft1');
@@ -420,14 +420,14 @@ describe('dirtyStateService', function () {
             var templates = [{observations: []}];
             var invalidJson = '{invalid json}';
 
-            var result = dirtyStateService.populateFormWithDraftData(invalidJson, templates);
+            var result = formDirtyStateService.populateFormWithDraftData(invalidJson, templates);
 
             expect(result.success).toBe(false);
             expect(result.error).toBeDefined();
         });
 
         it('should return success: false for missing data', function () {
-            var result = dirtyStateService.populateFormWithDraftData(null, null);
+            var result = formDirtyStateService.populateFormWithDraftData(null, null);
             expect(result.success).toBe(false);
         });
 
@@ -445,7 +445,7 @@ describe('dirtyStateService', function () {
                 {concept: {uuid: 'uuid-2'}, value: 'new2'}
             ]);
 
-            var result = dirtyStateService.populateFormWithDraftData(draftData, templates);
+            var result = formDirtyStateService.populateFormWithDraftData(draftData, templates);
 
             expect(result.success).toBe(true);
             expect(templates[0].observations[0].value).toBe('new1');
@@ -456,7 +456,7 @@ describe('dirtyStateService', function () {
             var templates = [{observations: [{value: 'original'}]}];
             var draftData = JSON.stringify([]);
 
-            var result = dirtyStateService.populateFormWithDraftData(draftData, templates);
+            var result = formDirtyStateService.populateFormWithDraftData(draftData, templates);
 
             expect(result.success).toBe(true);
             expect(templates[0].observations[0].value).toBe('original');
@@ -484,7 +484,7 @@ describe('dirtyStateService', function () {
                 }
             ]);
 
-            var result = dirtyStateService.populateFormWithDraftData(draftData, templates);
+            var result = formDirtyStateService.populateFormWithDraftData(draftData, templates);
 
             expect(result.success).toBe(true);
             expect(templates[0].observations[0].groupMembers[0].value).toBe('new');

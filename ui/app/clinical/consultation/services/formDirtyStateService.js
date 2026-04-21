@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .factory('dirtyStateService', [function () {
+    .factory('formDirtyStateService', [function () {
         /**
          * Recursively collects observation values from an obs tree.
          * Handles multiSelect fields, group members, and scalar values.
