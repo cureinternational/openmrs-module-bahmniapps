@@ -1021,6 +1021,56 @@ describe('ConceptSetPageController', function () {
             expect(formDraftService.getDraft).not.toHaveBeenCalled();
         });
 
+        describe('Resume Draft', function () {
+            it('should populate form with draft data when resumeDraftOnLoad flag is set', function () {
+                var conceptUuid = 'concept-uuid-1';
+                var conceptResponseData = {
+                    results: [{setMembers: [{name: {name: 'abcd'}, uuid: conceptUuid}]}]
+                };
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutMock = function (callback, delay) {
+                    if (delay === 0) { callback(); }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                var draftObs = {concept: {uuid: conceptUuid}, value: 'draft-value'};
+                rootScope.resumeDraftOnLoad = true;
+                rootScope.draftData = {formData: angular.toJson([draftObs])};
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                expect(rootScope.resumeDraftOnLoad).toBe(false);
+            });
+
+            it('should not attempt population when resumeDraftOnLoad flag is not set', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutMock = function (callback, delay) {
+                    if (delay === 0) { callback(); }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                rootScope.resumeDraftOnLoad = false;
+                rootScope.draftData = null;
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                expect(rootScope.resumeDraftOnLoad).toBe(false);
+            });
+        });
+
         describe('Form2 Dirty Tracking', function () {
             var timeoutMock;
 

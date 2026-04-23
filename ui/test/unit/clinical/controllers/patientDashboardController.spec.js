@@ -419,6 +419,59 @@ describe("patient dashboard controller", function () {
             expect(scope.formDraft.draftTime).toBeNull();
         });
 
+        describe("resumeDraft", function () {
+            it("should make GET call, set resumeDraftOnLoad flag and navigate to observations page", function () {
+                _state.go = jasmine.createSpy('go');
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', formData: '[]', markedAsSaved: false}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+                scope.resumeDraft();
+
+                expect(_formDraftService.getDraft).toHaveBeenCalledWith('patient-uuid', 'provider-uuid');
+                expect(_rootScope.resumeDraftOnLoad).toBe(true);
+                expect(_rootScope.draftData.uuid).toBe('draft-uuid');
+                expect(_state.go).toHaveBeenCalledWith('patient.dashboard.show.observations', {
+                    conceptSetGroupName: 'All Observation Templates'
+                });
+            });
+
+            it("should not navigate when patient uuid is missing", function () {
+                _state.go = jasmine.createSpy('go');
+                createControllerForDraft(null, {uuid: 'provider-uuid'});
+                scope.resumeDraft();
+                expect(_state.go).not.toHaveBeenCalled();
+            });
+
+            it("should not navigate when provider uuid is missing", function () {
+                _state.go = jasmine.createSpy('go');
+                createControllerForDraft({uuid: 'patient-uuid'}, null);
+                scope.resumeDraft();
+                expect(_state.go).not.toHaveBeenCalled();
+            });
+
+            it("should not navigate when draft is already marked as saved", function () {
+                _state.go = jasmine.createSpy('go');
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', markedAsSaved: true}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+                scope.resumeDraft();
+
+                expect(_state.go).not.toHaveBeenCalled();
+            });
+        });
+
         it("should use dashboard-content templateUrl when dashboard-content view is configured", function () {
             _state.current.views['dashboard-content'] = {
                 templateUrl: 'dashboard/views/custom-content.html'

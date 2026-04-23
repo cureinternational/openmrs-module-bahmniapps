@@ -61,6 +61,10 @@ angular.module('bahmni.clinical')
                         openTemplate(templateToBeOpened);
                     }
                 }
+                if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
+                    populateFormWithDraftData($rootScope.draftData.formData);
+                    $rootScope.resumeDraftOnLoad = false;
+                }
                 $timeout(setupDirtyTracking, 0);
             };
 
