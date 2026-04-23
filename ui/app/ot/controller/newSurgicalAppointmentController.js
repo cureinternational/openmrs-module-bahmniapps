@@ -119,8 +119,12 @@ angular.module('bahmni.ot')
                         return surgicalAppointment.isBeingEdited;
                     });
 
-                    delete $scope.surgicalForm.surgicalAppointments[appointment.sortWeight].isBeingEdited;
-                    delete $scope.ngDialogData.isBeingEdited;
+                    if (appointment && $scope.surgicalForm.surgicalAppointments[appointment.sortWeight]) {
+                        delete $scope.surgicalForm.surgicalAppointments[appointment.sortWeight].isBeingEdited;
+                    }
+                    if ($scope.ngDialogData.isBeingEdited) {
+                        delete $scope.ngDialogData.isBeingEdited;
+                    }
                 }
                 ngDialog.close();
             };
