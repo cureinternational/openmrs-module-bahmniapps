@@ -36,15 +36,33 @@ angular.module('bahmni.clinical')
                             spinner.forPromise(formService.getFormList($scope.consultation.encounterUuid)
                                 .then(function (response) {
                                     $scope.consultation.observationForms = getObservationForms(response.data);
-                                    concatObservationForms();
+                                    loadDraftThenConcat();
                                 })
                             );
                         } else {
-                            concatObservationForms();
+                            loadDraftThenConcat();
                         }
                     }));
                 }
             };
+            var loadDraftThenConcat = function () {
+                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
+                var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
+                if ($scope.enableFormDraftFeature && !$rootScope.resumeDraftOnLoad && patientUuid && providerUuid) {
+                    formDraftService.getDraft(patientUuid, providerUuid).then(function (response) {
+                        if (response.data && response.data.uuid && !response.data.markedAsSaved) {
+                            $rootScope.draftData = response.data;
+                            $rootScope.resumeDraftOnLoad = true;
+                        }
+                        concatObservationForms();
+                    }, function () {
+                        concatObservationForms();
+                    });
+                } else {
+                    concatObservationForms();
+                }
+            };
+
             var concatObservationForms = function () {
                 $scope.allTemplates = getSelectedObsTemplate(allConceptSections);
                 $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
