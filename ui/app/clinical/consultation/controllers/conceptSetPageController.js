@@ -49,10 +49,60 @@ angular.module('bahmni.clinical')
                 $scope.allTemplates = getSelectedObsTemplate(allConceptSections);
                 $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
                 $scope.allTemplates = $scope.allTemplates.concat($scope.consultation.observationForms);
+
+                if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
+                    var parsedDraftObs = angular.fromJson($rootScope.draftData.formData);
+                    if (parsedDraftObs && parsedDraftObs.length > 0) {
+                        var stripObservationFlags = function (obs) {
+                            if (!obs) { return obs; }
+                            var copy = angular.copy(obs);
+                            delete copy.isObservation;
+                            delete copy.isObservationNode;
+                            if (copy.groupMembers && copy.groupMembers.length > 0) {
+                                copy.groupMembers = _.map(copy.groupMembers, stripObservationFlags);
+                            }
+                            return copy;
+                        };
+                        _.each(parsedDraftObs, function (draftObs) {
+                            if (!draftObs.concept) { return; }
+                            var matchingTemplate = _.find($scope.allTemplates, function (t) {
+                                return t.uuid === draftObs.concept.uuid;
+                            });
+                            if (matchingTemplate && (!matchingTemplate.observations || matchingTemplate.observations.length === 0)) {
+                                matchingTemplate.observations = [stripObservationFlags(draftObs)];
+                            }
+                        });
+                        var form2DraftObs = _.filter(parsedDraftObs, function (draftObs) {
+                            return draftObs.formNamespace === 'Bahmni' && draftObs.formFieldPath;
+                        });
+                        if (form2DraftObs.length > 0) {
+                            _.each($scope.consultation.observationForms, function (obsForm) {
+                                var matchingObs = _.filter(form2DraftObs, function (draftObs) {
+                                    return draftObs.formFieldPath.split('.')[0] === obsForm.formName;
+                                });
+                                if (matchingObs.length > 0 && obsForm.observations.length === 0) {
+                                    _.each(matchingObs, function (obs) {
+                                        obsForm.observations.push(obs);
+                                    });
+                                    obsForm.isOpen = true;
+                                }
+                            });
+                        }
+                    }
+                }
+
                 if ($scope.consultation.selectedObsTemplate.length == 0) {
                     initializeDefaultTemplates();
                     if ($scope.consultation.observations && $scope.consultation.observations.length > 0) {
                         addTemplatesInSavedOrder();
+                    }
+                    if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
+                        _.each($scope.allTemplates, function (template) {
+                            if (template.observations && template.observations.length > 0 &&
+                                !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
+                                insertTemplate(template);
+                            }
+                        });
                     }
                     var templateToBeOpened = getLastVisitedTemplate() ||
                         _.first($scope.consultation.selectedObsTemplate);
