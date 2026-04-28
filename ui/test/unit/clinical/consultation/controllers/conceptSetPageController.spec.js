@@ -70,7 +70,6 @@ describe('ConceptSetPageController', function () {
         appDescriptor.getConfigValue.and.returnValue(false);
         appService.getAppDescriptor.and.returnValue(appDescriptor);
         formDraftService = jasmine.createSpyObj('formDraftService', ['saveDraft', 'getDraft']);
-        // Configure getDraft to return a rejected promise by default (no existing draft)
         formDraftService.getDraft.and.returnValue({
             then: function (success, error) {
                 if (error) error();
@@ -748,7 +747,6 @@ describe('ConceptSetPageController', function () {
             createControllerWithTimeoutAndFilter();
             scope.saveAsDraft();
 
-            // The controller uses .then(successFn, errorFn) - trigger the error via the second argument
             var thenArgs = saveDraftPromise.then.calls.mostRecent().args;
             thenArgs[1]({status: 500, data: {error: {message: 'Server error'}}});
 
@@ -808,7 +806,6 @@ describe('ConceptSetPageController', function () {
             var postSaveHandler = scope.consultation.postSaveHandler;
             expect(postSaveHandler).toBeDefined();
 
-            // Execute the post-save handler
             postSaveHandler.fire();
 
             expect(scope.formDraft.isDirty).toBe(false);
@@ -1021,6 +1018,86 @@ describe('ConceptSetPageController', function () {
             expect(formDraftService.getDraft).not.toHaveBeenCalled();
         });
 
+        describe('checkForExistingDrafts — resume race condition guard', function () {
+            var timeoutMock;
+
+            beforeEach(function () {
+                timeoutMock = function (callback, delay) {
+                    if (delay === 0 || delay === 500) { callback(); }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+            });
+
+            it('should not clobber draftData when resumeDraftOnLoad is set and getDraft returns no valid draft', function () {
+                scope.allTemplates = [{uuid: 'some-template', label: 'T', observations: [],
+                    isDefault: function () { return false; }, alwaysShow: false, isAvailable: function () { return true; }}];
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                var existingDraftData = {uuid: 'draft-uuid', formData: '[]', markedAsSaved: false};
+                rootScope.resumeDraftOnLoad = true;
+                rootScope.draftData = existingDraftData;
+
+                formDraftService.getDraft.and.returnValue({
+                    then: function (success, error) {
+                        success({data: {uuid: null}});
+                        return {catch: function () { return this; }};
+                    }
+                });
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                expect(rootScope.draftData).not.toBeNull();
+                expect(rootScope.draftData.uuid).toBe('draft-uuid');
+            });
+
+            it('should not clobber draftData when resumeDraftOnLoad is set and getDraft errors', function () {
+                scope.allTemplates = [{uuid: 'some-template', label: 'T', observations: [],
+                    isDefault: function () { return false; }, alwaysShow: false, isAvailable: function () { return true; }}];
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                var existingDraftData = {uuid: 'draft-uuid', formData: '[]', markedAsSaved: false};
+                rootScope.resumeDraftOnLoad = true;
+                rootScope.draftData = existingDraftData;
+
+                formDraftService.getDraft.and.returnValue({
+                    then: function (success, error) {
+                        error({status: 500});
+                        return {catch: function () { return this; }};
+                    }
+                });
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                expect(rootScope.draftData).not.toBeNull();
+                expect(rootScope.draftData.uuid).toBe('draft-uuid');
+            });
+
+            it('should still null draftData when resumeDraftOnLoad is false and getDraft returns no valid draft', function () {
+                scope.allTemplates = [{uuid: 'some-template', label: 'T', observations: [],
+                    isDefault: function () { return false; }, alwaysShow: false, isAvailable: function () { return true; }}];
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+                rootScope.resumeDraftOnLoad = false;
+
+                formDraftService.getDraft.and.returnValue({
+                    then: function (success, error) {
+                        success({data: {uuid: null}});
+                        return {catch: function () { return this; }};
+                    }
+                });
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                expect(rootScope.draftData).toBeNull();
+            });
+        });
+
         describe('Resume Draft', function () {
             it('should populate form with draft data when resumeDraftOnLoad flag is set', function () {
                 var conceptUuid = 'concept-uuid-1';
@@ -1069,6 +1146,55 @@ describe('ConceptSetPageController', function () {
 
                 expect(rootScope.resumeDraftOnLoad).toBe(false);
             });
+
+            it('should always clear resumeDraftOnLoad even when formData is absent', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 'concept-uuid-1'}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutMock = function (callback, delay) {
+                    if (delay === 0) { callback(); }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                rootScope.resumeDraftOnLoad = true;
+                rootScope.draftData = {uuid: 'draft-uuid', formData: null};
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                expect(rootScope.resumeDraftOnLoad).toBe(false);
+            });
+
+            it('should not populate forms from a different patient when resumeDraftPatientUuid does not match', function () {
+                var conceptUuid = 'concept-uuid-1';
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: conceptUuid}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+
+                var timeoutMock = function (callback, delay) {
+                    if (delay === 0) { callback(); }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                var draftObs = [{concept: {uuid: conceptUuid}, isObservation: true, groupMembers: []}];
+                rootScope.resumeDraftOnLoad = true;
+                rootScope.resumeDraftPatientUuid = 'other-patient-uuid';
+                rootScope.draftData = {formData: angular.toJson(draftObs)};
+                scope.patient = {uuid: 'current-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                var template = _.find(scope.allTemplates, function (t) { return t.uuid === conceptUuid; });
+                expect(template.observations.length).toBe(0);
+                expect(rootScope.resumeDraftOnLoad).toBe(false);
+                expect(rootScope.resumeDraftPatientUuid).toBeNull();
+            });
         });
 
         describe('Auto-populate draft on direct navigation', function () {
@@ -1088,8 +1214,6 @@ describe('ConceptSetPageController', function () {
                 appService.getAppDescriptor.and.returnValue(appDescriptor);
             };
 
-            // Both loadDraftThenConcat and checkForExistingDrafts call getDraft, so the mock
-            // must support .then(success, error).catch(fn) chaining on each invocation.
             var mockDraftSuccess = function (draftData) {
                 formDraftService.getDraft.and.returnValue({
                     then: function (success, error) {
@@ -1173,7 +1297,6 @@ describe('ConceptSetPageController', function () {
             });
 
             it('should not call getDraft from loadDraftThenConcat when resumeDraftOnLoad is already set (Resume button path)', function () {
-                // checkForExistingDrafts still calls getDraft once; loadDraftThenConcat must not add a second call
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 'concept-uuid-1'}]}]};
                 mockConceptSetService(conceptResponseData);
                 mockformService({});
@@ -1190,11 +1313,9 @@ describe('ConceptSetPageController', function () {
             });
 
             it('should not call getDraft from loadDraftThenConcat when enableFormDraftFeature is false', function () {
-                // checkForExistingDrafts still calls getDraft once; loadDraftThenConcat must not add a second call
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 'concept-uuid-1'}]}]};
                 mockConceptSetService(conceptResponseData);
                 mockformService({});
-                // enableFormDraftFeature is false by default in beforeEach
 
                 scope.patient = {uuid: 'test-patient-uuid'};
                 rootScope.currentProvider = {uuid: 'test-provider-uuid'};
@@ -1311,7 +1432,6 @@ describe('ConceptSetPageController', function () {
             };
 
             it('should call loadDraftThenConcat via the else branch when observationForms is already populated', function () {
-                // Covers the else branch at line 43 (observationForms pre-set, getFormList not called)
                 var conceptUuid = 'concept-uuid-1';
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: conceptUuid}]}]};
                 mockConceptSetService(conceptResponseData);
@@ -1322,7 +1442,6 @@ describe('ConceptSetPageController', function () {
                 rootScope.resumeDraftOnLoad = false;
                 rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
 
-                // Pre-populate observationForms so the else branch is taken
                 scope.consultation.observationForms = [{
                     formName: 'Pre-loaded Form', formUuid: 'pre-loaded-uuid', formVersion: '1',
                     label: 'Pre-loaded Form', conceptName: 'Pre-loaded Form',
@@ -1340,21 +1459,17 @@ describe('ConceptSetPageController', function () {
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                // formService.getFormList should NOT have been called (else branch skips it)
                 expect(formService.getFormList).not.toHaveBeenCalled();
-                // getDraft was still called by loadDraftThenConcat and checkForExistingDrafts
                 expect(formDraftService.getDraft).toHaveBeenCalledWith('test-patient-uuid', 'test-provider-uuid');
             });
 
             it('should handle null groupMember inside stripObservationFlags without throwing', function () {
-                // Covers the null-guard at line 75 inside stripObservationFlags
                 var conceptUuid = 'concept-uuid-1';
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: conceptUuid}]}]};
                 mockConceptSetService(conceptResponseData);
                 mockformService({});
                 rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
 
-                // Draft obs with a null entry in groupMembers
                 var draftObs = [{
                     concept: {uuid: conceptUuid}, isObservation: true,
                     groupMembers: [null, {concept: {uuid: 'child-uuid'}, value: 'v', isObservation: true}]
@@ -1371,14 +1486,12 @@ describe('ConceptSetPageController', function () {
             });
 
             it('should skip draft obs that have no concept property', function () {
-                // Covers the early-return at line 85 inside the _.each loop
                 var conceptUuid = 'concept-uuid-1';
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: conceptUuid}]}]};
                 mockConceptSetService(conceptResponseData);
                 mockformService({});
                 rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
 
-                // Mix: one valid obs, one without concept
                 var draftObs = [
                     {isObservation: true, value: 'orphan', groupMembers: []},
                     {concept: {uuid: conceptUuid, name: 'abcd'}, isObservation: true, groupMembers: []}
@@ -1767,7 +1880,6 @@ describe('ConceptSetPageController', function () {
 
                 scope.$digest();
 
-                // Destroy the scope
                 scope.$destroy();
                 expect(removeEventListenerSpy).toHaveBeenCalledWith('input', jasmine.any(Function), true);
                 expect(removeEventListenerSpy).toHaveBeenCalledWith('change', jasmine.any(Function), true);

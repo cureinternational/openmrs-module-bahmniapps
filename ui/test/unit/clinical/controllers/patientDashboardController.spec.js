@@ -420,6 +420,10 @@ describe("patient dashboard controller", function () {
         });
 
         describe("resumeDraft", function () {
+            beforeEach(function () {
+                _appConfig.getConfigValue.and.returnValue(true);
+            });
+
             it("should make GET call, set resumeDraftOnLoad flag and navigate to observations page", function () {
                 _state.go = jasmine.createSpy('go');
                 _formDraftService.getDraft.and.returnValue({
@@ -468,6 +472,41 @@ describe("patient dashboard controller", function () {
                 createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
                 scope.resumeDraft();
 
+                expect(_state.go).not.toHaveBeenCalled();
+            });
+
+            it("should set statusError when getDraft fails during resumeDraft", function () {
+                _state.go = jasmine.createSpy('go');
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success, error) {
+                        error({status: 500});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+                scope.resumeDraft();
+
+                expect(_state.go).not.toHaveBeenCalled();
+                expect(scope.formDraft.statusError).toBe(true);
+                expect(scope.formDraft.statusMessage).toBe('RESUME_DRAFT_ERROR_KEY');
+            });
+
+            it("should not call getDraft or navigate when enableFormDraftFeature is false", function () {
+                _state.go = jasmine.createSpy('go');
+                _appConfig.getConfigValue.and.returnValue(false);
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success, error) { if (error) { error(); } return this; },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+                _formDraftService.getDraft.calls.reset();
+
+                scope.resumeDraft();
+
+                expect(_formDraftService.getDraft).not.toHaveBeenCalled();
                 expect(_state.go).not.toHaveBeenCalled();
             });
         });

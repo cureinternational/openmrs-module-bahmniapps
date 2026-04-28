@@ -49,10 +49,14 @@ angular.module('bahmni.clinical')
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
                 if ($scope.enableFormDraftFeature && !$rootScope.resumeDraftOnLoad && patientUuid && providerUuid) {
-                    formDraftService.getDraft(patientUuid, providerUuid).then(function (response) {
-                        if (response.data && response.data.uuid && !response.data.markedAsSaved) {
+                    var promise = draftCheckPromise || formDraftService.getDraft(patientUuid, providerUuid);
+                    promise.then(function (response) {
+                        if (response && response.data && response.data.uuid && !response.data.markedAsSaved) {
                             $rootScope.draftData = response.data;
+                        }
+                        if ($rootScope.draftData && $rootScope.draftData.uuid && !$rootScope.draftData.markedAsSaved) {
                             $rootScope.resumeDraftOnLoad = true;
+                            $rootScope.resumeDraftPatientUuid = patientUuid;
                         }
                         concatObservationForms();
                     }, function () {
@@ -68,44 +72,56 @@ angular.module('bahmni.clinical')
                 $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
                 $scope.allTemplates = $scope.allTemplates.concat($scope.consultation.observationForms);
 
-                if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
-                    var parsedDraftObs = angular.fromJson($rootScope.draftData.formData);
-                    if (parsedDraftObs && parsedDraftObs.length > 0) {
-                        var stripObservationFlags = function (obs) {
-                            if (!obs) { return obs; }
-                            var copy = angular.copy(obs);
-                            delete copy.isObservation;
-                            delete copy.isObservationNode;
-                            if (copy.groupMembers && copy.groupMembers.length > 0) {
-                                copy.groupMembers = _.map(copy.groupMembers, stripObservationFlags);
-                            }
-                            return copy;
-                        };
-                        _.each(parsedDraftObs, function (draftObs) {
-                            if (!draftObs.concept) { return; }
-                            var matchingTemplate = _.find($scope.allTemplates, function (t) {
-                                return t.uuid === draftObs.concept.uuid;
-                            });
-                            if (matchingTemplate && (!matchingTemplate.observations || matchingTemplate.observations.length === 0)) {
-                                matchingTemplate.observations = [stripObservationFlags(draftObs)];
-                            }
-                        });
-                        var form2DraftObs = _.filter(parsedDraftObs, function (draftObs) {
-                            return draftObs.formNamespace === 'Bahmni' && draftObs.formFieldPath;
-                        });
-                        if (form2DraftObs.length > 0) {
-                            _.each($scope.consultation.observationForms, function (obsForm) {
-                                var matchingObs = _.filter(form2DraftObs, function (draftObs) {
-                                    return draftObs.formFieldPath.split('.')[0] === obsForm.formName;
-                                });
-                                if (matchingObs.length > 0 && obsForm.observations.length === 0) {
-                                    _.each(matchingObs, function (obs) {
-                                        obsForm.observations.push(obs);
-                                    });
-                                    obsForm.isOpen = true;
-                                }
-                            });
+                var currentPatientUuid = $scope.patient ? $scope.patient.uuid : null;
+                var isDraftResumeValid = $rootScope.resumeDraftOnLoad &&
+                    $rootScope.draftData &&
+                    (!$rootScope.resumeDraftPatientUuid || $rootScope.resumeDraftPatientUuid === currentPatientUuid);
+                var draftFormData = isDraftResumeValid && $rootScope.draftData.formData ? $rootScope.draftData.formData : null;
+
+                var parsedDraftObs = null;
+                if (draftFormData) {
+                    try {
+                        parsedDraftObs = angular.fromJson(draftFormData);
+                    } catch (e) {
+                        parsedDraftObs = null;
+                    }
+                }
+
+                if (parsedDraftObs && parsedDraftObs.length > 0) {
+                    var stripObservationFlags = function (obs) {
+                        if (!obs) { return obs; }
+                        var copy = angular.copy(obs);
+                        delete copy.isObservation;
+                        delete copy.isObservationNode;
+                        if (copy.groupMembers && copy.groupMembers.length > 0) {
+                            copy.groupMembers = _.map(copy.groupMembers, stripObservationFlags);
                         }
+                        return copy;
+                    };
+                    _.each(parsedDraftObs, function (draftObs) {
+                        if (!draftObs.concept) { return; }
+                        var matchingTemplate = _.find($scope.allTemplates, function (t) {
+                            return t.uuid === draftObs.concept.uuid;
+                        });
+                        if (matchingTemplate && (!matchingTemplate.observations || matchingTemplate.observations.length === 0)) {
+                            matchingTemplate.observations = [stripObservationFlags(draftObs)];
+                        }
+                    });
+                    var form2DraftObs = _.filter(parsedDraftObs, function (draftObs) {
+                        return draftObs.formNamespace === 'Bahmni' && draftObs.formFieldPath;
+                    });
+                    if (form2DraftObs.length > 0) {
+                        _.each($scope.consultation.observationForms, function (obsForm) {
+                            var matchingObs = _.filter(form2DraftObs, function (draftObs) {
+                                return draftObs.formFieldPath.split('.')[0] === obsForm.formName;
+                            });
+                            if (matchingObs.length > 0 && obsForm.observations.length === 0) {
+                                _.each(matchingObs, function (obs) {
+                                    obsForm.observations.push(obs);
+                                });
+                                obsForm.isOpen = true;
+                            }
+                        });
                     }
                 }
 
@@ -114,7 +130,7 @@ angular.module('bahmni.clinical')
                     if ($scope.consultation.observations && $scope.consultation.observations.length > 0) {
                         addTemplatesInSavedOrder();
                     }
-                    if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
+                    if (draftFormData) {
                         _.each($scope.allTemplates, function (template) {
                             if (template.observations && template.observations.length > 0 &&
                                 !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
@@ -129,9 +145,12 @@ angular.module('bahmni.clinical')
                         openTemplate(templateToBeOpened);
                     }
                 }
-                if ($rootScope.resumeDraftOnLoad && $rootScope.draftData && $rootScope.draftData.formData) {
-                    populateFormWithDraftData($rootScope.draftData.formData);
+                if (draftFormData) {
+                    populateFormWithDraftData(draftFormData);
+                }
+                if ($rootScope.resumeDraftOnLoad) {
                     $rootScope.resumeDraftOnLoad = false;
+                    $rootScope.resumeDraftPatientUuid = null;
                 }
                 $timeout(setupDirtyTracking, 0);
             };
@@ -487,6 +506,7 @@ angular.module('bahmni.clinical')
 
             $scope.saveAsDraft = saveFormDraft;
 
+            var draftCheckPromise = null;
             var draftContextWatchDeregister = null;
 
             var checkForExistingDrafts = function () {
@@ -504,7 +524,8 @@ angular.module('bahmni.clinical')
                     return true;
                 }
 
-                formDraftService.getDraft(patientUuid, providerUuid).then(
+                draftCheckPromise = formDraftService.getDraft(patientUuid, providerUuid);
+                draftCheckPromise.then(
                     function (response) {
                         if (response.data && response.data.uuid && !response.data.markedAsSaved) {
                             $scope.formDraft.hasDrafts = true;
@@ -518,18 +539,22 @@ angular.module('bahmni.clinical')
                                 $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
                                 $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
                             }
-                        } else {
+                        } else if (!$rootScope.resumeDraftOnLoad) {
                             $rootScope.draftData = null;
                             clearDraftStatus();
                         }
                     },
                     function () {
+                        if (!$rootScope.resumeDraftOnLoad) {
+                            $rootScope.draftData = null;
+                            clearDraftStatus();
+                        }
+                    }
+                ).catch(function () {
+                    if (!$rootScope.resumeDraftOnLoad) {
                         $rootScope.draftData = null;
                         clearDraftStatus();
                     }
-                ).catch(function () {
-                    $rootScope.draftData = null;
-                    clearDraftStatus();
                 });
 
                 return true;
