@@ -56,26 +56,8 @@ angular.module('bahmni.clinical')
                 if (!$scope.enableFormDraftFeature) {
                     return;
                 }
-
-                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
-                var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
-
-                if (!patientUuid || !providerUuid) {
-                    return;
-                }
-
-                formDraftService.getDraft(patientUuid, providerUuid).then(function (response) {
-                    if (response.data && response.data.uuid && !response.data.markedAsSaved) {
-                        $rootScope.draftData = response.data;
-                        $rootScope.resumeDraftOnLoad = true;
-                        $rootScope.resumeDraftPatientUuid = patientUuid;
-                        $state.go('patient.dashboard.show.observations', {
-                            conceptSetGroupName: 'All Observation Templates'
-                        });
-                    }
-                }, function () {
-                    $scope.formDraft.statusMessage = 'RESUME_DRAFT_ERROR_KEY';
-                    $scope.formDraft.statusError = true;
+                $state.go('patient.dashboard.show.observations', {
+                    conceptSetGroupName: 'All Observation Templates'
                 });
             };
 
