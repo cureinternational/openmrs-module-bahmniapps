@@ -193,6 +193,9 @@
   "DRUG_DETAILS_QUANTITY_TEXT": "Quantity",
   "DRUG_DETAILS_DURATION": "Duration",
   "DRUG_DETAILS_ADDITIONAL_INSTRUCTIONS": "Additional instructions",
+  "MEDICATION_PHARMACIST_REVIEW_HEADING": "New Medications Available to be Dispensed",
+  "MEDICATION_PHARMACIST_REVIEW_SUBTEXT": "Please review the patient's weight, allergies, and prescriptions to continue with dispensing.",
+  "MEDICATION_CONFIRM_REVIEW": "Confirm Review",
 
   "MONTHS": "January, February, March, April, May, June, July, August, September, October, November, December",
   "CHOOSE_MONTH_KEY": "Choose month",
