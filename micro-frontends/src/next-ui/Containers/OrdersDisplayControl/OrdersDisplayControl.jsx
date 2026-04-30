@@ -89,6 +89,7 @@ export function OrdersDisplayControl({hostData}) {
         const payload = {
             category: orderType.uuid,
             patient: patient.uuid,
+            _count:100
         }
         if(numberOfVisits){
             payload.numberOfVisits = numberOfVisits;
