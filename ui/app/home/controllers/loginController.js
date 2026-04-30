@@ -1,14 +1,24 @@
 'use strict';
 
 angular.module('bahmni.home')
-    .controller('LoginController', ['$rootScope', '$scope', '$window', '$location', 'sessionService', 'initialData', 'spinner', '$q', '$stateParams', '$bahmniCookieStore', 'localeService', '$translate', 'userService', 'auditLogService', '$state',
-        function ($rootScope, $scope, $window, $location, sessionService, initialData, spinner, $q, $stateParams, $bahmniCookieStore, localeService, $translate, userService, auditLogService, $state) {
+    .controller('LoginController', ['$rootScope', '$scope', '$window', '$location', 'sessionService', 'initialData', 'spinner', '$q', '$stateParams', '$bahmniCookieStore', 'localeService', '$translate', 'userService', 'auditLogService', '$state', '$timeout',
+        function ($rootScope, $scope, $window, $location, sessionService, initialData, spinner, $q, $stateParams, $bahmniCookieStore, localeService, $translate, userService, auditLogService, $state, $timeout)
+        {
             var redirectUrl = $location.search()['from'];
             var landingPagePath = "/dashboard";
             var loginPagePath = "/login";
             $scope.locations = initialData.locations;
             $scope.loginInfo = {};
             var localeLanguages = [];
+
+            var focusUsername = function () {
+                $timeout(function () {
+                    var el = document.getElementById('username');
+                    if (el && el.offsetParent !== null) {
+                        el.focus();
+                    }
+                }, 0);
+            };
 
             var getLocalTimeZone = function () {
                 var currentLocalTime = new Date().toString();
@@ -202,6 +212,8 @@ angular.module('bahmni.home')
                     delete $scope.loginInfo.otp;
                     delete $scope.loginInfo.username;
                     delete $scope.loginInfo.password;
+
+                    focusUsername();
                 };
 
                 $scope.resendOTP = function () {
@@ -247,7 +259,10 @@ angular.module('bahmni.home')
                             }
                             $state.go('loginLocation', {});
                         }
+                        focusUsername();
                     }
+
                 );
             };
+            focusUsername();
         }]);

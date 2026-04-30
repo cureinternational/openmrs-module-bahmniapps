@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.home')
-    .controller('LoginLocationController', ['$rootScope', '$scope', '$window', '$location', 'sessionService', 'initialData', 'spinner', '$q', '$stateParams', '$bahmniCookieStore', 'localeService', '$translate', 'userService', 'auditLogService',
-        function ($rootScope, $scope, $window, $location, sessionService, initialData, spinner, $q, $stateParams, $bahmniCookieStore, localeService, $translate, userService, auditLogService) {
+    .controller('LoginLocationController', ['$rootScope', '$scope', '$window', '$location', 'sessionService', 'initialData', 'spinner', '$q', '$stateParams', '$bahmniCookieStore', 'localeService', '$translate', 'userService', 'auditLogService', '$timeout',
+        function ($rootScope, $scope, $window, $location, sessionService, initialData, spinner, $q, $stateParams, $bahmniCookieStore, localeService, $translate, userService, auditLogService, $timeout) {
             var redirectUrl = $location.search()['from'];
             var landingPagePath = "/dashboard";
             var loginPagePath = "/login";
@@ -142,4 +142,11 @@ angular.module('bahmni.home')
                     }
                 );
             };
+
+            $timeout(function () {
+                var el = document.getElementById('location');
+                if (el) {
+                    el.focus();
+                }
+            }, 0);
         }]);
