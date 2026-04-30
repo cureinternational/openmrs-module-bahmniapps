@@ -147,6 +147,7 @@ describe("OrdersDisplayControl", () => {
         "/openmrs/ws/fhir2/R4/ServiceRequest",
         {
           params: {
+            _count: 100,
             category: "order-type-uuid-123",
             patient: "patient-uuid-456",
           },
