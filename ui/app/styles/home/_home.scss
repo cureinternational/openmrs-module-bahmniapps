@@ -409,6 +409,9 @@ body {
         select {
           width: 99%;
         }
+        select#location {
+          margin-bottom: 2px;
+        }
       }
     }
     .form-footer {
