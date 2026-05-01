@@ -1,7 +1,7 @@
 'use strict';
 
 describe('ConceptSetPageController', function () {
-    var scope, controller, rootScope, conceptSetService, configurations, clinicalAppConfigService, state, encounterConfig, spinner, messagingService, translate, stateParams, formService, appService, formDraftService;
+    var scope, controller, rootScope, conceptSetService, configurations, clinicalAppConfigService, state, encounterConfig, spinner, messagingService, translate, stateParams, formService, appService, formDraftService, autoSaveService;
     stateParams = {conceptSetGroupName: "concept set group name"};
     var extension = {"extension": {
         extensionParams: {}
@@ -79,6 +79,12 @@ describe('ConceptSetPageController', function () {
                 return this;
             }
         });
+        autoSaveService = jasmine.createSpyObj('autoSaveService', [
+            'registerObservationForm',
+            'unregisterObservationForm',
+            'markObservationsAsDirty',
+            'getObservationFormState'
+        ]);
     };
 
     beforeEach(initController);
@@ -98,7 +104,8 @@ describe('ConceptSetPageController', function () {
             spinner: spinner,
             $translate: translate,
             appService: appService,
-            formDraftService: formDraftService
+            formDraftService: formDraftService,
+            autoSaveService: autoSaveService
         });
     };
 
@@ -607,7 +614,8 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock || $timeout,
                     $filter: filterMock || defaultFilterMock,
-                    formDraftService: formDraftServiceMock || formDraftService
+                    formDraftService: formDraftServiceMock || formDraftService,
+                    autoSaveService: autoSaveService
                 });
             };
         }));
@@ -1854,6 +1862,114 @@ describe('ConceptSetPageController', function () {
             });
         });
 
+        describe('Auto-save service integration', function () {
+            var timeoutMock;
+
+            beforeEach(function () {
+                timeoutMock = function (callback, delay) {
+                    if (delay === 0) { callback(); }
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+            });
+
+            var createControllerWithAutoSave = function (timeoutSvc, appDescriptorOverride) {
+                clinicalAppConfigService.getAllConceptSetExtensions.and.returnValue(extension);
+                if (appDescriptorOverride) {
+                    appService.getAppDescriptor.and.returnValue(appDescriptorOverride);
+                }
+                return controller("ConceptSetPageController", {
+                    $scope: scope,
+                    $rootScope: rootScope,
+                    $stateParams: stateParams,
+                    conceptSetService: conceptSetService,
+                    formService: formService,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    messagingService: messagingService,
+                    configurations: configurations,
+                    $state: state,
+                    spinner: spinner,
+                    $translate: translate,
+                    appService: appService,
+                    $timeout: timeoutSvc || timeoutMock,
+                    $filter: function () { return function () { return 'mocked-time'; }; },
+                    formDraftService: formDraftService,
+                    autoSaveService: autoSaveService
+                });
+            };
+
+            it('should call autoSaveService.markObservationsAsDirty(true) when isDirty becomes true', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                createControllerWithAutoSave();
+
+                scope.formDraft.isDirty = true;
+                scope.$digest();
+
+                expect(autoSaveService.markObservationsAsDirty).toHaveBeenCalledWith(true);
+            });
+
+            it('should call autoSaveService.markObservationsAsDirty(false) when isDirty becomes false', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                createControllerWithAutoSave();
+
+                scope.formDraft.isDirty = true;
+                scope.$digest();
+                scope.formDraft.isDirty = false;
+                scope.$digest();
+
+                expect(autoSaveService.markObservationsAsDirty).toHaveBeenCalledWith(false);
+            });
+
+            it('should register observation form with autoSaveService when dirty tracking is set up', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+
+                createControllerWithAutoSave();
+
+                expect(autoSaveService.registerObservationForm).toHaveBeenCalledWith(
+                    scope.formDraft,
+                    scope.patient,
+                    rootScope.currentProvider,
+                    scope.consultation.selectedObsTemplate,
+                    jasmine.any(Function)
+                );
+            });
+
+            it('should call autoSaveService.unregisterObservationForm on scope $destroy', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                createControllerWithAutoSave();
+
+                scope.$destroy();
+
+                expect(autoSaveService.unregisterObservationForm).toHaveBeenCalled();
+            });
+
+            it('should mark observations as not dirty via service when event:save-started is broadcast', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                createControllerWithAutoSave();
+
+                rootScope.$broadcast('event:save-started');
+
+                expect(autoSaveService.markObservationsAsDirty).toHaveBeenCalledWith(false);
+            });
+        });
+
         describe('Form2 Dirty Tracking', function () {
             var timeoutMock;
 
@@ -1899,7 +2015,8 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock,
                     $filter: function () { return function () { return 'mocked-time'; }; },
-                    formDraftService: formDraftService
+                    formDraftService: formDraftService,
+                    autoSaveService: autoSaveService
                 });
 
                 scope.$digest();
@@ -1931,7 +2048,8 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock,
                     $filter: function () { return function () { return 'mocked-time'; }; },
-                    formDraftService: formDraftService
+                    formDraftService: formDraftService,
+                    autoSaveService: autoSaveService
                 });
 
                 scope.$digest();
@@ -1973,7 +2091,8 @@ describe('ConceptSetPageController', function () {
                     appService: appService,
                     $timeout: timeoutMock,
                     $filter: function () { return function () { return 'mocked-time'; }; },
-                    formDraftService: formDraftService
+                    formDraftService: formDraftService,
+                    autoSaveService: autoSaveService
                 });
 
                 scope.$digest();

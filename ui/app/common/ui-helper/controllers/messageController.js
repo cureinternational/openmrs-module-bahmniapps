@@ -1,7 +1,7 @@
 "use strict";
 
-angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$scope", "messagingService", "$translate", "$state", "$location",
-    function ($scope, messagingService, $translate, $state, $location) {
+angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$scope", "messagingService", "$translate", "$state", "$location", "$rootScope",
+    function ($scope, messagingService, $translate, $state, $location, $rootScope) {
         $scope.messages = messagingService.messages;
 
         $scope.getMessageText = function (level) {
@@ -33,6 +33,7 @@ angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$sco
         };
 
         $scope.discardChanges = function (level) {
+            $rootScope.$broadcast('event:discard-changes');
             $state.discardChanges = true;
             $scope.hideMessage(level);
             return $state.isPatientSearch ? $location.path('/default/patient/search') : $location.path('/default/patient/' + $state.newPatientUuid + "/dashboard");
