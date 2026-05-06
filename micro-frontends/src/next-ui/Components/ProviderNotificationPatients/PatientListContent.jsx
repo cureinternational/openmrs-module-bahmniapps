@@ -13,7 +13,7 @@ const PatientListContent = ({ patientMedicationDetails, handleOnClick}) => {
     patientMedicationDetails;
 
   const handleButtonClick = () => {
-    handleOnClick();
+    handleOnClick(medication_administration_performer_uuid, medication_administration_uuid, notes);
     setNotes("");
   };
 
