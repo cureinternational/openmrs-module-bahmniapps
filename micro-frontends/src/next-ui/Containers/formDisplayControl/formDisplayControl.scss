@@ -119,12 +119,31 @@
 .form-approval-icon-container {
   height: 20px;
   width: 20px;
+  .bx--tooltip__trigger{
+    margin-left: 0;
+    svg{
+      fill: #198038
+    }
+  }
 }
-
 .form-display-control-accordion {
   position: absolute;
   right: 10px;
   top: 10px;
   cursor: pointer;
   padding-right: 6px;
+}
+
+.form-approval-tooltip{
+  color: #fff;
+  z-index: 600;
+  ul{
+    list-style-type: disc;
+    padding-top: 8px;
+    padding-left: 24px;
+    line-height: 2;
+  }
+}
+.bx--tooltip{
+  z-index: 996;
 }

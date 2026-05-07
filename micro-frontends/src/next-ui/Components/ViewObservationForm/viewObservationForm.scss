@@ -415,6 +415,22 @@
       color: #ffffff !important;
     }
   }
+
+  .action-name{
+    min-width: 64px !important;
+    width: 8% !important;
+  }
+  .action-date-time{
+    min-width: 144px !important;
+    width: 18% !important;
+  }
+  .action-user-name{
+    min-width: 144px !important;
+    width: 12% !important;
+  }
+  .action-user-comment{
+    white-space: pre-line;
+  }
 }
 .success-banner-icon {
   flex-shrink: 0;
