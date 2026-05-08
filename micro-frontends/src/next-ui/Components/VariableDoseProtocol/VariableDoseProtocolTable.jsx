@@ -9,23 +9,24 @@ import {
     TableCell,
 } from "carbon-components-react";
 import { ChevronDown16, ChevronUp16 } from "@carbon/icons-react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { I18nProvider } from "../i18n/I18nProvider";
 import "../../../styles/carbon-conflict-fixes.scss";
 import "../../../styles/carbon-theme.scss";
 import "./VariableDoseProtocolTable.scss";
 
 var vdpHeaders = [
-    { key: "stageName", header: "Stage" },
-    { key: "dose", header: "Dose" },
-    { key: "frequency", header: "Frequency" },
-    { key: "duration", header: "Duration" },
+    { key: "stageName", id: "VARIABLE_DOSE_TABLE_HEADER_STAGE", defaultMessage: "Stage" },
+    { key: "dose", id: "VARIABLE_DOSE_TABLE_HEADER_DOSE", defaultMessage: "Dose" },
+    { key: "frequency", id: "VARIABLE_DOSE_TABLE_HEADER_FREQUENCY", defaultMessage: "Frequency" },
+    { key: "duration", id: "VARIABLE_DOSE_TABLE_HEADER_DURATION", defaultMessage: "Duration" },
 ];
 
 var detailFields = [
-    { key: "instructions", label: "Instructions" },
-    { key: "rate", label: "Rate (ml/hr)" },
-    { key: "additives", label: "Additives" },
-    { key: "additionalInstructions", label: "Additional Instructions" },
+    { key: "instructions", id: "VARIABLE_DOSE_TABLE_DETAIL_INSTRUCTIONS", defaultMessage: "Instructions" },
+    { key: "rate", id: "VARIABLE_DOSE_TABLE_DETAIL_RATE", defaultMessage: "Rate (ml/hr)" },
+    { key: "additives", id: "VARIABLE_DOSE_TABLE_DETAIL_ADDITIVES", defaultMessage: "Additives" },
+    { key: "additionalInstructions", id: "VARIABLE_DOSE_TABLE_DETAIL_ADDITIONAL_INSTRUCTIONS", defaultMessage: "Additional Instructions" },
 ];
 
 function ExpandedDetails(props) {
@@ -39,7 +40,9 @@ function ExpandedDetails(props) {
             {fields.map(function (f, i) {
                 return (
                     <div key={f.key} className={"vdp-detail-item" + (i < fields.length - 1 ? " vdp-detail-item--separator" : "")}>
-                        <div className="vdp-detail-label">{f.label}</div>
+                        <div className="vdp-detail-label">
+                            <FormattedMessage id={f.id} defaultMessage={f.defaultMessage} />
+                        </div>
                         <div className="vdp-detail-value">{stage[f.key]}</div>
                     </div>
                 );
@@ -53,6 +56,7 @@ ExpandedDetails.propTypes = {
 };
 
 function VariableDoseProtocolTableInner(props) {
+    const intl = useIntl();
     var hostData = props.hostData;
     var [expandedRows, setExpandedRows] = useState({});
 
@@ -61,6 +65,11 @@ function VariableDoseProtocolTableInner(props) {
     }
 
     var allExpanded = hostData.stages.every(function (_, i) { return !!expandedRows[i]; });
+
+    const COLLAPSE_ALL = intl.formatMessage({ id: "VARIABLE_DOSE_TABLE_COLLAPSE_ALL", defaultMessage: "Collapse all rows" });
+    const EXPAND_ALL = intl.formatMessage({ id: "VARIABLE_DOSE_TABLE_EXPAND_ALL", defaultMessage: "Expand all rows" });
+    const COLLAPSE_ROW = intl.formatMessage({ id: "VARIABLE_DOSE_TABLE_COLLAPSE_ROW", defaultMessage: "Collapse row" });
+    const EXPAND_ROW = intl.formatMessage({ id: "VARIABLE_DOSE_TABLE_EXPAND_ROW", defaultMessage: "Expand row" });
 
     var toggleRow = function (index) {
         setExpandedRows(function (prev) {
@@ -78,7 +87,9 @@ function VariableDoseProtocolTableInner(props) {
 
     return (
         <div className="next-ui vdp-section">
-            <p className="vdp-title">Variable Dosage Protocol</p>
+            <p className="vdp-title">
+                <FormattedMessage id="VARIABLE_DOSE_TABLE_TITLE" defaultMessage="Variable Dosage Protocol" />
+            </p>
             <Table className="vdp-table">
                 <TableHead>
                     <TableRow>
@@ -87,13 +98,17 @@ function VariableDoseProtocolTableInner(props) {
                                 type="button"
                                 className="vdp-expand-btn"
                                 onClick={toggleAll}
-                                aria-label={allExpanded ? "Collapse all rows" : "Expand all rows"}
+                                aria-label={allExpanded ? COLLAPSE_ALL : EXPAND_ALL}
                             >
                                 {allExpanded ? <ChevronUp16 /> : <ChevronDown16 />}
                             </button>
                         </TableHeader>
                         {vdpHeaders.map(function (h) {
-                            return <TableHeader key={h.key}>{h.header}</TableHeader>;
+                            return (
+                                <TableHeader key={h.key}>
+                                    <FormattedMessage id={h.id} defaultMessage={h.defaultMessage} />
+                                </TableHeader>
+                            );
                         })}
                     </TableRow>
                 </TableHead>
@@ -110,7 +125,7 @@ function VariableDoseProtocolTableInner(props) {
                                                 type="button"
                                                 className="vdp-expand-btn"
                                                 onClick={function () { toggleRow(index); }}
-                                                aria-label={isExpanded ? "Collapse row" : "Expand row"}
+                                                aria-label={isExpanded ? COLLAPSE_ROW : EXPAND_ROW}
                                             >
                                                 {isExpanded ? <ChevronUp16 /> : <ChevronDown16 />}
                                             </button>
