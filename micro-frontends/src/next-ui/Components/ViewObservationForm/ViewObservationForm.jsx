@@ -295,9 +295,9 @@ export const ViewObservationForm = (props) => {
                 <table className="actions-table">
                   <thead>
                     <tr>
-                      <th>{intl.formatMessage({ id: "ACTION", defaultMessage: "Action" })}</th>
-                      <th>{intl.formatMessage({ id: "DATE_TIME", defaultMessage: "Date & Time" })}</th>
-                      <th>{intl.formatMessage({ id: "PROVIDER", defaultMessage: "Provider" })}</th>
+                      <th className={"action-name"}>{intl.formatMessage({ id: "ACTION", defaultMessage: "Action" })}</th>
+                      <th className={"action-date-time"}>{intl.formatMessage({ id: "DATE_TIME", defaultMessage: "Date & Time" })}</th>
+                      <th className={"action-user-name"}>{intl.formatMessage({ id: "PROVIDER", defaultMessage: "Provider" })}</th>
                       <th>{intl.formatMessage({ id: "COMMENTS_COLUMN", defaultMessage: "Comments" })}</th>
                     </tr>
                   </thead>
@@ -305,10 +305,10 @@ export const ViewObservationForm = (props) => {
                     {actionsHistory && actionsHistory.length > 0 &&
                       actionsHistory.map((action, index) => (
                         <tr key={index}>
-                          <td>{intl.formatMessage({ id: action.action, defaultMessage: "Action" })}</td>
-                          <td>{action.dateTime}</td>
-                          <td>{action.username}</td>
-                          <td>{action.comment || "-"}</td>
+                          <td className={"action-name"}>{intl.formatMessage({ id: action.action, defaultMessage: "Action" })}</td>
+                          <td className={"action-date-time"}>{action.dateTime}</td>
+                          <td className={"action-user-name"}>{action.username}</td>
+                          <td className={"action-user-comment"}>{action.comment || "-"}</td>
                         </tr>
                       ))
                     }

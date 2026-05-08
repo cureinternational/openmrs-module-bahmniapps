@@ -303,13 +303,19 @@ exports[`ViewObservationForm should match the screenshot 1`] = `
                   >
                     <thead>
                       <tr>
-                        <th>
+                        <th
+                          class="action-name"
+                        >
                           Action
                         </th>
-                        <th>
+                        <th
+                          class="action-date-time"
+                        >
                           Date & Time
                         </th>
-                        <th>
+                        <th
+                          class="action-user-name"
+                        >
                           Provider
                         </th>
                         <th>

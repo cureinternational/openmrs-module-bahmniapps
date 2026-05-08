@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Accordion, AccordionItem } from "carbon-components-react";
+import { Accordion, AccordionItem, Tooltip } from "carbon-components-react";
 import "../../../styles/carbon-conflict-fixes.scss";
 import "../../../styles/carbon-theme.scss";
 import "../../../styles/common.scss";
@@ -245,15 +245,20 @@ export function FormDisplayControl(props) {
         const formName = resource.extension.find(
           (e) => e.url === "http://fhir.bahmni.org/ext/task/name"
         )?.valueString;
+        const owner = resource.owner?.display;
         const codeType = resource.code?.text;
         const encounterUuid = resource.encounter?.reference?.split("/")[1];
 
         if (!formName || !codeType || !encounterUuid) return acc;
 
-        if (!acc[formName]) acc[formName] = {approval: new Set(), comment: new Set()};
+        if (!acc[formName]) acc[formName] = { comment: new Set(), approval: {} };
 
         if (codeType === FORM_APPROVAL) {
-          acc[formName].approval.add(encounterUuid);
+          if(acc[formName].approval?.[encounterUuid]){
+            acc[formName].approval[encounterUuid].add(owner);
+          }else{
+            acc[formName].approval[encounterUuid] = new Set([owner]);
+          }
         } else if (codeType === FORM_COMMENT) {
           acc[formName].comment.add(encounterUuid);
         }
@@ -292,8 +297,9 @@ export function FormDisplayControl(props) {
                   const actions = formActions[key];
                   let hasActions = false, approvals = new Set(), comments = new Set();
                   if(actions){
-                    if(actions.approval.size > 0){
-                      approvals = actions.approval;
+                    const approvalList = Object.keys(actions.approval);
+                    if(approvalList.length > 0) {
+                      approvals = new Set(Object.keys(actions.approval));
                     }
                     if(actions.comment.size > 0){
                       comments = actions.comment;
@@ -315,8 +321,14 @@ export function FormDisplayControl(props) {
                               <div key={index} className={"row-accordion"}>
                                 <div className={"form-name-text"}>
                                   <div className={"form-approval-icon-container"}>
-                                    {approvals.has(entry.encounterUuid) ? <CheckmarkFilled className="success-banner-icon"/>
-                                      : <></>}
+                                    {approvals.has(entry.encounterUuid) ? <Tooltip renderIcon={() => <CheckmarkFilled className="success-banner-icon"/>}>
+                                      <div className={"form-approval-tooltip"}>
+                                        <FormattedMessage id={"APPROVERS"} defaultMessage={"Approvers"}/>: <br/>
+                                        <ul>
+                                          {Array.from(actions.approval[entry.encounterUuid]).map(name => <li key={name}>{name}</li>)}
+                                        </ul>
+                                      </div>
+                                    </Tooltip>: <></>}
                                   </div>
                                   {checkForPrivileges(entry, "view") ? (
                                     <a
