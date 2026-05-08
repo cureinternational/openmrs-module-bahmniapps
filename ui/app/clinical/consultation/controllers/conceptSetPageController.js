@@ -411,7 +411,14 @@ angular.module('bahmni.clinical')
                     return;
                 }
                 dirtyTrackingState.initialized = true;
-                dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                if ($scope.consultation._draftCleanState !== undefined) {
+                    dirtyTrackingState.cleanState = $scope.consultation._draftCleanState;
+                    var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState;
+                } else {
+                    dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                }
 
                 dirtyTrackingState.watchDeregister = $scope.$watch(
                     function () { return formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate); },
@@ -443,6 +450,7 @@ angular.module('bahmni.clinical')
                 }
                 dirtyTrackingState.suppressionUnsuppressPromise = $timeout(function () {
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
                     $scope.formDraft.isDirty = false;
                     dirtyTrackingState.suppressTracking = false;
                     dirtyTrackingState.suppressionUnsuppressPromise = null;
@@ -463,6 +471,7 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.suppressionUnsuppressPromise = null;
                 }
                 $scope.formDraft.isDirty = false;
+                $scope.consultation._draftCleanState = undefined;
                 if (restartTracking !== false) {
                     $timeout(setupDirtyTracking, 0);
                 }
@@ -494,6 +503,7 @@ angular.module('bahmni.clinical')
                     $scope.formDraft.isDirty = false;
                     $scope.formDraft.hasDrafts = true;
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
                     $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
                 }, function () {
                     $scope.formDraft.statusMessage = 'CHANGES_NOT_SAVED_KEY';
