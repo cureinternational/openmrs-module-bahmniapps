@@ -54,8 +54,14 @@ angular.module('bahmni.ot').controller('calendarViewCancelAppointmentController'
                 appointment.patient = {uuid: appointment.patient.uuid};
                 appointment.surgicalAppointmentAttributes = _.values(appointment.surgicalAppointmentAttributes).filter(function (attribute) {
                     return !_.isUndefined(attribute.value);
+                }).map(function (attribute) {
+                    if (attribute.surgicalAppointmentAttributeType && attribute.surgicalAppointmentAttributeType.name === 'otherSurgeon') {
+                        attribute.value = attribute.value && attribute.value.id;
+                    }
+                    attribute.value = !_.isNull(attribute.value) && attribute.value.toString() || "";
+                    return attribute;
                 });
-                return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation']);
+                return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation', 'primaryDiagnosis', 'observationMap']);
             });
 
             return surgicalAppointmentService.updateSurgicalBlock(surgicalBlock);
