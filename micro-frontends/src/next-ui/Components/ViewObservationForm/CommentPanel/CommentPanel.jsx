@@ -53,7 +53,7 @@ export const CommentPanel = (props) => {
               rows={2}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder={intl.formatMessage({ id: "COMMENT_PLACEHOLDER", defaultMessage: `Enter a maximum of ${maxCharacters} characters` })}
+              placeholder={intl.formatMessage({ id: "COMMENT_PLACEHOLDER", defaultMessage: "Enter a maximum of {maxCharacters} characters" }, { maxCharacters })}
               maxLength={maxCharacters}
               disabled={isLoading}
             />

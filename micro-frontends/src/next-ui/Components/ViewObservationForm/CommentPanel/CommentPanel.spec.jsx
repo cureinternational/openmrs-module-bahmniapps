@@ -34,7 +34,7 @@ describe("CommentPanel", () => {
   it("should render the comment panel", () => {
     render(<CommentPanel {...defaultProps} />);
     expect(screen.getByText("Add Comment")).toBeTruthy();
-    expect(screen.getByPlaceholderText("Enter a maximum of 256 characters")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Enter a maximum of 255 characters")).toBeTruthy();
   });
 
   it("should render Cancel and Save buttons", () => {
@@ -51,7 +51,7 @@ describe("CommentPanel", () => {
 
   it("should enable Save button when textarea has text", () => {
     render(<CommentPanel {...defaultProps} />);
-    const textarea = screen.getByPlaceholderText("Enter a maximum of 256 characters");
+    const textarea = screen.getByPlaceholderText("Enter a maximum of 255 characters");
     fireEvent.change(textarea, { target: { value: "Test comment" } });
 
     const saveButton = screen.getByRole("button", { name: /save/i });
@@ -68,7 +68,7 @@ describe("CommentPanel", () => {
 
   it("should clear textarea when Cancel button is clicked", () => {
     render(<CommentPanel {...defaultProps} />);
-    const textarea = screen.getByPlaceholderText("Enter a maximum of 256 characters");
+    const textarea = screen.getByPlaceholderText("Enter a maximum of 255 characters");
     fireEvent.change(textarea, { target: { value: "Test comment" } });
 
     const cancelButton = screen.getByRole("button", { name: /cancel/i });
