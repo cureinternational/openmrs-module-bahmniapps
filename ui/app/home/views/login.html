@@ -3,7 +3,7 @@
     <span ng-if="titleText" class="title_text"> {{'LOGIN_PAGE_TITLE_TEXT' | translate }} </span>
 </div>
 
-<div class="login" ng-if="!showOTP">
+<div class="login" ng-hide="showOTP">
     <div ng-if="headerText" class="emr-login-text">
         <b>{{'LOGIN_PAGE_HEADER_TEXT'| translate}} </b>
     </div>
@@ -71,7 +71,7 @@
 
 </div>
 
-<div class="login login-otp" ng-if="showOTP">
+<div class="login login-otp" ng-show="showOTP">
 
     <header class="reg-header">
         <div class="left">{{'LOGIN_LABEL_LOGIN_KEY' | translate}}</div>
