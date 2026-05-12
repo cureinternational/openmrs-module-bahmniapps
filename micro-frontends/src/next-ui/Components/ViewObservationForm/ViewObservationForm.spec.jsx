@@ -386,10 +386,10 @@ describe("ViewObservationForm", () => {
     fireEvent.click(screen.getByText("Comment"));
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Enter a maximum of 256 characters")).toBeTruthy();
+      expect(screen.getByPlaceholderText("Enter a maximum of 255 characters")).toBeTruthy();
     });
 
-    fireEvent.change(screen.getByPlaceholderText("Enter a maximum of 256 characters"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter a maximum of 255 characters"), {
       target: { value: "A new comment" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
@@ -415,10 +415,10 @@ describe("ViewObservationForm", () => {
     fireEvent.click(screen.getByText("Comment"));
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Enter a maximum of 256 characters")).toBeTruthy();
+      expect(screen.getByPlaceholderText("Enter a maximum of 255 characters")).toBeTruthy();
     });
 
-    fireEvent.change(screen.getByPlaceholderText("Enter a maximum of 256 characters"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter a maximum of 255 characters"), {
       target: { value: "A new comment" },
     });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
