@@ -8,7 +8,7 @@ describe("patient dashboard controller", function () {
     }));
 
     var scope, spinner, _clinicalDashboardConfig, _clinicalAppConfigService, _state, _appService, _diseaseTemplateService,
-        _stateParams, _controller, _appConfig, location, filter, _rootScope, _formDraftService, _ngDialog;
+        _stateParams, _controller, _appConfig, location, filter, _rootScope, _formDraftService, _ngDialog, _timeout;
     var diseaseTemplates;
     location = {
         path: function () {
@@ -81,13 +81,14 @@ describe("patient dashboard controller", function () {
                 return value;
             });
         });
-        inject(function ($controller, $rootScope, $filter, formDraftService, ngDialog) {
+        inject(function ($controller, $rootScope, $filter, formDraftService, ngDialog, $timeout) {
             scope = $rootScope.$new();
             scope.patient = {};
             scope.visitHistory = {};
             _rootScope = $rootScope;
             _formDraftService = formDraftService;
             _ngDialog = ngDialog;
+            _timeout = $timeout;
 
             spinner = jasmine.createSpyObj('spinner', ['forPromise']);
             filter = $filter;
@@ -519,10 +520,31 @@ describe("patient dashboard controller", function () {
                 expect(scope.formDraft.hasDrafts).toBe(false);
                 expect(scope.formDraft.draftDate).toBeNull();
                 expect(scope.formDraft.draftTime).toBeNull();
+                expect(scope.formDraft.discardSuccess).toBe(true);
                 expect(_rootScope.draftData).toBeNull();
                 expect(_rootScope.resumeDraftOnLoad).toBe(false);
                 expect(_rootScope.resumeDraftPatientUuid).toBeNull();
+                expect(_rootScope.hasVisitedConsultation).toBe(false);
                 expect(_rootScope.draftDiscarded).toBe(true);
+            });
+
+            it("should hide success banner after 5 seconds", function () {
+                _formDraftService.discardDraft.and.returnValue({
+                    then: function (success) {
+                        success();
+                        return this;
+                    }
+                });
+                _rootScope.currentProvider = {uuid: 'provider-uuid'};
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                scope.confirmDiscardDraft();
+                var dialogScope = _ngDialog.open.calls.mostRecent().args[0].scope;
+                dialogScope.discardDraft();
+
+                expect(scope.formDraft.discardSuccess).toBe(true);
+                _timeout.flush(5000);
+                expect(scope.formDraft.discardSuccess).toBe(false);
             });
 
             it("should close dialog only after discard API call succeeds", function () {

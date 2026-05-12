@@ -2,9 +2,9 @@
 
 angular.module('bahmni.clinical')
     .controller('PatientDashboardController', ['$scope', 'clinicalAppConfigService', 'clinicalDashboardConfig', 'printer',
-        '$state', 'spinner', 'visitSummary', 'appService', '$stateParams', 'diseaseTemplateService', 'patientContext', '$location', '$filter', 'formDraftService', '$rootScope', 'ngDialog',
+        '$state', 'spinner', 'visitSummary', 'appService', '$stateParams', 'diseaseTemplateService', 'patientContext', '$location', '$filter', 'formDraftService', '$rootScope', 'ngDialog', '$timeout',
         function ($scope, clinicalAppConfigService, clinicalDashboardConfig, printer,
-            $state, spinner, visitSummary, appService, $stateParams, diseaseTemplateService, patientContext, $location, $filter, formDraftService, $rootScope, ngDialog) {
+            $state, spinner, visitSummary, appService, $stateParams, diseaseTemplateService, patientContext, $location, $filter, formDraftService, $rootScope, ngDialog, $timeout) {
             $scope.enableFormDraftFeature = appService.getAppDescriptor().getConfigValue('enableFormDraftFeature');
             $scope.patient = patientContext.patient;
             $scope.activeVisit = $scope.visitHistory.activeVisit;
@@ -26,7 +26,8 @@ angular.module('bahmni.clinical')
             $scope.formDraft = {
                 draftDate: draftTimestampObj.date,
                 draftTime: draftTimestampObj.time,
-                hasDrafts: false
+                hasDrafts: false,
+                discardSuccess: false
             };
             var programConfig = appService.getAppDescriptor().getConfigValue("program") || {};
             $state.discardChanges = false;
@@ -78,11 +79,18 @@ angular.module('bahmni.clinical')
                         $scope.formDraft.hasDrafts = false;
                         $scope.formDraft.draftDate = null;
                         $scope.formDraft.draftTime = null;
+                        $scope.formDraft.discardSuccess = true;
                         $rootScope.draftData = null;
                         $rootScope.resumeDraftOnLoad = false;
                         $rootScope.resumeDraftPatientUuid = null;
+                        $rootScope.hasVisitedConsultation = false;
+                        $state.discardChanges = true;
+                        $state.dirtyConsultationForm = false;
                         $rootScope.draftDiscarded = true;
                         ngDialog.close(dialog.id);
+                        $timeout(function () {
+                            $scope.formDraft.discardSuccess = false;
+                        }, 5000);
                     });
                 };
             };
