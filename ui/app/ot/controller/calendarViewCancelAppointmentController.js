@@ -56,12 +56,14 @@ angular.module('bahmni.ot').controller('calendarViewCancelAppointmentController'
                     return !_.isUndefined(attribute.value);
                 }).map(function (attribute) {
                     if (attribute.surgicalAppointmentAttributeType && attribute.surgicalAppointmentAttributeType.name === 'otherSurgeon') {
-                        attribute.value = attribute.value && attribute.value.id;
+                        if (attribute.value && typeof attribute.value === 'object') {
+                            attribute.value = attribute.value.id;
+                        }
                     }
-                    attribute.value = !_.isNull(attribute.value) && attribute.value.toString() || "";
+                    attribute.value = (attribute.value != null) ? attribute.value.toString() : "";
                     return attribute;
                 });
-                return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation', 'primaryDiagnosis', 'observationMap']);
+                return _.omit(appointment, ['derivedAttributes', 'surgicalBlock', 'bedNumber', 'bedLocation', 'primaryDiagnosis', 'observationMap', 'patientObservations']);
             });
 
             return surgicalAppointmentService.updateSurgicalBlock(surgicalBlock);
