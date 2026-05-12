@@ -430,6 +430,8 @@
     "NO_ALLERGIES_MESSAGE": "Aucune allergie enregistrée pour ce patient",
     "RESUME": "Reprendre",
     "DISCARD_DRAFT": "Rejeter le brouillon",
+    "DISCARD_DRAFT_CONFIRM_MESSAGE": "Le brouillon enregistré pour les formulaires d'observation sera supprimé et ne pourra pas être restauré.",
+    "DISCARD": "Rejeter",
     "FORMS_DRAFT_BANNER_TITLE": "Formulaires d'observation en cours",
     "FORMS_DRAFT_BANNER_SUBTITLE": "Vos entrées ont été enregistrées comme brouillon le {{ draftDate }} à {{ draftTime }}. Cliquez sur Reprendre pour continuer là où vous vous étiez arrêté ou sur Abandonner pour recommencer."
 }
