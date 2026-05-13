@@ -566,6 +566,45 @@ describe("patient dashboard controller", function () {
                 thenCallback();
                 expect(_ngDialog.close).toHaveBeenCalledWith(fakeDialog.id);
             });
+
+            it("should close dialog when discard API call fails", function () {
+                _formDraftService.discardDraft.and.returnValue({
+                    then: function (success, error) {
+                        error();
+                        return this;
+                    }
+                });
+                _rootScope.currentProvider = {uuid: 'provider-uuid'};
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+                scope.formDraft.hasDrafts = true;
+
+                scope.confirmDiscardDraft();
+                var dialogScope = _ngDialog.open.calls.mostRecent().args[0].scope;
+                dialogScope.discardDraft();
+
+                expect(_ngDialog.close).toHaveBeenCalledWith(fakeDialog.id);
+                expect(scope.formDraft.hasDrafts).toBe(true);
+            });
+
+            it("should cancel success banner timeout on scope destroy", function () {
+                _formDraftService.discardDraft.and.returnValue({
+                    then: function (success) {
+                        success();
+                        return this;
+                    }
+                });
+                _rootScope.currentProvider = {uuid: 'provider-uuid'};
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                scope.confirmDiscardDraft();
+                var dialogScope = _ngDialog.open.calls.mostRecent().args[0].scope;
+                dialogScope.discardDraft();
+
+                expect(scope.formDraft.discardSuccess).toBe(true);
+                scope.$destroy();
+                try { _timeout.flush(5000); } catch (e) {}
+                expect(scope.formDraft.discardSuccess).toBe(true);
+            });
         });
 
         it("should use dashboard-content templateUrl when dashboard-content view is configured", function () {

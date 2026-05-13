@@ -62,6 +62,8 @@ angular.module('bahmni.clinical')
                 });
             };
 
+            var discardSuccessTimeout;
+
             $scope.confirmDiscardDraft = function () {
                 var dialogScope = $scope.$new();
                 var dialog = ngDialog.open({
@@ -88,9 +90,11 @@ angular.module('bahmni.clinical')
                         $state.dirtyConsultationForm = false;
                         $rootScope.draftDiscarded = true;
                         ngDialog.close(dialog.id);
-                        $timeout(function () {
+                        discardSuccessTimeout = $timeout(function () {
                             $scope.formDraft.discardSuccess = false;
                         }, 5000);
+                    }, function () {
+                        ngDialog.close(dialog.id);
                     });
                 };
             };
@@ -181,6 +185,9 @@ angular.module('bahmni.clinical')
                 cleanUpListenerSaveSuccessful();
                 cleanUpListenerSaveStarted();
                 cleanUpListenerPrintDashboard();
+                if (discardSuccessTimeout) {
+                    $timeout.cancel(discardSuccessTimeout);
+                }
             });
 
             var addTabNameToParams = function (board) {
