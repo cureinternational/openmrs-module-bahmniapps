@@ -3,7 +3,7 @@
 describe("patient dashboard controller", function () {
     beforeEach(module('bahmni.clinical'));
     beforeEach(module(function ($provide) {
-        $provide.value('formDraftService', jasmine.createSpyObj('formDraftService', ['getDraft', 'saveDraft', 'markDraftAsSaved', 'discardDraft']));
+        $provide.value('formDraftService', jasmine.createSpyObj('formDraftService', ['getDraft', 'saveDraft', 'markDraftAsSaved', 'discardDraft', 'isDraftExpired']));
         $provide.value('ngDialog', jasmine.createSpyObj('ngDialog', ['open', 'close']));
     }));
 
@@ -84,7 +84,7 @@ describe("patient dashboard controller", function () {
         inject(function ($controller, $rootScope, $filter, formDraftService, ngDialog, $timeout) {
             scope = $rootScope.$new();
             scope.patient = {};
-            scope.visitHistory = {};
+            scope.visitHistory = {activeVisit: {uuid: 'active-visit-uuid'}};
             _rootScope = $rootScope;
             _formDraftService = formDraftService;
             _ngDialog = ngDialog;
@@ -604,6 +604,112 @@ describe("patient dashboard controller", function () {
                 scope.$destroy();
                 try { _timeout.flush(5000); } catch (e) {}
                 expect(scope.formDraft.discardSuccess).toBe(true);
+            });
+        });
+
+        describe("draft discard when visit is closed", function () {
+            it("should auto-discard draft when there is no active visit", function () {
+                scope.visitHistory = {};
+                _formDraftService.isDraftExpired.and.returnValue(false);
+                _formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', timestamp: Date.now(), markedAsSaved: false}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                expect(_formDraftService.discardDraft).toHaveBeenCalledWith('patient-uuid', 'provider-uuid');
+                expect(scope.formDraft.hasDrafts).toBe(false);
+                expect(_rootScope.draftData).toBeNull();
+            });
+
+            it("should show draft banner when active visit exists and draft is not expired", function () {
+                _formDraftService.isDraftExpired.and.returnValue(false);
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', timestamp: Date.now(), markedAsSaved: false}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                expect(_formDraftService.discardDraft).not.toHaveBeenCalled();
+                expect(scope.formDraft.hasDrafts).toBe(true);
+                expect(_rootScope.draftData.uuid).toBe('draft-uuid');
+            });
+        });
+
+        describe("auto-expiry of drafts at midnight", function () {
+            it("should auto-discard and clear draft state when draft is expired", function () {
+                var expiredTimestamp = new Date();
+                expiredTimestamp.setDate(expiredTimestamp.getDate() - 1);
+
+                _formDraftService.isDraftExpired.and.returnValue(true);
+                _formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', timestamp: expiredTimestamp.getTime(), markedAsSaved: false}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                expect(_formDraftService.isDraftExpired).toHaveBeenCalledWith(expiredTimestamp.getTime());
+                expect(_formDraftService.discardDraft).toHaveBeenCalledWith('patient-uuid', 'provider-uuid');
+                expect(scope.formDraft.hasDrafts).toBe(false);
+                expect(scope.formDraft.draftDate).toBeNull();
+                expect(scope.formDraft.draftTime).toBeNull();
+                expect(_rootScope.draftData).toBeNull();
+                expect(_rootScope.resumeDraftOnLoad).toBe(false);
+                expect(_rootScope.resumeDraftPatientUuid).toBeNull();
+            });
+
+            it("should clear rootScope resume flags when auto-discarding due to no active visit", function () {
+                _rootScope.resumeDraftOnLoad = true;
+                _rootScope.resumeDraftPatientUuid = 'patient-uuid';
+                scope.visitHistory = {};
+                _formDraftService.isDraftExpired.and.returnValue(false);
+                _formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', timestamp: Date.now(), markedAsSaved: false}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                expect(_formDraftService.discardDraft).toHaveBeenCalledWith('patient-uuid', 'provider-uuid');
+                expect(_rootScope.resumeDraftOnLoad).toBe(false);
+                expect(_rootScope.resumeDraftPatientUuid).toBeNull();
+            });
+
+            it("should not auto-discard and should show draft when draft is not expired", function () {
+                var todayTimestamp = Date.now();
+
+                _formDraftService.isDraftExpired.and.returnValue(false);
+                _formDraftService.getDraft.and.returnValue({
+                    then: function (success) {
+                        success({data: {uuid: 'draft-uuid', timestamp: todayTimestamp, markedAsSaved: false}});
+                        return this;
+                    },
+                    catch: function () { return this; }
+                });
+
+                createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
+
+                expect(_formDraftService.discardDraft).not.toHaveBeenCalled();
+                expect(scope.formDraft.hasDrafts).toBe(true);
+                expect(_rootScope.draftData.uuid).toBe('draft-uuid');
             });
         });
 

@@ -58,7 +58,12 @@ angular.module('bahmni.clinical')
                     var promise = formDraftService.getDraft(patientUuid, providerUuid);
                     promise.then(function (response) {
                         if (response && response.data && response.data.uuid && !response.data.markedAsSaved) {
-                            $rootScope.draftData = response.data;
+                            if (formDraftService.isDraftExpired(response.data.timestamp)) {
+                                formDraftService.discardDraft(patientUuid, providerUuid);
+                                $rootScope.draftData = null;
+                            } else {
+                                $rootScope.draftData = response.data;
+                            }
                         } else {
                             $rootScope.draftData = null;
                         }
@@ -551,16 +556,22 @@ angular.module('bahmni.clinical')
                 draftCheckPromise.then(
                     function (response) {
                         if (response.data && response.data.uuid && !response.data.markedAsSaved) {
-                            $scope.formDraft.hasDrafts = true;
-                            $rootScope.draftData = response.data;
-                            var serverTimestamp = response.data.timestamp;
-                            if (serverTimestamp && !isNaN(new Date(serverTimestamp).getTime())) {
-                                var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
-                                var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
-                                $scope.formDraft.draftDate = draftDate;
-                                $scope.formDraft.draftTime = draftTime;
-                                $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
-                                $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
+                            if (formDraftService.isDraftExpired(response.data.timestamp)) {
+                                formDraftService.discardDraft(patientUuid, providerUuid);
+                                $rootScope.draftData = null;
+                                clearDraftStatus();
+                            } else {
+                                $scope.formDraft.hasDrafts = true;
+                                $rootScope.draftData = response.data;
+                                var serverTimestamp = response.data.timestamp;
+                                if (serverTimestamp && !isNaN(new Date(serverTimestamp).getTime())) {
+                                    var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
+                                    var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
+                                    $scope.formDraft.draftDate = draftDate;
+                                    $scope.formDraft.draftTime = draftTime;
+                                    $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
+                                    $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
+                                }
                             }
                         } else if (!$rootScope.resumeDraftOnLoad) {
                             $rootScope.draftData = null;

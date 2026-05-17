@@ -74,7 +74,11 @@ describe('ConceptSetPageController', function () {
         spinner = jasmine.createSpyObj("spinner", ["forPromise"]);
         messagingService = jasmine.createSpyObj('messagingService', ['showMessage']);
         translate = jasmine.createSpyObj('$translate', ['instant']);
-        formDraftService = jasmine.createSpyObj('formDraftService', ['saveDraft', 'getDraft']);
+        appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
+        var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+        appDescriptor.getConfigValue.and.returnValue(false);
+        appService.getAppDescriptor.and.returnValue(appDescriptor);
+        formDraftService = jasmine.createSpyObj('formDraftService', ['saveDraft', 'getDraft', 'discardDraft', 'isDraftExpired']);
         formDraftService.getDraft.and.returnValue({
             then: function (success, error) {
                 if (error) error();
@@ -1653,6 +1657,69 @@ describe('ConceptSetPageController', function () {
 
                 var template = _.find(scope.allTemplates, function (t) { return t.uuid === conceptUuid; });
                 expect(template.observations.length).toBe(1);
+            });
+
+            describe('auto-expiry of drafts at midnight', function () {
+                var enableDraftFeatureForExpiry = function () {
+                    var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+                    appDescriptor.getConfigValue.and.returnValue(true);
+                    appService.getAppDescriptor.and.returnValue(appDescriptor);
+                };
+
+                it('should auto-discard expired draft and not set resumeDraftOnLoad', function () {
+                    var expiredTimestamp = new Date();
+                    expiredTimestamp.setDate(expiredTimestamp.getDate() - 1);
+
+                    enableDraftFeatureForExpiry();
+                    mockConceptSetService({results: [{setMembers: []}]});
+                    mockformService({});
+                    rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                    rootScope.resumeDraftOnLoad = false;
+                    scope.patient = {uuid: 'patient-uuid'};
+                    rootScope.currentProvider = {uuid: 'provider-uuid'};
+
+                    formDraftService.isDraftExpired.and.returnValue(true);
+                    formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                    formDraftService.getDraft.and.returnValue({
+                        then: function (success) {
+                            success({data: {uuid: 'draft-uuid', timestamp: expiredTimestamp.getTime(), markedAsSaved: false}});
+                            return {catch: function () { return this; }};
+                        }
+                    });
+
+                    createControllerWithTimeoutAndFilter(timeoutMock);
+
+                    expect(formDraftService.isDraftExpired).toHaveBeenCalledWith(expiredTimestamp.getTime());
+                    expect(formDraftService.discardDraft).toHaveBeenCalledWith('patient-uuid', 'provider-uuid');
+                    expect(rootScope.draftData).toBeNull();
+                    expect(rootScope.resumeDraftOnLoad).toBeFalsy();
+                });
+
+                it('should not auto-discard and should resume draft when draft is not expired', function () {
+                    var todayTimestamp = Date.now();
+
+                    enableDraftFeatureForExpiry();
+                    mockConceptSetService({results: [{setMembers: []}]});
+                    mockformService({});
+                    rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                    rootScope.resumeDraftOnLoad = false;
+                    scope.patient = {uuid: 'patient-uuid'};
+                    rootScope.currentProvider = {uuid: 'provider-uuid'};
+
+                    formDraftService.isDraftExpired.and.returnValue(false);
+                    formDraftService.getDraft.and.returnValue({
+                        then: function (success) {
+                            success({data: {uuid: 'draft-uuid', timestamp: todayTimestamp, markedAsSaved: false}});
+                            return {catch: function () { return this; }};
+                        }
+                    });
+
+                    createControllerWithTimeoutAndFilter(timeoutMock);
+
+                    expect(formDraftService.discardDraft).not.toHaveBeenCalled();
+                    expect(rootScope.draftData).not.toBeNull();
+                    expect(rootScope.draftData.uuid).toBe('draft-uuid');
+                });
             });
         });
 

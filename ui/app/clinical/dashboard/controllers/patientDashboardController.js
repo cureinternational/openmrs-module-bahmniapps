@@ -107,14 +107,24 @@ angular.module('bahmni.clinical')
                     formDraftService.getDraft(patientUuid, providerUuid).then(
                         function (response) {
                             if (response.data && response.data.uuid && !response.data.markedAsSaved) {
-                                $scope.formDraft.hasDrafts = true;
-                                $rootScope.draftData = response.data;
-                                var serverTimestamp = response.data.timestamp;
-                                if (serverTimestamp) {
-                                    var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
-                                    var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
-                                    $scope.formDraft.draftDate = draftDate;
-                                    $scope.formDraft.draftTime = draftTime;
+                                if (!$scope.activeVisit || formDraftService.isDraftExpired(response.data.timestamp)) {
+                                    formDraftService.discardDraft(patientUuid, providerUuid);
+                                    $scope.formDraft.hasDrafts = false;
+                                    $scope.formDraft.draftDate = null;
+                                    $scope.formDraft.draftTime = null;
+                                    $rootScope.draftData = null;
+                                    $rootScope.resumeDraftOnLoad = false;
+                                    $rootScope.resumeDraftPatientUuid = null;
+                                } else {
+                                    $scope.formDraft.hasDrafts = true;
+                                    $rootScope.draftData = response.data;
+                                    var serverTimestamp = response.data.timestamp;
+                                    if (serverTimestamp) {
+                                        var draftDate = $filter('date')(new Date(serverTimestamp), 'dd MMM yyyy');
+                                        var draftTime = $filter('date')(new Date(serverTimestamp), 'hh:mm a');
+                                        $scope.formDraft.draftDate = draftDate;
+                                        $scope.formDraft.draftTime = draftTime;
+                                    }
                                 }
                             } else {
                                 $scope.formDraft.hasDrafts = false;

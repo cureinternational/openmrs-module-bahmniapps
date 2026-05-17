@@ -42,10 +42,18 @@ angular.module('bahmni.common.services')
             });
         };
 
+        var isDraftExpired = function (timestamp) {
+            if (!timestamp) { return false; }
+            var today = new Date();
+            var todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            return new Date(timestamp) < todayMidnight;
+        };
+
         return {
             saveDraft: saveDraft,
             getDraft: getDraft,
             discardDraft: discardDraft,
-            markDraftAsSaved: markDraftAsSaved
+            markDraftAsSaved: markDraftAsSaved,
+            isDraftExpired: isDraftExpired
         };
     }]);
