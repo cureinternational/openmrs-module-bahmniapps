@@ -2258,4 +2258,5 @@ describe("AddTreatmentController", function () {
             expect(treatment).toBe(drugOrder1);
         });
     });
+
 });

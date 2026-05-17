@@ -718,7 +718,16 @@ angular.module('bahmni.clinical')
                 var includedOrderSetTreatments = _.filter(orderSetTreatmentsAcrossTabs, function (treatment) {
                     return treatment.orderSetUuid ? treatment.include : true;
                 });
-                $scope.consultation.newlyAddedTreatments = allTreatmentsAcrossTabs.concat(includedOrderSetTreatments);
+                var loadingDoseTreatments = ($scope.consultation.newlyAddedTreatments || []).filter(function (t) { return t.isLoadingDose; });
+                loadingDoseTreatments.forEach(function (ld) {
+                    var vdEntry = _.find($scope.consultation.variableDoseTreatments || [], function (v) {
+                        return v.drug && ld.drug && v.drug.uuid === ld.drug.uuid;
+                    });
+                    if (vdEntry && vdEntry.careSetting) {
+                        ld.careSetting = vdEntry.careSetting;
+                    }
+                });
+                $scope.consultation.newlyAddedTreatments = allTreatmentsAcrossTabs.concat(includedOrderSetTreatments).concat(loadingDoseTreatments);
                 if ($scope.consultation.discontinuedDrugs) {
                     $scope.consultation.discontinuedDrugs.forEach(function (discontinuedDrug) {
                         var removableOrder = _.find(activeDrugOrders, { uuid: discontinuedDrug.uuid });
@@ -1000,7 +1009,8 @@ angular.module('bahmni.clinical')
                         routes: treatmentConfig.getRoutes(),
                         dosingRules: treatmentConfig.dosingRules || [],
                         drugFormDefaults: treatmentConfig.inputOptionsConfig.drugFormDefaults || {},
-                        dosageRuleUnitsMap: (orderSetConfig && orderSetConfig.dosageRuleUnitsMap) || {}
+                        dosageRuleUnitsMap: (orderSetConfig && orderSetConfig.dosageRuleUnitsMap) || {},
+                        dosingInstructions: treatmentConfig.getDosingInstructions()
                     };
                     var _openVariableDoseModal = null;
                     $scope.$on('openVariableDoseModal', function (event, payload) {
@@ -1022,6 +1032,42 @@ angular.module('bahmni.clinical')
                         onClose: function () {},
                         onSave: function (data) {
                             $timeout(function () {
+                                console.log('[LoadingDose] onSave data:', JSON.stringify({ drug: data.drug && data.drug.name, units: data.units, route: data.route, loadingDose: data.loadingDose }));
+                                if (data.loadingDose) {
+                                    var occurrenceUnit = _.find(treatmentConfig.getDurationUnits(), function (u) {
+                                        return u.name.toLowerCase().indexOf('occurrence') !== -1;
+                                    });
+                                    console.log('[LoadingDose] occurrenceUnit found:', occurrenceUnit && occurrenceUnit.name);
+                                    var loadingDoseOrder = new DrugOrderViewModel(treatmentConfig, {
+                                        drug: data.drug || null,
+                                        uniformDosingType: {
+                                            dose: parseFloat(data.loadingDose.dose) || 0,
+                                            frequency: 'STAT (Immediately)',
+                                            doseUnits: data.units || ''
+                                        },
+                                        frequencyType: Bahmni.Clinical.Constants.dosingTypes.uniform,
+                                        duration: 1,
+                                        durationUnit: occurrenceUnit ? occurrenceUnit.name : 'Occurrence(s)',
+                                        route: data.route || '',
+                                        instructions: data.loadingDose.instructions || '',
+                                        rate: data.loadingDose.rate ? parseFloat(data.loadingDose.rate) : null,
+                                        additives: data.loadingDose.additives || '',
+                                        additionalInstructions: data.loadingDose.additionalInstructions || '',
+                                        careSetting: ($scope.allMedicinesInPrescriptionAvailableForIPD && currentVisitType === 'IPD')
+                                            ? Bahmni.Clinical.Constants.careSetting.inPatient
+                                            : Bahmni.Clinical.Constants.careSetting.outPatient,
+                                        scheduledDate: data.startDate,
+                                        asNeeded: false,
+                                        isLoadingDose: true,
+                                        quantity: parseFloat(data.loadingDose.dose) || 0,
+                                        quantityUnit: data.units || 'Unit(s)'
+                                    });
+                                    console.log('[LoadingDose] ViewModel created — drug:', loadingDoseOrder.drug && loadingDoseOrder.drug.name, '| frequency:', loadingDoseOrder.uniformDosingType && loadingDoseOrder.uniformDosingType.frequency, '| dose:', loadingDoseOrder.uniformDosingType && loadingDoseOrder.uniformDosingType.dose, '| durationUnit:', loadingDoseOrder.durationUnit, '| isLoadingDose:', loadingDoseOrder.isLoadingDose);
+                                    $scope.consultation.newlyAddedTreatments = $scope.consultation.newlyAddedTreatments || [];
+                                    $scope.consultation.newlyAddedTreatments.push(loadingDoseOrder);
+                                    console.log('[LoadingDose] newlyAddedTreatments count:', $scope.consultation.newlyAddedTreatments.length);
+                                }
+
                                 $scope.consultation.variableDoseTreatments = $scope.consultation.variableDoseTreatments || [];
                                 var unit = data.units || '';
                                 var entry = {
@@ -1038,7 +1084,24 @@ angular.module('bahmni.clinical')
                                     startDate: data.startDate,
                                     stageCount: VARIABLE_DOSE_MOCK_STAGE_COUNT,
                                     totalDays: VARIABLE_DOSE_MOCK_TOTAL_DAYS,
-                                    stages: buildVariableDoseMockStages(unit)
+                                    stages: (function () {
+                                        if (data.loadingDose) {
+                                            var loadingDoseStage = {
+                                                stageName: 'Loading Dose',
+                                                dose: data.loadingDose.dose || '',
+                                                unit: unit,
+                                                frequency: 'Loading Dose',
+                                                duration: '1 Occurrence',
+                                                instructions: data.loadingDose.instructions || '',
+                                                rate: data.loadingDose.rate || '',
+                                                additives: data.loadingDose.additives || '',
+                                                additionalInstructions: data.loadingDose.additionalInstructions || ''
+                                            };
+                                            var mockStages = buildVariableDoseMockStages(unit);
+                                            return [loadingDoseStage].concat(mockStages.slice(1));
+                                        }
+                                        return buildVariableDoseMockStages(unit);
+                                    }())
                                 };
                                 if (data.editIndex != null) {
                                     $scope.consultation.variableDoseTreatments[data.editIndex] = entry;
