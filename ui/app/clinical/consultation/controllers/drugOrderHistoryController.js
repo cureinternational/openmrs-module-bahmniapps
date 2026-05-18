@@ -22,35 +22,6 @@ angular.module('bahmni.clinical')
             $scope.autoSelectNotAllowed = $scope.printPrescriptionFeature && $scope.printPrescriptionFeature.autoSelectNotAllowed != null ? $scope.printPrescriptionFeature.autoSelectNotAllowed : false;
             $scope.selectedDrugs = {};
 
-            if (!$scope.allMedicinesInPrescriptionAvailableForIPD) {
-                $scope.updateOrderType = function (drugOrder) {
-                    var updatedDrugOrder = angular.copy(drugOrder);
-                    updatedDrugOrder.careSetting = updatedDrugOrder.careSetting === Bahmni.Clinical.Constants.careSetting.outPatient ? Bahmni.Clinical.Constants.careSetting.inPatient : Bahmni.Clinical.Constants.careSetting.outPatient;
-                    if (updatedDrugOrder.previousOrderUuid !== undefined) {
-                        updatedDrugOrder.previousOrderUuid = null;
-                        updatedDrugOrder.scheduledDate = null;
-                    }
-                    $rootScope.$broadcast("event:updateDrugOrderType", updatedDrugOrder);
-                    $rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
-                };
-
-                $scope.disableIPDButton = function (drugOrder) {
-                    return ($scope.medicationSchedules &&
-                        $scope.medicationSchedules.some(function (schedule) {
-                            return schedule.order.uuid === drugOrder.uuid;
-                        })) ||
-                        !drugOrder.isActive() || !drugOrder.isDiscontinuedAllowed ||
-                        $scope.consultation.encounterUuid !== drugOrder.encounterUuid;
-                };
-
-                $scope.disableEditButton = function (drugOrder) {
-                    return ($scope.medicationSchedules &&
-                        $scope.medicationSchedules.some(function (schedule) {
-                            return schedule.order.uuid === drugOrder.uuid;
-                        }));
-                };
-            }
-
             var createPrescriptionGroups = function (activeAndScheduledDrugOrders) {
                 $scope.consultation.drugOrderGroups = [];
                 createPrescribedDrugOrderGroups();
@@ -249,16 +220,6 @@ angular.module('bahmni.clinical')
                         }
                     }));
             };
-
-            const getActiveAndPrescribedDrugOrdersUuids = function () {
-                return $scope.consultation.activeAndScheduledDrugOrders.map(function (drugOrder) {
-                    return drugOrder.uuid;
-                });
-            };
-
-            !$scope.allMedicinesInPrescriptionAvailableForIPD && spinner.forPromise(treatmentService.getMedicationSchedulesForOrders($stateParams.patientUuid, getActiveAndPrescribedDrugOrdersUuids()).then(function (response) {
-                $scope.medicationSchedules = response.data;
-            }));
 
             $scope.getOrderReasonConcept = function (drugOrder) {
                 if (drugOrder.orderReasonConcept) {

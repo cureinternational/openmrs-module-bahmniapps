@@ -49,10 +49,6 @@
             </div>
             <div class="button-group-wrapper">
                 <div class="button-group">
-                    <button ng-show="!allMedicinesInPrescriptionAvailableForIPD" class="ipd-btn" ng-click="toggleCareSetting(newTreatment)" ng-disabled="shouldDisableIPDButton(newTreatment)">
-                        <i class="fa fa-check" ng-show="newTreatment.careSetting === 'INPATIENT'"></i>
-                        {{ ::'IPD_BUTTON' | translate}}
-                    </button>
                     <button ng-click="edit(newTreatment, $index)" ng-disabled="showBulkChangeToggle"><i class="fa fa-edit"></i>
                     </button>
                     <button ng-confirm-click="remove($index)"
@@ -75,10 +71,6 @@
                 <div ng-if="newTreatment.rate"> | {{newTreatment.rate}} ml/hr</div>
                 <div ng-if="newTreatment.additives"> | {{newTreatment.additives}}</div>
                 <div ng-if="newTreatment.getQuantityWithUnit()"> | {{newTreatment.getQuantityWithUnit()}}</div>
-                <div>
-                    <span ng-show="allMedicinesInPrescriptionAvailableForIPD && newTreatment.careSetting==='INPATIENT'"> | {{ ::'IPD_BUTTON' | translate}}</span>
-                    <span ng-show="allMedicinesInPrescriptionAvailableForIPD && newTreatment.careSetting==='OUTPATIENT'"> | {{ ::'OPD_BUTTON' | translate}}</span>
-                </div>
             </div>
             <cdss-alert-row alerts="newTreatment.alerts"></cdss-alert-row>
         </li>
@@ -105,10 +97,6 @@
             </div>
             <div class="button-group-wrapper">
                 <div class="button-group">
-                    <button ng-show="!allMedicinesInPrescriptionAvailableForIPD" class="ipd-btn" ng-click="toggleCareSetting(treatment)">
-                        <i class="fa fa-check" ng-show="treatment.careSetting === 'INPATIENT'"></i>
-                        {{ ::'IPD_BUTTON' | translate }}
-                    </button>
                     <button ng-click="editVariableDose($index)"><i class="fa fa-edit"></i></button>
                     <button ng-confirm-click="removeVariableDose($index)"
                             confirm-message="{{ 'REMOVE_CONFIRMATION_KEY' | translate }}">

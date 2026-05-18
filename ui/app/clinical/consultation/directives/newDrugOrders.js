@@ -5,14 +5,6 @@ angular.module('bahmni.clinical')
         var controller = function ($scope, $rootScope, appService) {
             var allMedicinesConfig = appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD");
             $scope.allMedicinesInPrescriptionAvailableForIPD = allMedicinesConfig !== null ? allMedicinesConfig : true;
-            if (!$scope.allMedicinesInPrescriptionAvailableForIPD) {
-                $rootScope.$on("event:setEncounterId", function (event, encounterId) {
-                    $scope.encounterId = encounterId;
-                });
-                $scope.toggleCareSetting = function (newTreatment) {
-                    newTreatment.careSetting = newTreatment.careSetting === Bahmni.Clinical.Constants.careSetting.inPatient ? Bahmni.Clinical.Constants.careSetting.outPatient : Bahmni.Clinical.Constants.careSetting.inPatient;
-                };
-            }
             $scope.edit = function (drugOrder, index) {
                 $rootScope.$broadcast("event:editDrugOrder", drugOrder, index);
             };
