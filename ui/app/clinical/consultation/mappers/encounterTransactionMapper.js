@@ -90,7 +90,7 @@ Bahmni.Clinical.EncounterTransactionMapper = function () {
             consultation.drugOrders = consultation.drugOrders.concat(consultation.removableDrugs);
         }
 
-        var loadingDoseOrders = consultation.drugOrders.filter(function(o) {
+        var loadingDoseOrders = consultation.drugOrders.filter(function (o) {
             if (!o.dosingInstructions || !o.dosingInstructions.administrationInstructions) { return false; }
             try { return JSON.parse(o.dosingInstructions.administrationInstructions).isLoadingDose; } catch (e) { return false; }
         });
