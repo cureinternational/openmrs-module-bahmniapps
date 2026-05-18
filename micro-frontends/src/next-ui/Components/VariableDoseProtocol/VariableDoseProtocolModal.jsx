@@ -338,7 +338,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
                                 id="loading-dose-instructions"
                                 titleText={LOADING_DOSE_INSTRUCTIONS_LABEL}
                                 placeholder={LOADING_DOSE_SELECT_INSTRUCTIONS}
-                                options={(hostData?.dosingInstructions || []).map((i) => ({ label: i.name, value: i.name }))}
+                                options={(hostData?.dosingInstructions || []).map((instruction) => ({ label: instruction.name, value: instruction.name }))}
                                 selectedValue={loadingDoseInstructions}
                                 onChange={(item) => setLoadingDoseInstructions(item || null)}
                                 width="100%"

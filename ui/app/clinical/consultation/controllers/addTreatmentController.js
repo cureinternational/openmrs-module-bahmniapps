@@ -2,6 +2,9 @@
 
 var VARIABLE_DOSE_MOCK_STAGE_COUNT = 5;
 var VARIABLE_DOSE_MOCK_TOTAL_DAYS = 13;
+var LOADING_DOSE_STAGE_NAME = 'Loading Dose';
+var LOADING_DOSE_FREQUENCY_DISPLAY = 'Loading Dose';
+var LOADING_DOSE_DURATION_DISPLAY = '1 Occurrence';
 
 var buildVariableDoseMockStages = function (unit) {
     return [
@@ -718,13 +721,13 @@ angular.module('bahmni.clinical')
                 var includedOrderSetTreatments = _.filter(orderSetTreatmentsAcrossTabs, function (treatment) {
                     return treatment.orderSetUuid ? treatment.include : true;
                 });
-                var loadingDoseTreatments = ($scope.consultation.newlyAddedTreatments || []).filter(function (t) { return t.isLoadingDose; });
-                loadingDoseTreatments.forEach(function (ld) {
-                    var vdEntry = _.find($scope.consultation.variableDoseTreatments || [], function (v) {
-                        return v.drug && ld.drug && v.drug.uuid === ld.drug.uuid;
+                var loadingDoseTreatments = ($scope.consultation.newlyAddedTreatments || []).filter(function (treatment) { return treatment.isLoadingDose; });
+                loadingDoseTreatments.forEach(function (loadingDoseTreatment) {
+                    var variableDoseEntry = _.find($scope.consultation.variableDoseTreatments || [], function (variableDoseTreatment) {
+                        return variableDoseTreatment.drug && loadingDoseTreatment.drug && variableDoseTreatment.drug.uuid === loadingDoseTreatment.drug.uuid;
                     });
-                    if (vdEntry && vdEntry.careSetting) {
-                        ld.careSetting = vdEntry.careSetting;
+                    if (variableDoseEntry && variableDoseEntry.careSetting) {
+                        loadingDoseTreatment.careSetting = variableDoseEntry.careSetting;
                     }
                 });
                 $scope.consultation.newlyAddedTreatments = allTreatmentsAcrossTabs.concat(includedOrderSetTreatments).concat(loadingDoseTreatments);
@@ -1033,14 +1036,14 @@ angular.module('bahmni.clinical')
                         onSave: function (data) {
                             $timeout(function () {
                                 if (data.loadingDose) {
-                                    var occurrenceUnit = _.find(treatmentConfig.getDurationUnits(), function (u) {
-                                        return u.name.toLowerCase().indexOf('occurrence') !== -1;
+                                    var occurrenceUnit = _.find(treatmentConfig.getDurationUnits(), function (durationUnit) {
+                                        return durationUnit.name.toLowerCase().indexOf('occurrence') !== -1;
                                     });
                                     var loadingDoseOrder = new DrugOrderViewModel(treatmentConfig, {
                                         drug: data.drug || null,
                                         uniformDosingType: {
                                             dose: parseFloat(data.loadingDose.dose) || 0,
-                                            frequency: 'STAT (Immediately)',
+                                            frequency: 'STAT (Immediately)', // Temporary: stored as STAT until "Loading Dose" frequency concept is added to OpenMRS
                                             doseUnits: data.units || ''
                                         },
                                         frequencyType: Bahmni.Clinical.Constants.dosingTypes.uniform,
@@ -1083,11 +1086,11 @@ angular.module('bahmni.clinical')
                                     stages: (function () {
                                         if (data.loadingDose) {
                                             var loadingDoseStage = {
-                                                stageName: 'Loading Dose',
+                                                stageName: LOADING_DOSE_STAGE_NAME,
                                                 dose: data.loadingDose.dose || '',
                                                 unit: unit,
-                                                frequency: 'Loading Dose',
-                                                duration: '1 Occurrence',
+                                                frequency: LOADING_DOSE_FREQUENCY_DISPLAY,
+                                                duration: LOADING_DOSE_DURATION_DISPLAY,
                                                 instructions: data.loadingDose.instructions || '',
                                                 rate: data.loadingDose.rate || '',
                                                 additives: data.loadingDose.additives || '',
