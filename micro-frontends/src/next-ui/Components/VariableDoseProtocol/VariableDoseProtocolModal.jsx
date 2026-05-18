@@ -46,7 +46,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
     );
 
     const [isLoadingDose, setIsLoadingDose] = useState(false);
-    const [loadingDoseDose, setLoadingDoseDose] = useState(0);
+    const [loadingDoseValue, setLoadingDoseValue] = useState(0);
     const [loadingDoseInstructions, setLoadingDoseInstructions] = useState(null);
     const [loadingDoseRate, setLoadingDoseRate] = useState(0);
     const [loadingDoseAdditives, setLoadingDoseAdditives] = useState('');
@@ -62,7 +62,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
 
     const showRateAndAdditives = dosingRule?.value === 'ml/kg';
 
-    const isNextEnabled = !!(selectedDrug && units && startDate && (!isLoadingDose || loadingDoseDose > 0));
+    const isNextEnabled = !!(selectedDrug && units && startDate && (!isLoadingDose || loadingDoseValue > 0));
     const isDirty = !!(selectedDrug || dosingRule || units || route || isLoadingDose);
 
     const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
@@ -91,7 +91,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
             route: route?.value || "",
             startDate,
             loadingDose: isLoadingDose ? {
-                dose: String(loadingDoseDose),
+                dose: String(loadingDoseValue),
                 instructions: loadingDoseInstructions?.value || '',
                 rate: String(loadingDoseRate),
                 additives: loadingDoseAdditives,
@@ -296,7 +296,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
                         onToggle={(checked) => {
                             setIsLoadingDose(checked);
                             if (!checked) {
-                                setLoadingDoseDose(0);
+                                setLoadingDoseValue(0);
                                 setLoadingDoseInstructions(null);
                                 setLoadingDoseRate(0);
                                 setLoadingDoseAdditives('');
@@ -313,12 +313,12 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
                                 <NumberInput
                                     id="loading-dose-dose"
                                     label={<Title text={LOADING_DOSE_LABEL} isRequired={true} />}
-                                    value={loadingDoseDose}
+                                    value={loadingDoseValue}
                                     min={0}
                                     step={0.5}
                                     onChange={(e, dirOrObj, legacyVal) => {
                                         const v = (dirOrObj !== null && typeof dirOrObj === 'object') ? dirOrObj.value : legacyVal;
-                                        setLoadingDoseDose(v !== undefined ? v : Number(e?.target?.value || 0));
+                                        setLoadingDoseValue(v !== undefined ? v : Number(e?.target?.value || 0));
                                     }}
                                 />
                             </div>
