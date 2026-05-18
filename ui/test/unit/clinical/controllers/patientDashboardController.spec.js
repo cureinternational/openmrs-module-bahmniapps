@@ -611,7 +611,7 @@ describe("patient dashboard controller", function () {
             it("should auto-discard draft when there is no active visit", function () {
                 scope.visitHistory = {};
                 _formDraftService.isDraftExpired.and.returnValue(false);
-                _formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                _formDraftService.discardDraft.and.returnValue({then: function (success) { success(); return this; }});
                 _formDraftService.getDraft.and.returnValue({
                     then: function (success) {
                         success({data: {uuid: 'draft-uuid', timestamp: Date.now(), markedAsSaved: false}});
@@ -651,7 +651,7 @@ describe("patient dashboard controller", function () {
                 expiredTimestamp.setDate(expiredTimestamp.getDate() - 1);
 
                 _formDraftService.isDraftExpired.and.returnValue(true);
-                _formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                _formDraftService.discardDraft.and.returnValue({then: function (success) { success(); return this; }});
                 _formDraftService.getDraft.and.returnValue({
                     then: function (success) {
                         success({data: {uuid: 'draft-uuid', timestamp: expiredTimestamp.getTime(), markedAsSaved: false}});
@@ -677,7 +677,7 @@ describe("patient dashboard controller", function () {
                 _rootScope.resumeDraftPatientUuid = 'patient-uuid';
                 scope.visitHistory = {};
                 _formDraftService.isDraftExpired.and.returnValue(false);
-                _formDraftService.discardDraft.and.returnValue({then: function () { return this; }});
+                _formDraftService.discardDraft.and.returnValue({then: function (success) { success(); return this; }});
                 _formDraftService.getDraft.and.returnValue({
                     then: function (success) {
                         success({data: {uuid: 'draft-uuid', timestamp: Date.now(), markedAsSaved: false}});

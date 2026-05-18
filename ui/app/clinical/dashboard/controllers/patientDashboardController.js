@@ -108,13 +108,15 @@ angular.module('bahmni.clinical')
                         function (response) {
                             if (response.data && response.data.uuid && !response.data.markedAsSaved) {
                                 if (!$scope.activeVisit || formDraftService.isDraftExpired(response.data.timestamp)) {
-                                    formDraftService.discardDraft(patientUuid, providerUuid);
-                                    $scope.formDraft.hasDrafts = false;
-                                    $scope.formDraft.draftDate = null;
-                                    $scope.formDraft.draftTime = null;
-                                    $rootScope.draftData = null;
-                                    $rootScope.resumeDraftOnLoad = false;
-                                    $rootScope.resumeDraftPatientUuid = null;
+                                    formDraftService.discardDraft(patientUuid, providerUuid).then(function () {
+                                        $scope.formDraft.hasDrafts = false;
+                                        $scope.formDraft.draftDate = null;
+                                        $scope.formDraft.draftTime = null;
+                                        $rootScope.draftData = null;
+                                        $rootScope.resumeDraftOnLoad = false;
+                                        $rootScope.resumeDraftPatientUuid = null;
+                                        $rootScope.draftDiscarded = true;
+                                    });
                                 } else {
                                     $scope.formDraft.hasDrafts = true;
                                     $rootScope.draftData = response.data;
