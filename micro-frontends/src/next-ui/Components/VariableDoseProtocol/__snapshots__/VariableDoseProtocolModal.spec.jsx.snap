@@ -136,7 +136,31 @@ exports[`VariableDoseProtocolModal should render the modal (open=true is hardcod
               />
             </div>
           </div>
-          <div />
+          <div
+            class="variable-dose-accept-wrapper"
+          >
+            <div
+              class="bx--form-item bx--checkbox-wrapper"
+            >
+              <input
+                class="bx--checkbox"
+                disabled=""
+                id="variable-dose-accept"
+                type="checkbox"
+              />
+              <label
+                class="bx--checkbox-label"
+                for="variable-dose-accept"
+              >
+                <span
+                  class="bx--checkbox-label-text"
+                  dir="auto"
+                >
+                  Accept
+                </span>
+              </label>
+            </div>
+          </div>
         </div>
         <div
           class="variable-dose-form-grid"

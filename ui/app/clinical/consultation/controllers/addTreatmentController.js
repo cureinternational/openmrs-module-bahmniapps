@@ -1032,12 +1032,10 @@ angular.module('bahmni.clinical')
                         onClose: function () {},
                         onSave: function (data) {
                             $timeout(function () {
-                                console.log('[LoadingDose] onSave data:', JSON.stringify({ drug: data.drug && data.drug.name, units: data.units, route: data.route, loadingDose: data.loadingDose }));
                                 if (data.loadingDose) {
                                     var occurrenceUnit = _.find(treatmentConfig.getDurationUnits(), function (u) {
                                         return u.name.toLowerCase().indexOf('occurrence') !== -1;
                                     });
-                                    console.log('[LoadingDose] occurrenceUnit found:', occurrenceUnit && occurrenceUnit.name);
                                     var loadingDoseOrder = new DrugOrderViewModel(treatmentConfig, {
                                         drug: data.drug || null,
                                         uniformDosingType: {
@@ -1062,10 +1060,8 @@ angular.module('bahmni.clinical')
                                         quantity: parseFloat(data.loadingDose.dose) || 0,
                                         quantityUnit: data.units || 'Unit(s)'
                                     });
-                                    console.log('[LoadingDose] ViewModel created — drug:', loadingDoseOrder.drug && loadingDoseOrder.drug.name, '| frequency:', loadingDoseOrder.uniformDosingType && loadingDoseOrder.uniformDosingType.frequency, '| dose:', loadingDoseOrder.uniformDosingType && loadingDoseOrder.uniformDosingType.dose, '| durationUnit:', loadingDoseOrder.durationUnit, '| isLoadingDose:', loadingDoseOrder.isLoadingDose);
                                     $scope.consultation.newlyAddedTreatments = $scope.consultation.newlyAddedTreatments || [];
                                     $scope.consultation.newlyAddedTreatments.push(loadingDoseOrder);
-                                    console.log('[LoadingDose] newlyAddedTreatments count:', $scope.consultation.newlyAddedTreatments.length);
                                 }
 
                                 $scope.consultation.variableDoseTreatments = $scope.consultation.variableDoseTreatments || [];

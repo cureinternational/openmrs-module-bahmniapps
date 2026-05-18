@@ -58,7 +58,6 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
     const drugFormDefaults = hostData?.drugFormDefaults || {};
     const dosageRuleUnitsMap = hostData?.dosageRuleUnitsMap || {};
 
-    // Loading dose unit mirrors the selected "Units *"; falls back to "mg" when nothing is selected.
     const loadingDoseUnitName = units?.value || 'Units';
 
     const showRateAndAdditives = dosingRule?.value === 'ml/kg';
@@ -432,23 +431,4 @@ export function VariableDoseProtocolModal(props) {
     );
 }
 
-VariableDoseProtocolModal.propTypes = {
-    hostData: PropTypes.shape({
-        doseUnits: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string })),
-        routes: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string })),
-        dosingRules: PropTypes.arrayOf(PropTypes.string),
-        dosageRuleUnitsMap: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
-        drugFormDefaults: PropTypes.objectOf(
-            PropTypes.shape({
-                doseUnits: PropTypes.string,
-                route: PropTypes.string,
-            })
-        ),
-        dosingInstructions: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string })),
-    }),
-    hostApi: PropTypes.shape({
-        onClose: PropTypes.func,
-        onSave: PropTypes.func,
-        searchDrugs: PropTypes.func,
-    }),
-};
+VariableDoseProtocolModal.propTypes = VariableDoseProtocolModalInner.propTypes;

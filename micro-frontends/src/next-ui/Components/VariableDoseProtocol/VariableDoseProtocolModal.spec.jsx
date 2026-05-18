@@ -332,10 +332,24 @@ describe("Loading Dose", () => {
         fireEvent.click(toggle);
 
         await waitFor(() => {
-            expect(screen.getByLabelText("Loading Dose")).toBeTruthy();
+            expect(container.querySelector("#loading-dose-dose")).toBeTruthy();
+            expect(container.querySelector("#loading-dose-additional-instructions")).toBeTruthy();
+        });
+    });
+
+    it("clicking loading dose toggle shows rate and additives when dosing rule is ml/kg", async () => {
+        const { container } = renderModal({ ...defaultHostData, dosingRules: ["ml/kg"] });
+        await waitFor(() => screen.getByText("Order Drug - Variable Dose Protocol"));
+
+        openBahmniDropdown(container, "variable-dose-dosing-rule");
+        fireEvent.click(screen.getByText("ml/kg"));
+
+        const toggle = container.querySelector("#loading-dose-toggle");
+        fireEvent.click(toggle);
+
+        await waitFor(() => {
             expect(screen.getByLabelText("Rate (ml/hr)")).toBeTruthy();
             expect(screen.getByLabelText("Additives")).toBeTruthy();
-            expect(screen.getByLabelText("Additional Instructions")).toBeTruthy();
         });
     });
 
@@ -347,13 +361,13 @@ describe("Loading Dose", () => {
         fireEvent.click(toggle);
 
         await waitFor(() => {
-            expect(screen.getByLabelText("Loading Dose")).toBeTruthy();
+            expect(container.querySelector("#loading-dose-dose")).toBeTruthy();
         });
 
         fireEvent.click(toggle);
 
         await waitFor(() => {
-            expect(screen.queryByLabelText("Loading Dose")).toBeNull();
+            expect(container.querySelector("#loading-dose-dose")).toBeNull();
         });
     });
 
@@ -379,9 +393,9 @@ describe("Loading Dose", () => {
         const toggle = container.querySelector("#loading-dose-toggle");
         fireEvent.click(toggle);
 
-        await waitFor(() => screen.getByLabelText("Loading Dose"));
+        await waitFor(() => container.querySelector("#loading-dose-dose"));
 
-        const doseInput = screen.getByLabelText("Loading Dose");
+        const doseInput = container.querySelector("#loading-dose-dose");
         fireEvent.change(doseInput, { target: { value: "5" } });
 
         await waitFor(() => {
