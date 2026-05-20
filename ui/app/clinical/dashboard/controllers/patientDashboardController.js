@@ -86,7 +86,6 @@ angular.module('bahmni.clinical')
                         $rootScope.resumeDraftOnLoad = false;
                         $rootScope.resumeDraftPatientUuid = null;
                         $rootScope.hasVisitedConsultation = false;
-                        $state.discardChanges = true;
                         $state.dirtyConsultationForm = false;
                         $rootScope.draftDiscarded = true;
                         ngDialog.close(dialog.id);
