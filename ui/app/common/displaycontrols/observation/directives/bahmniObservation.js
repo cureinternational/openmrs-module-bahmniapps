@@ -71,14 +71,15 @@ angular.module('bahmni.common.displaycontrol.observation')
                 var fetchFormSpecificObs = function (formName) {
                     var getFormNameAndVersion = Bahmni.Common.Util.FormFieldPathUtil.getFormNameAndVersion;
                     var target = formName.toUpperCase();
-                    $scope.bahmniObservations = _.filter($scope.bahmniObservations, function (bahmniObs) {
+                    $scope.bahmniObservations.forEach(function (bahmniObs) {
                         bahmniObs.value = _.filter(bahmniObs.value, function (observation) {
                             return observation.formFieldPath &&
                                 getFormNameAndVersion(observation.formFieldPath).formName.toUpperCase() === target;
                         });
+                    });
+                    $scope.bahmniObservations = _.filter($scope.bahmniObservations, function (bahmniObs) {
                         return bahmniObs.value.length > 0;
                     });
-                    console.log("$scope.bahmniObservations -- ", $scope.bahmniObservations);
                 };
 
                 var fetchObservations = function () {

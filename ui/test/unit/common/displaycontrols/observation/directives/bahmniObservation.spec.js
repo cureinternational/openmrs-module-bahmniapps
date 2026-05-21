@@ -260,15 +260,15 @@ describe("BahmniObservation", function () {
                     formFieldPath: "form2"
                 },
             ];
-            var formResponse = { 
-                    data: { 
+            var formResponse = {
+                    data: {
                         resources: [
-                            { value: 'form1' }, 
+                            { value: 'form1' },
                             { value: 'form2' }
-                        ] 
-                    } 
+                        ]
+                    }
                 };
-            
+
             mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond(formResponse);
             mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
 
@@ -276,10 +276,196 @@ describe("BahmniObservation", function () {
             scope.$digest();
             var compiledElementScope = element.isolateScope();
             scope.$digest();
-        
+
             expect(compiledElementScope.bahmniObservations[0].value.length).toEqual(1);
             expect(compiledElementScope.bahmniObservations[0].value[0].concept.name).toEqual("Surgeon");
             expect(compiledElementScope.bahmniObservations[0].value[0].formFieldPath).toEqual("form1");
+        });
+
+        it("should filter out every date group when none of the observations belong to the configured form", function () {
+            scope.patient = {uuid: '123'};
+            scope.config = {
+                conceptNames: ["Surgeon"],
+                filterByFormName: "form1"
+            };
+            scope.section = {};
+            scope.observations = [
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form2",
+                    encounterDateTime: "2026-01-01T10:00:00"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form2",
+                    encounterDateTime: "2026-02-01T10:00:00"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form2",
+                    encounterDateTime: "2026-03-01T10:00:00"
+                }
+            ];
+
+            mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond({data: {}});
+            mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
+
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.bahmniObservations.length).toEqual(0);
+        });
+
+        it("should filter observations inside every date group, not just the first one", function () {
+            scope.patient = {uuid: '123'};
+            scope.config = {
+                conceptNames: ["Surgeon"],
+                filterByFormName: "form1"
+            };
+            scope.section = {};
+            scope.observations = [
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form2",
+                    encounterDateTime: "2026-01-01T10:00:00"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form1",
+                    encounterDateTime: "2026-02-01T10:00:00"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form2",
+                    encounterDateTime: "2026-03-01T10:00:00"
+                }
+            ];
+
+            mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond({data: {}});
+            mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
+
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.bahmniObservations.length).toEqual(1);
+            expect(compiledElementScope.bahmniObservations[0].value.length).toEqual(1);
+            expect(compiledElementScope.bahmniObservations[0].value[0].formFieldPath).toEqual("form1");
+        });
+
+        it("should match form name from a versioned formFieldPath like 'FormName.1/2-0'", function () {
+            scope.patient = {uuid: '123'};
+            scope.config = {
+                conceptNames: ["Surgeon"],
+                filterByFormName: "Orthopaedic Operative Report"
+            };
+            scope.section = {};
+            scope.observations = [
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "Orthopaedic Operative Report.1/2-0"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "Audiology Procedure Note.1/2-0"
+                }
+            ];
+
+            mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond({data: {}});
+            mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
+
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.bahmniObservations[0].value.length).toEqual(1);
+            expect(compiledElementScope.bahmniObservations[0].value[0].formFieldPath).toEqual("Orthopaedic Operative Report.1/2-0");
+        });
+
+        it("should match the configured form name case-insensitively", function () {
+            scope.patient = {uuid: '123'};
+            scope.config = {
+                conceptNames: ["Surgeon"],
+                filterByFormName: "ORTHOPAEDIC OPERATIVE REPORT"
+            };
+            scope.section = {};
+            scope.observations = [
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "Orthopaedic Operative Report.1/2-0"
+                }
+            ];
+
+            mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond({data: {}});
+            mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
+
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.bahmniObservations[0].value.length).toEqual(1);
+        });
+
+        it("should drop observations that have no formFieldPath when filterByFormName is set", function () {
+            scope.patient = {uuid: '123'};
+            scope.config = {
+                conceptNames: ["Surgeon"],
+                filterByFormName: "form1"
+            };
+            scope.section = {};
+            scope.observations = [
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form1"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"}
+                }
+            ];
+
+            mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond({data: {}});
+            mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
+
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.bahmniObservations[0].value.length).toEqual(1);
+            expect(compiledElementScope.bahmniObservations[0].value[0].formFieldPath).toEqual("form1");
+        });
+
+        it("should not apply any form-name filtering when filterByFormName is absent from config", function () {
+            scope.patient = {uuid: '123'};
+            scope.config = {
+                conceptNames: ["Surgeon"]
+            };
+            scope.section = {};
+            scope.observations = [
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form1"
+                },
+                {
+                    concept: {name: "Surgeon", shortName: "Surgeon"},
+                    formFieldPath: "form2"
+                }
+            ];
+
+            mockBackend.expectGET("/openmrs/ws/rest/v1/bahmniie/form/allForms?v=custom:(version,name,uuid)").respond({data: {}});
+            mockBackend.expectGET('../common/displaycontrols/observation/views/observationDisplayControl.html').respond("<div>dummy</div>");
+
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.bahmniObservations[0].value.length).toEqual(2);
         });
     });
 });
