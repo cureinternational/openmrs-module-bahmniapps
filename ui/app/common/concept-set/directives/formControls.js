@@ -26,7 +26,7 @@ angular.module('bahmni.common.conceptSet')
                         .then(function (response) {
                             var formDetailsAsString = _.get(response, 'data.resources[0].value');
                             if (formDetailsAsString) {
-                                var formDetails = JSON.parse(formDetailsAsString);
+                                var formDetails = Bahmni.Common.Util.deepUnescapeStrings(JSON.parse(formDetailsAsString));
                                 formDetails.version = formVersion;
                                 loadedFormDetails[formUuid] = formDetails;
                                 var formParams = { formName: formName, formVersion: formVersion, locale: locale, formUuid: formUuid };
