@@ -227,6 +227,35 @@ describe("AdtController", function () {
 
             expect(formDraftService.discardDraft).not.toHaveBeenCalled();
         });
+
+        it("should call discardDraft with null providerUuid when currentProvider is missing on startNewVisit", function () {
+            scope.visitSummary = {visitType: "OPD", uuid: "visitUuid"};
+            scope.patient = {uuid: '123'};
+            scope.adtObservations = [];
+            rootScope.currentProvider = null;
+            visitService.endVisit.and.callFake(stubEndVisitPromise);
+            encounterService.create.and.returnValue({success: function () {}});
+            createController();
+
+            scope.startNewVisit('visitTypeUuid');
+
+            expect(formDraftService.discardDraft).toHaveBeenCalledWith('123', null);
+        });
+
+        it("should call discardDraft with null providerUuid when currentProvider is missing on closeCurrentVisitAndStartNewVisit", function () {
+            scope.visitSummary = {visitType: "OPD", uuid: "visitUuid"};
+            scope.patient = {uuid: '123'};
+            scope.adtObservations = [];
+            rootScope.currentProvider = null;
+            var encounterResponse = {patientUuid: '123', encounterUuid: 'uuid', encounterType: 'ADMISSION'};
+            visitService.endVisitAndCreateEncounter.and.returnValue(specUtil.createFakePromise(encounterResponse));
+            encounterService.buildEncounter.and.returnValue(encounterResponse);
+            createController();
+
+            scope.closeCurrentVisitAndStartNewVisit();
+
+            expect(formDraftService.discardDraft).toHaveBeenCalledWith('123', null);
+        });
     });
 
     it("Should close the confirmation dialog if cancelled", function () {
