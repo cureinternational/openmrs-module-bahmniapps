@@ -35,15 +35,12 @@ angular.module('bahmni.clinical')
             $scope.clearButtonClicked = false;
             $scope.conceptSource = localStorage.getItem("conceptSource") || "";
             $scope.prescribeMedicationPrivilege = Bahmni.Clinical.Constants.prescribeMedicationPrivilege;
-            $scope.allMedicinesInPrescriptionAvailableForIPD = appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD") !== null ? appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD") : true;
             var currentVisitType;
-            if ($scope.allMedicinesInPrescriptionAvailableForIPD) {
-                visitService.search(
-                    { patient: $state.params.patientUuid, includeInactive: false, v: "custom:(uuid,visitType,startDatetime,stopDatetime,location,encounters:(uuid))" }
-                ).then(function (response) {
-                    currentVisitType = response.data.results[0].visitType.display;
-                });
-            }
+            visitService.search(
+                { patient: $state.params.patientUuid, includeInactive: false, v: "custom:(uuid,visitType,startDatetime,stopDatetime,location,encounters:(uuid))" }
+            ).then(function (response) {
+                currentVisitType = response.data.results[0].visitType.display;
+            });
 
             $scope.getFilteredOrderSets = function (searchTerm) {
                 if (searchTerm && searchTerm.length >= 3) {
@@ -423,7 +420,7 @@ angular.module('bahmni.clinical')
                     ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length == 0)) {
                     return;
                 }
-                if ($scope.allMedicinesInPrescriptionAvailableForIPD && currentVisitType === 'IPD') {
+                if (currentVisitType === 'IPD') {
                     $scope.treatment.careSetting = Bahmni.Clinical.Constants.careSetting.inPatient;
                 }
                 if ($scope.treatment.isNewOrderSet) {
@@ -1054,7 +1051,7 @@ angular.module('bahmni.clinical')
                                         rate: data.loadingDose.rate ? parseFloat(data.loadingDose.rate) : null,
                                         additives: data.loadingDose.additives || '',
                                         additionalInstructions: data.loadingDose.additionalInstructions || '',
-                                        careSetting: ($scope.allMedicinesInPrescriptionAvailableForIPD && currentVisitType === 'IPD')
+                                        careSetting: (currentVisitType === 'IPD')
                                             ? Bahmni.Clinical.Constants.careSetting.inPatient
                                             : Bahmni.Clinical.Constants.careSetting.outPatient,
                                         scheduledDate: data.startDate,
@@ -1077,7 +1074,7 @@ angular.module('bahmni.clinical')
                                     route: data.route || '',
                                     quantity: 432,
                                     quantityUnit: 'Tablets',
-                                    careSetting: ($scope.allMedicinesInPrescriptionAvailableForIPD && currentVisitType === 'IPD')
+                                    careSetting: (currentVisitType === 'IPD')
                                         ? Bahmni.Clinical.Constants.careSetting.inPatient
                                         : Bahmni.Clinical.Constants.careSetting.outPatient,
                                     startDate: data.startDate,
