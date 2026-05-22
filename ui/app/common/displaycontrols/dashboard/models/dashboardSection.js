@@ -22,13 +22,13 @@
         "conditionsList"
     ];
     var reactDisplayControls = [
-        "Allergies",
+        "allergies",
         "formsV2React",
         "ordersV2"
     ];
 
     var getViewUrl = function (section) {
-        if (reactDisplayControls.includes(section.translationKey) || reactDisplayControls.includes(section.type)) {
+        if (reactDisplayControls.includes(section.type)) {
             return DISPLAY_CONTROL_REACT_URL;
         }
         if (section.isObservation) {
