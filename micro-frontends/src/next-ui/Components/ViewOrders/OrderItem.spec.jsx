@@ -46,7 +46,7 @@ describe("OrderItem", () => {
 describe("OrderItemContainer", () => {
     const mockProps = {
         updatedAt: "01 Jan 2024 10:00 AM",
-        orderStatus: "COMPLETED",
+        orderStatus: "completed",
         statusUpdatedBy: "Status updated by User A",
         updatedBy: "Updated by User A",
         owner: "Owner Name",
