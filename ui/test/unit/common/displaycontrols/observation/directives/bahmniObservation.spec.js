@@ -1,6 +1,5 @@
 'use strict';
 
-
 describe("BahmniObservation", function () {
     var appService, scope, $compile, mockBackend, observationsService, q, spinner, formHierarchyService, encounterService, providerInfoService, formPrintService;
     var simpleHtml = '<bahmni-observation section="section" patient="patient" is-on-dashboard="true" config="config" enrollment="enrollment" observations="observations"></bahmni-observation>';
@@ -503,100 +502,5 @@ describe("BahmniObservation", function () {
             expect(compiledElementScope.bahmniObservations[0].value[0].formFieldPath).toEqual("form1");
             expect(compiledElementScope.bahmniObservations[0].value[1].formFieldPath).toEqual("form3");
         });
-    });
-});
-
-describe('fetchFormSpecificObs', function () {
-    var $scope;
-    var getFormNameAndVersion;
-    beforeEach(function () {
-        $scope = {
-            bahmniObservations: [
-                { value: [
-                    { formFieldPath: 'formA.v1', concept: { name: 'A' } },
-                    { formFieldPath: 'formB.v1', concept: { name: 'B' } },
-                    { formFieldPath: 'formC.v1', concept: { name: 'C' } }
-                ] },
-                { value: [
-                    { formFieldPath: 'formB.v1', concept: { name: 'B' } },
-                    { formFieldPath: 'formD.v1', concept: { name: 'D' } }
-                ] }
-            ]
-        };
-        getFormNameAndVersion = function (formFieldPath) {
-            return { formName: formFieldPath.split('.')[0] };
-        };
-        Bahmni = { Common: { Util: { FormFieldPathUtil: { getFormNameAndVersion: getFormNameAndVersion } } } };
-    });
-
-    it('should filter by a single form name', function () {
-        var fetchFormSpecificObs = function (formNames) {
-            if (!formNames) return;
-            var getFormNameAndVersion = Bahmni.Common.Util.FormFieldPathUtil.getFormNameAndVersion;
-            var targets = Array.isArray(formNames) ? formNames : [formNames];
-            targets = targets.map(function(name) { return name.toUpperCase(); });
-            $scope.bahmniObservations.forEach(function (bahmniObs) {
-                bahmniObs.value = bahmniObs.value.filter(function (observation) {
-                    if (!observation.formFieldPath) return false;
-                    var obsFormName = getFormNameAndVersion(observation.formFieldPath).formName.toUpperCase();
-                    return targets.includes(obsFormName);
-                });
-            });
-            $scope.bahmniObservations = $scope.bahmniObservations.filter(function (bahmniObs) {
-                return bahmniObs.value.length > 0;
-            });
-        };
-        fetchFormSpecificObs('formB');
-        expect($scope.bahmniObservations.length).toBe(2);
-        expect($scope.bahmniObservations[0].value.length).toBe(1);
-        expect($scope.bahmniObservations[0].value[0].concept.name).toBe('B');
-        expect($scope.bahmniObservations[1].value.length).toBe(1);
-        expect($scope.bahmniObservations[1].value[0].concept.name).toBe('B');
-    });
-
-    it('should filter by multiple form names', function () {
-        var fetchFormSpecificObs = function (formNames) {
-            if (!formNames) return;
-            var getFormNameAndVersion = Bahmni.Common.Util.FormFieldPathUtil.getFormNameAndVersion;
-            var targets = Array.isArray(formNames) ? formNames : [formNames];
-            targets = targets.map(function(name) { return name.toUpperCase(); });
-            $scope.bahmniObservations.forEach(function (bahmniObs) {
-                bahmniObs.value = bahmniObs.value.filter(function (observation) {
-                    if (!observation.formFieldPath) return false;
-                    var obsFormName = getFormNameAndVersion(observation.formFieldPath).formName.toUpperCase();
-                    return targets.includes(obsFormName);
-                });
-            });
-            $scope.bahmniObservations = $scope.bahmniObservations.filter(function (bahmniObs) {
-                return bahmniObs.value.length > 0;
-            });
-        };
-        fetchFormSpecificObs(['formA', 'formD']);
-        expect($scope.bahmniObservations.length).toBe(2);
-        expect($scope.bahmniObservations[0].value.length).toBe(1);
-        expect($scope.bahmniObservations[0].value[0].concept.name).toBe('A');
-        expect($scope.bahmniObservations[1].value.length).toBe(1);
-        expect($scope.bahmniObservations[1].value[0].concept.name).toBe('D');
-    });
-
-    it('should handle null or undefined formNames gracefully', function () {
-        var fetchFormSpecificObs = function (formNames) {
-            if (!formNames) return;
-            var getFormNameAndVersion = Bahmni.Common.Util.FormFieldPathUtil.getFormNameAndVersion;
-            var targets = Array.isArray(formNames) ? formNames : [formNames];
-            targets = targets.map(function(name) { return name.toUpperCase(); });
-            $scope.bahmniObservations.forEach(function (bahmniObs) {
-                bahmniObs.value = bahmniObs.value.filter(function (observation) {
-                    if (!observation.formFieldPath) return false;
-                    var obsFormName = getFormNameAndVersion(observation.formFieldPath).formName.toUpperCase();
-                    return targets.includes(obsFormName);
-                });
-            });
-            $scope.bahmniObservations = $scope.bahmniObservations.filter(function (bahmniObs) {
-                return bahmniObs.value.length > 0;
-            });
-        };
-        fetchFormSpecificObs(null);
-        expect($scope.bahmniObservations.length).toBe(2);
     });
 });
