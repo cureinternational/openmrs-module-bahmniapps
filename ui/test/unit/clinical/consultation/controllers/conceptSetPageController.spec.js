@@ -827,6 +827,80 @@ describe('ConceptSetPageController', function () {
             expect(formDraftService.saveDraft).not.toHaveBeenCalled();
         });
 
+        it('should register $state.saveFormDraftIfDirty when controller initializes', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            createControllerWithTimeoutAndFilter();
+
+            expect(state.saveFormDraftIfDirty).toBeDefined();
+            expect(typeof state.saveFormDraftIfDirty).toBe('function');
+        });
+
+        it('should clear $state.saveFormDraftIfDirty when scope is destroyed', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            createControllerWithTimeoutAndFilter();
+            expect(state.saveFormDraftIfDirty).toBeDefined();
+
+            scope.$destroy();
+
+            expect(state.saveFormDraftIfDirty).toBeNull();
+        });
+
+        it('should call saveDraft via $state.saveFormDraftIfDirty when enableFormDraftFeature is true and isDirty', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+            appDescriptor.getConfigValue.and.returnValue(true);
+            appService.getAppDescriptor.and.returnValue(appDescriptor);
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter();
+            scope.formDraft.isDirty = true;
+
+            state.saveFormDraftIfDirty();
+
+            expect(formDraftService.saveDraft).toHaveBeenCalled();
+        });
+
+        it('should not call saveDraft via $state.saveFormDraftIfDirty when isDirty is false', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+            appDescriptor.getConfigValue.and.returnValue(true);
+            appService.getAppDescriptor.and.returnValue(appDescriptor);
+
+            createControllerWithTimeoutAndFilter();
+            scope.formDraft.isDirty = false;
+
+            state.saveFormDraftIfDirty();
+
+            expect(formDraftService.saveDraft).not.toHaveBeenCalled();
+        });
+
+        it('should not call saveDraft via $state.saveFormDraftIfDirty when enableFormDraftFeature is false', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            createControllerWithTimeoutAndFilter();
+            scope.formDraft.isDirty = true;
+
+            state.saveFormDraftIfDirty();
+
+            expect(formDraftService.saveDraft).not.toHaveBeenCalled();
+        });
+
         it('should disable Save as Draft button (isDirty = false) when post-save handler is executed', function () {
             var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
             mockConceptSetService(conceptResponseData);

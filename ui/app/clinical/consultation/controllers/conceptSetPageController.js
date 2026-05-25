@@ -495,10 +495,10 @@ angular.module('bahmni.clinical')
 
             var saveFormDraft = function () {
                 if (dirtyTrackingState.isSaving) {
-                    return;
+                    return $q.resolve();
                 }
                 if (!$scope.visitHistory || !$scope.visitHistory.activeVisit) {
-                    return;
+                    return $q.resolve();
                 }
 
                 dirtyTrackingState.isSaving = true;
@@ -509,7 +509,7 @@ angular.module('bahmni.clinical')
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
                 var formData = formDirtyStateService.serializeFormData($scope.consultation.selectedObsTemplate);
 
-                formDraftService.saveDraft(patientUuid, providerUuid, formData).then(function (response) {
+                return formDraftService.saveDraft(patientUuid, providerUuid, formData).then(function (response) {
                     var serverTimestamp = response.data.timestamp;
                     var savedDate = new Date(serverTimestamp);
                     var draftDate = $filter('date')(savedDate, 'dd MMM yyyy');
@@ -534,6 +534,13 @@ angular.module('bahmni.clinical')
             };
 
             $scope.saveAsDraft = saveFormDraft;
+
+            $state.saveFormDraftIfDirty = function () {
+                if ($scope.enableFormDraftFeature && $scope.formDraft.isDirty && !dirtyTrackingState.isSaving && $scope.visitHistory && $scope.visitHistory.activeVisit) {
+                    return saveFormDraft();
+                }
+                return $q.resolve();
+            };
 
             var draftCheckPromise = null;
             var draftContextWatchDeregister = null;
@@ -653,6 +660,7 @@ angular.module('bahmni.clinical')
                 }
                 saveSuccessfulListener();
                 saveStartedListener();
+                $state.saveFormDraftIfDirty = null;
             });
 
             init();
