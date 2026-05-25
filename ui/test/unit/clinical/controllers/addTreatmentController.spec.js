@@ -260,7 +260,7 @@ describe("AddTreatmentController", function () {
 
     var $q, scope, stateParams, rootScope, contextChangeHandler, newTreatment,
         editTreatment, clinicalAppConfigService, ngDialog, drugService, drugs,
-        encounterDateTime, appService, appConfig, defaultDrugsPromise, orderSetService, locationService, $state, cdssService, calculateQuantityAndUnit, diagnosisService;
+        encounterDateTime, appService, appConfig, defaultDrugsPromise, orderSetService, locationService, $state, cdssService, calculateQuantityAndUnit, diagnosisService, visitService, observationsService;
 
     stateParams = {
         tabConfigName: null
@@ -340,6 +340,10 @@ describe("AddTreatmentController", function () {
             cdssService.getAlerts.and.returnValue(specUtil.respondWith(cdssResponse));
             cdssService.sortInteractionsByStatus.and.returnValue(specUtil.respondWith(cdssResponse));
             diagnosisService.getPatientDiagnosis.and.returnValue([]);
+            $state = { params: { patientUuid: 'patient.uuid' }, dirtyConsultationForm: false };
+            visitService = jasmine.createSpyObj('visitService', ['search']);
+            visitService.search.and.returnValue(specUtil.respondWithPromise($q, { data: { results: [] } }));
+            observationsService = jasmine.createSpyObj('observationsService', ['getByEncounterAndConcept']);
 
             appService.getAppDescriptor.and.returnValue(appConfig);
             appService.getAppDescriptor.and.returnValue(appDescriptor);
@@ -403,7 +407,9 @@ describe("AddTreatmentController", function () {
                 orderSetService: orderSetService,
                 $state: $state,
                 cdssService: cdssService,
-                diagnosisService: diagnosisService
+                diagnosisService: diagnosisService,
+                visitService: visitService,
+                observationsService: observationsService
             });
             scope.treatments = [];
             scope.orderSetTreatments = [];
