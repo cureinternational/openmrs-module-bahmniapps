@@ -342,7 +342,7 @@ describe("AddTreatmentController", function () {
             diagnosisService.getPatientDiagnosis.and.returnValue([]);
             $state = { params: { patientUuid: 'patient.uuid' }, dirtyConsultationForm: false };
             visitService = jasmine.createSpyObj('visitService', ['search']);
-            visitService.search.and.returnValue(specUtil.respondWithPromise($q, { data: { results: [] } }));
+            visitService.search.and.returnValue(specUtil.respondWithPromise($q, { data: { results: [{ visitType: { display: 'OPD' }, uuid: 'visit-uuid' }] } }));
             observationsService = jasmine.createSpyObj('observationsService', ['getByEncounterAndConcept']);
 
             appService.getAppDescriptor.and.returnValue(appConfig);
