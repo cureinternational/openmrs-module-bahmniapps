@@ -68,23 +68,22 @@ angular.module('bahmni.common.displaycontrol.observation')
                     }
                 };
 
-                var fetchFormSpecificObs = function (formName) {
-                    var obsFormNameAndVersion;
+                var fetchFormSpecificObs = function (formNames) {
+                    if (!formNames) return;
                     var getFormNameAndVersion = Bahmni.Common.Util.FormFieldPathUtil.getFormNameAndVersion;
-                    $scope.bahmniObservations.forEach(function (bahmniObs, index) {
+                    var targets = angular.isArray(formNames) ? formNames : [formNames];
+                    targets = targets.map(function (name) { return name.toUpperCase(); });
+
+                    $scope.bahmniObservations.forEach(function (bahmniObs) {
                         bahmniObs.value = _.filter(bahmniObs.value, function (observation) {
-                            if (observation.formFieldPath) {
-                                obsFormNameAndVersion = getFormNameAndVersion(observation.formFieldPath);
-                                if (formName.toUpperCase() === obsFormNameAndVersion.formName.toUpperCase()) {
-                                    return observation;
-                                }
-                            }
+                            if (!observation.formFieldPath) return false;
+                            var obsFormName = getFormNameAndVersion(observation.formFieldPath).formName.toUpperCase();
+                            return targets.includes(obsFormName);
                         });
-                        if (bahmniObs.value.length <= 0) {
-                            $scope.bahmniObservations.splice(index, 1);
-                        }
                     });
-                    console.log("$scope.bahmniObservations -- ", $scope.bahmniObservations);
+                    $scope.bahmniObservations = _.filter($scope.bahmniObservations, function (bahmniObs) {
+                        return bahmniObs.value.length > 0;
+                    });
                 };
 
                 var fetchObservations = function () {
