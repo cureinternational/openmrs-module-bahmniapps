@@ -320,7 +320,7 @@ describe('VisitController', function () {
 
     describe('IPD visit mode logic', function () {
         it('should set isIpdReadMode to false when visit is IPD and not stopped', function () {
-            var visitSummary = {visitType: 'IPD', stopDateTime: null};
+            const visitSummary = {visitType: 'IPD', stopDateTime: null};
             $controller('VisitController', {
                 $scope: scope,
                 $rootScope: rootScope,
@@ -348,7 +348,7 @@ describe('VisitController', function () {
         });
 
         it('should set isIpdReadMode to true when visit is IPD and stopped', function () {
-            var visitSummary = {visitType: 'IPD', stopDateTime: '2024-01-01'};
+            const visitSummary = {visitType: 'IPD', stopDateTime: '2024-01-01'};
             $controller('VisitController', {
                 $scope: scope,
                 $rootScope: rootScope,
@@ -406,7 +406,7 @@ describe('VisitController', function () {
 
     describe('scope functions', function () {
         it('should toggle item show property', function () {
-            var item = {show: false};
+            const item = {show: false};
             scope.toggle(item);
             expect(item.show).toBe(true);
             scope.toggle(item);
@@ -430,43 +430,43 @@ describe('VisitController', function () {
         });
 
         it('should return correct class for testResultClass with pending results', function () {
-            var line = {isSummary: true, hasResults: false, name: 'Test'};
-            var result = scope.testResultClass(line);
+            const line = {isSummary: true, hasResults: false, name: 'Test'};
+            const result = scope.testResultClass(line);
             expect(result['pending-result']).toBe(true);
             expect(result['header']).toBe(true);
         });
 
         it('should return correct class for testResultClass without pending results', function () {
-            var line = {isSummary: true, hasResults: true, name: 'Test'};
-            var result = scope.testResultClass(line);
+            const line = {isSummary: true, hasResults: true, name: 'Test'};
+            const result = scope.testResultClass(line);
             expect(result['pending-result']).toBeUndefined();
             expect(result['header']).toBe(true);
         });
 
         it('should return correct class for testResultClass for non-summary line', function () {
-            var line = {isSummary: false};
-            var result = scope.testResultClass(line);
+            const line = {isSummary: false};
+            const result = scope.testResultClass(line);
             expect(result['pending-result']).toBeUndefined();
             expect(result['header']).toBeUndefined();
         });
 
         it('should return true for pendingResults when line is summary without results and has name', function () {
-            var line = {isSummary: true, hasResults: false, name: 'Test'};
+            const line = {isSummary: true, hasResults: false, name: 'Test'};
             expect(scope.pendingResults(line)).toBe(true);
         });
 
         it('should return false for pendingResults when line has results', function () {
-            var line = {isSummary: true, hasResults: true, name: 'Test'};
+            const line = {isSummary: true, hasResults: true, name: 'Test'};
             expect(scope.pendingResults(line)).toBe(false);
         });
 
         it('should return false for pendingResults when line has empty name', function () {
-            var line = {isSummary: true, hasResults: false, name: ''};
+            const line = {isSummary: true, hasResults: false, name: ''};
             expect(scope.pendingResults(line)).toBe(false);
         });
 
         it('should return false for pendingResults when line is not summary', function () {
-            var line = {isSummary: false, hasResults: false, name: 'Test'};
+            const line = {isSummary: false, hasResults: false, name: 'Test'};
             expect(scope.pendingResults(line)).toBe(false);
         });
     });
