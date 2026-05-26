@@ -56,13 +56,14 @@ describe('VisitController', function () {
         encounterService = jasmine.createSpyObj('encounterService', ['getEncountersForEncounterType']);
         appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
         getEncounterPromise = specUtil.createServicePromise('getEncountersForEncounterType');
-        allergyService = jasmine.createSpyObj('allergyService', ['getAllergyForPatient', 'getNoKnownAllergyUuid']);
+        allergyService = jasmine.createSpyObj('allergyService', ['getAllergyForPatient', 'getNoKnownAllergyUuid', 'fetchAndProcessAllergies']);
         visitService = jasmine.createSpyObj('visitService', ['getVisit']);
         $location = jasmine.createSpyObj('$location', ['search']);
         auditLogService = jasmine.createSpyObj('auditLogService', ['log']);
         sessionService = jasmine.createSpyObj('sessionService', ['destroy']);
         allergyService.getAllergyForPatient.and.returnValue(Promise.resolve(allergiesMock));
         allergyService.getNoKnownAllergyUuid.and.returnValue(Promise.resolve("no-known-allergy-uuid"));
+        allergyService.fetchAndProcessAllergies.and.returnValue(Promise.resolve("Pollen, Eggs"));
         encounterService.getEncountersForEncounterType.and.returnValue(getEncounterPromise);
         visitService.getVisit.and.returnValue(Promise.resolve({data: {encounters: []}}));
         $location.search.and.returnValue({source: "clinical"});
@@ -170,7 +171,7 @@ describe('VisitController', function () {
         it('should handle on print event', function () {
             scope.visitTabConfig.currentTab.printing = {templateUrl: 'common/views/visitTabPrint.html', observationsConcepts: ["WEIGHT"]}
             scope.$broadcast("event:printVisitTab", {});
-            expect(allergyService.getAllergyForPatient).toHaveBeenCalled();
+            expect(allergyService.fetchAndProcessAllergies).toHaveBeenCalled();
         });
 
 
