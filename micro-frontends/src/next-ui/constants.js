@@ -45,9 +45,9 @@ export const FHIR_EXT_CREATED_BY = "created-by"
 export const FHIR_URL = "/openmrs/ws/fhir2/R4/Task";
 export const FHIR_EXT_ORDER_SHORT_NAME = "order-short-name"
 export const FHIR_TASK_STATUS_TO_UI_STATUS = {
-    requested: 'Acknowledged',
-    accepted: 'In Progress',
-    completed: 'Completed',
+    REQUESTED: 'Acknowledged',
+    ACCEPTED: 'In Progress',
+    COMPLETED: 'Completed',
 };
 export const FORM_COMMENT = "FORM_COMMENT";
 export const FORM_APPROVAL = "FORM_APPROVAL";
