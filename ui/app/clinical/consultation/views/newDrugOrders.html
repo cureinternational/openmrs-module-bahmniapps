@@ -90,14 +90,13 @@
                             {{treatment.drugName}}<span ng-if="treatment.drugForm"> ({{treatment.drugForm}})</span>
                         </strong>
                         <div class="dosage-frequency">
-                            Variable Dosage | {{treatment.stageCount}} Stages | {{treatment.totalDays}} Days
+                            Variable Dosage | {{treatment.stageCount}} {{treatment.stageCount == 1 ? 'Stage' : 'Stages'}} | {{treatment.totalDays}} Day(s)
                         </div>
                     </div>
                 </div>
             </div>
             <div class="button-group-wrapper">
                 <div class="button-group">
-                    <button ng-click="editVariableDose($index)"><i class="fa fa-edit"></i></button>
                     <button ng-confirm-click="removeVariableDose($index)"
                             confirm-message="{{ 'REMOVE_CONFIRMATION_KEY' | translate }}">
                         <i class="fa fa-remove"></i>

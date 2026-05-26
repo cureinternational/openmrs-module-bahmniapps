@@ -114,7 +114,6 @@
   color: #da1e28;
 }
 
-/* ── Protocol section ── */
 .vdp-protocol-section {
   width: 100%;
   margin-top: 1.5rem;
@@ -137,7 +136,6 @@
   margin-bottom: 8px;
 }
 
-/* Toggle row: switch + inline label side by side */
 .vdp-loading-dose-toggle-row {
   display: flex;
   align-items: center;
@@ -172,7 +170,6 @@
   letter-spacing: 0.16px;
 }
 
-/* ── Loading dose expanded fields ── */
 .vdp-loading-dose-fields {
   margin-top: 1rem;
   width: 100%;
@@ -205,10 +202,7 @@
   box-sizing: border-box;
 }
 
-/* Lock input wrapper height so AngularJS hover borders (content-box) don't shift layout */
 .vdp-loading-dose-stepper .bx--number__input-wrapper {
-  box-sizing: border-box !important;
-  height: 40px !important;
   min-height: 40px !important;
 }
 
@@ -221,17 +215,10 @@
   box-sizing: border-box;
 }
 
-/* Lock dropdown field height for same reason */
 .vdp-loading-dose-unit .bx--list-box__field {
   box-sizing: border-box !important;
   height: 40px !important;
   min-height: 40px !important;
-}
-
-/* clinical.css adds a global border to button elements — remove it from all NumberInput steppers */
-.vdp-loading-dose-stepper .bx--number__control-btn,
-.vdp-loading-dose-details-row .bx--number__control-btn {
-  border: none !important;
 }
 
 /*
@@ -245,12 +232,6 @@
 .vdp-loading-dose-details-row .bx--number input[type='number']:focus,
 .vdp-loading-dose-details-row .bx--number__control-btn:focus {
   outline: none !important;
-}
-
-.vdp-loading-dose-stepper .bx--number__input-wrapper:has(input:focus),
-.vdp-loading-dose-details-row .bx--number__input-wrapper:has(input:focus) {
-  outline: 2px solid #0f62fe !important;
-  outline-offset: 0 !important;
 }
 
 /* clinical.css adds a border to button elements — remove it from the chevron */
@@ -294,4 +275,166 @@
 .variable-dose-modal .bx--number input[type='number'],
 .variable-dose-modal .bx--text-input {
   background-color: #f4f4f4 !important;
+}
+
+/* Fix NumberInput +/- hover highlight and border alignment.
+   overflow:hidden on the wrapper clips the controls' hover background.
+   The input's border-bottom is clipped too (it sits outside content-box at 40px),
+   so we restore it as a ::after pseudo-element at bottom:0 inside the 40px box.
+   border:none on buttons strips clinical.css borders that inflate height. */
+.variable-dose-modal .bx--number__input-wrapper {
+  position: relative !important;
+  box-sizing: border-box !important;
+  height: 40px !important;
+  overflow: hidden !important;
+}
+
+/* Bottom border drawn as a pseudo-element inside the 40px box (not clipped) */
+.variable-dose-modal .bx--number__input-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #8d8d8d;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.variable-dose-modal .bx--number__input-wrapper:focus-within::after {
+  background-color: #0f62fe;
+}
+
+.variable-dose-modal .bx--number input[type='number'] {
+  border-bottom: none !important;
+  box-sizing: border-box !important;
+}
+
+.variable-dose-modal .bx--number__control-btn {
+  border: none !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.vdp-stage-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+  margin-top: 16px;
+  background-color: #ffffff;
+}
+
+.vdp-stage-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.vdp-stage-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #161616;
+  margin: 0;
+}
+
+.vdp-stage-main-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+/* Instructions row: same 4-column grid as main row.
+   Instructions=col1(1fr=Dose), Rate=col2(2fr=Frequency), Additives=col3+4(span 2=Duration+Units).
+   When Rate/Additives hidden, Instructions stays at 1fr — never expands. */
+.vdp-stage-instructions-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.vdp-stage-additives {
+  grid-column: span 2;
+  width: 100%;
+}
+
+.vdp-stage-main-row .bx--form-item,
+.vdp-stage-main-row .bx--number,
+.vdp-stage-instructions-row .bx--form-item,
+.vdp-stage-instructions-row .bx--number,
+.vdp-stage-additives .bx--text-input-wrapper,
+.vdp-stage-additives .bx--form-item {
+  width: 100%;
+}
+
+.variable-dose-modal .bx--number input[type='number']:focus,
+.variable-dose-modal .bx--number__control-btn:focus {
+  outline: none !important;
+}
+
+/* Focus: ::after pseudo-element color handles the bottom line; outline is clipped by
+   overflow:hidden but the ::after color change signals focus clearly enough */
+.variable-dose-modal .bx--number__input-wrapper:has(input:focus) {
+  outline: none;
+}
+
+.vdp-toggle-instructions-btn.bx--btn--ghost {
+  color: #0f62fe;
+  padding: 6px 12px;
+  min-height: unset;
+  margin-top: 8px;
+  border-radius: 0;
+  background-color: transparent;
+  border: none;
+
+  &:hover {
+    background-color: #e5e5e5;
+    opacity: 1;  /* override clinical.css button:hover { opacity: 0.8 } */
+    text-decoration: none;
+    color: #0f62fe;
+  }
+
+  &:active {
+    background-color: #c6c6c6;
+    opacity: 1;
+    color: #0f62fe;
+  }
+}
+
+.vdp-stage-delete-btn.bx--btn--ghost {
+  color: #525252;
+  padding: 6px;
+  min-height: unset;
+
+  &:hover { opacity: 1; color: #525252; }
+  &:active { opacity: 1; color: #525252; }
+}
+
+.vdp-stages-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+.vdp-add-stage-btn.bx--btn--tertiary {
+  border: 1px solid #0f62fe;
+  color: #0f62fe;
+  background-color: transparent;
+
+  &:hover {
+    background-color: #e8f0fe;
+  }
+}
+
+.vdp-totals {
+  font-size: 13px;
+  color: #525252;
+  white-space: nowrap;
 }
