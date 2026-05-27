@@ -44,5 +44,9 @@ angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$sco
                 navigate();
             }
         };
+
+        $scope.$on('$stateChangeSuccess', function () {
+            $state.discardChanges = false;
+        });
     }
 ]);

@@ -156,6 +156,7 @@ angular.module('bahmni.clinical')
                 if (draftFormData) {
                     populateFormWithDraftData(draftFormData);
                 }
+                $scope.consultation._draftCleanState = undefined;
                 if ($rootScope.resumeDraftOnLoad) {
                     $rootScope.resumeDraftOnLoad = false;
                     $rootScope.resumeDraftPatientUuid = null;
@@ -429,6 +430,13 @@ angular.module('bahmni.clinical')
                 } else {
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    dirtyTrackingState.suppressTracking = true;
+                    dirtyTrackingState.suppressionUnsuppressPromise = $timeout(function () {
+                        dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                        $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                        dirtyTrackingState.suppressTracking = false;
+                        dirtyTrackingState.suppressionUnsuppressPromise = null;
+                    }, 0);
                 }
 
                 dirtyTrackingState.watchDeregister = $scope.$watch(
@@ -441,6 +449,9 @@ angular.module('bahmni.clinical')
                                 return;
                             }
                             $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
+                            if ($scope.formDraft.isDirty) {
+                                $state.dirtyConsultationForm = true;
+                            }
                         }
                     }
                 );
