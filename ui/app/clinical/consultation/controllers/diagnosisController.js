@@ -573,6 +573,7 @@ angular.module('bahmni.clinical')
             };
 
             $scope.isRetrospectiveMode = retrospectiveEntryService.isRetrospectiveMode;
+
             init();
         }
     ]);

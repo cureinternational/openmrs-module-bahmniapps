@@ -35,5 +35,160 @@ describe('patientService', function () {
 
             mockBackend.flush();
         });
+    });
+
+    describe('calculateDaysSinceLmp', function () {
+        it('should calculate days correctly from LMP date to today', function () {
+            var lmpDate = new Date();
+            lmpDate.setDate(lmpDate.getDate() - 30);
+            var dateStr = lmpDate.toISOString().split('T')[0];
+
+            var result = patientService.calculateDaysSinceLmp(dateStr);
+
+            expect(result).toBe(30);
+        });
+
+        it('should return 0 for LMP on today', function () {
+            var today = new Date().toISOString().split('T')[0];
+            var result = patientService.calculateDaysSinceLmp(today);
+
+            expect(result).toBe(0);
+        });
+
+        it('should return null for invalid date string', function () {
+            var result = patientService.calculateDaysSinceLmp('invalid-date');
+            expect(result).toBeNull();
+        });
+
+        it('should return null for empty string', function () {
+            var result = patientService.calculateDaysSinceLmp('');
+            expect(result).toBeNull();
+        });
+
+        it('should return null for null input', function () {
+            var result = patientService.calculateDaysSinceLmp(null);
+            expect(result).toBeNull();
+        });
+
+        it('should return null for future date', function () {
+            var futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + 5);
+            var dateStr = futureDate.toISOString().split('T')[0];
+
+            var result = patientService.calculateDaysSinceLmp(dateStr);
+            expect(result).toBeNull();
+        });
+
+        it('should calculate 28-day threshold correctly', function () {
+            var lmpDate = new Date();
+            lmpDate.setDate(lmpDate.getDate() - 28);
+            var dateStr = lmpDate.toISOString().split('T')[0];
+
+            var result = patientService.calculateDaysSinceLmp(dateStr);
+            expect(result).toBe(28);
+        });
+
+        it('should handle date with time component', function () {
+            var lmpDate = new Date();
+            lmpDate.setDate(lmpDate.getDate() - 15);
+            var dateStr = lmpDate.toISOString();  // Include time
+
+            var result = patientService.calculateDaysSinceLmp(dateStr);
+            expect(result).toBe(15);
+        });
+    });
+
+    describe('getPatientLmpData', function () {
+        it('should fetch and return LMP data successfully', function () {
+            var patientUuid = 'patient-uuid-123';
+            var lmpResponse = {
+                results: [{
+                    value: '2026-04-10'
+                }]
+            };
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-123&concept=LMP&limit=1/).respond(lmpResponse);
+
+            patientService.getPatientLmpData(patientUuid).then(function (data) {
+                expect(data).toBeTruthy();
+                expect(data.lmpDate).toBe('2026-04-10');
+                expect(data.daysSinceLmp).toBeGreaterThanOrEqual(0);
+            });
+
+            mockBackend.flush();
+        });
+
+        it('should return null when no observations found', function () {
+            var patientUuid = 'patient-uuid-456';
+            var emptyResponse = {results: []};
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-456&concept=LMP&limit=1/).respond(emptyResponse);
+
+            patientService.getPatientLmpData(patientUuid).then(function (data) {
+                expect(data).toBeNull();
+            });
+
+            mockBackend.flush();
+        });
+
+        it('should return null for empty or null patientUuid', function () {
+            var result1 = patientService.getPatientLmpData('');
+            var result2 = patientService.getPatientLmpData(null);
+
+            expect(result1).toEqual(null);
+            expect(result2).toEqual(null);
+        });
+
+        it('should return null when observation value is empty', function () {
+            var patientUuid = 'patient-uuid-789';
+            var responseWithoutValue = {
+                results: [{
+                    value: null
+                }]
+            };
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-789&concept=LMP&limit=1/).respond(responseWithoutValue);
+
+            patientService.getPatientLmpData(patientUuid).then(function (data) {
+                expect(data).toBeNull();
+            });
+
+            mockBackend.flush();
+        });
+
+        it('should handle API errors gracefully', function () {
+            var patientUuid = 'patient-uuid-error';
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-error&concept=LMP&limit=1/).respond(500, 'Server Error');
+            spyOn(console, 'log');
+
+            patientService.getPatientLmpData(patientUuid).then(function (data) {
+                expect(data).toBeNull();
+            });
+
+            mockBackend.flush();
+        });
+
+        it('should include daysSinceLmp in returned data', function () {
+            var patientUuid = 'patient-uuid-with-days';
+            var thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            var lmpDate = thirtyDaysAgo.toISOString().split('T')[0];
+
+            var lmpResponse = {
+                results: [{
+                    value: lmpDate
+                }]
+            };
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-with-days&concept=LMP&limit=1/).respond(lmpResponse);
+
+            patientService.getPatientLmpData(patientUuid).then(function (data) {
+                expect(data.lmpDate).toBe(lmpDate);
+                expect(data.daysSinceLmp).toBe(30);
+            });
+
+            mockBackend.flush();
+        });
     })
 });

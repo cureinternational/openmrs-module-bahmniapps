@@ -64,4 +64,72 @@ angular.module('bahmni.common.patient')
                 withCredentials: true
             });
         };
+
+        this.calculateDaysSinceLmp = function (lmpDateStr) {
+            if (!lmpDateStr || !angular.isString(lmpDateStr)) {
+                return null;
+            }
+
+            var lmpDate = new Date(lmpDateStr);
+            if (isNaN(lmpDate.getTime())) {
+                return null;
+            }
+
+            var today = new Date();
+            lmpDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            if (lmpDate > today) {
+                return null;
+            }
+
+            var daysMs = today.getTime() - lmpDate.getTime();
+            return Math.floor(daysMs / (24 * 60 * 60 * 1000));
+        };
+
+        this.getPatientLmpData = function (patientUuid, conceptName) {
+            var self = this;
+
+            if (!patientUuid || !angular.isString(patientUuid)) {
+                return Bahmni.Common.Promise.when(null);
+            }
+
+            var resolvedConceptName = conceptName || Bahmni.Common.Constants.lmpConceptName;
+            var url = Bahmni.Common.Constants.openmrsObsUrl + "?patient=" + patientUuid + "&concept=" + encodeURIComponent(resolvedConceptName) + "&limit=1";
+
+            return $http.get(url, {
+                withCredentials: true
+            }).then(function (response) {
+                if (!response.data || !response.data.results || response.data.results.length === 0) {
+                    return null;
+                }
+
+                var lmpObs = response.data.results[0];
+                var lmpDateStr = lmpObs.value || lmpObs.valueText;
+
+                if (!lmpDateStr && lmpObs.display) {
+                    var displayMatch = lmpObs.display.match(/(\d{4}-\d{2}-\d{2})/);
+                    if (displayMatch && displayMatch[1]) {
+                        lmpDateStr = displayMatch[1];
+                    }
+                }
+
+                if (!lmpDateStr) {
+                    return null;
+                }
+
+                var daysSinceLmp = self.calculateDaysSinceLmp(lmpDateStr);
+
+                if (daysSinceLmp === null) {
+                    return null;
+                }
+
+                return {
+                    lmpDate: lmpDateStr,
+                    daysSinceLmp: daysSinceLmp
+                };
+            }).catch(function () {
+                return null;
+            });
+        };
     }]);

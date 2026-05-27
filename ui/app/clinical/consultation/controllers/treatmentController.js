@@ -65,5 +65,6 @@ angular.module('bahmni.clinical')
                 $scope.enrollment = $stateParams.enrollment;
                 $scope.treatmentConfig = treatmentConfig;
             };
+
             init();
         }]);
