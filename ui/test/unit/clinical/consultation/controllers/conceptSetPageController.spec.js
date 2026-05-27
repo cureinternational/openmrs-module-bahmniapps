@@ -619,6 +619,61 @@ describe('ConceptSetPageController', function () {
             scope.visitHistory = {activeVisit: {uuid: 'active-visit-uuid'}};
         }));
 
+        it('should not mark form as dirty immediately after resuming draft when _draftCleanState was stale', function () {
+            // Use a uuid that matches the draft obs concept uuid so template observations get populated
+            var conceptResponseData = {
+                results: [{setMembers: [{name: {name: 'abcd'}, uuid: 'obs-uuid'}]}]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0) { callback(); }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            // Simulate stale _draftCleanState from a previous empty-form visit (set BEFORE controller init)
+            scope.consultation._draftCleanState = '[]';
+
+            // Set resume draft state BEFORE controller creation so concatObservationForms sees it
+            rootScope.resumeDraftOnLoad = true;
+            rootScope.draftData = {
+                uuid: 'draft-uuid',
+                formData: angular.toJson([{concept: {uuid: 'obs-uuid'}, value: 'draft-value'}])
+            };
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            // After resume, isDirty should be false (not erroneously true due to stale cleanState)
+            expect(scope.formDraft.isDirty).toBe(false);
+            // _draftCleanState should reflect draft-populated state, not the stale empty '[]'
+            expect(scope.consultation._draftCleanState).not.toBe('[]');
+        });
+
+        it('should not mark form as dirty when returning to empty consultation with stale non-empty _draftCleanState and no draft', function () {
+            var conceptResponseData = {
+                results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0) { callback(); }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            // Simulate stale _draftCleanState from a previous session with observations
+            scope.consultation._draftCleanState = '["some-previous-value"]';
+
+            // No draft: enableFormDraftFeature is false so loadDraftThenConcat goes straight to concatObservationForms
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            expect(scope.formDraft.isDirty).toBe(false);
+            expect(scope.consultation._draftCleanState).not.toBe('["some-previous-value"]');
+        });
+
         it('should set dirty true when form component observation changes', function () {
             var conceptResponseData = {
                 results: [
@@ -658,6 +713,49 @@ describe('ConceptSetPageController', function () {
             observationValue = 'updated-value';
             scope.$digest();
             expect(scope.formDraft.isDirty).toBe(true);
+        });
+
+        it('should set $state.dirtyConsultationForm to true when form becomes dirty after resuming draft', function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: 'abcd'}, uuid: 123}]
+                    }
+                ]
+            };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var observationValue;
+            var timeoutMock = function (callback, delay) {
+                if (delay === 0) {
+                    callback();
+                }
+                return {$$timeoutId: delay};
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+
+            scope.consultation.selectedObsTemplate = [{
+                component: {
+                    getValue: function () {
+                        return {
+                            observations: [{value: observationValue}]
+                        };
+                    }
+                },
+                observations: []
+            }];
+
+            scope.$digest();
+            expect(scope.formDraft.isDirty).toBe(false);
+            expect(state.dirtyConsultationForm).toBeFalsy();
+
+            observationValue = 'new-change-after-draft-resume';
+            scope.$digest();
+            expect(scope.formDraft.isDirty).toBe(true);
+            expect(state.dirtyConsultationForm).toBe(true);
         });
 
         it('should call formDraftService.saveDraft with patient uuid and provider uuid on saveAsDraft', function () {
@@ -1322,7 +1420,6 @@ describe('ConceptSetPageController', function () {
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                // _draftCleanState must be cleared so dirty tracking baselines against the empty form
                 expect(scope.consultation._draftCleanState).toBeUndefined();
                 expect(scope.formDraft.isDirty).toBe(false);
             });
@@ -2146,7 +2243,6 @@ describe('ConceptSetPageController', function () {
 
                 scope.$destroy();
 
-                // Auto-save should persist across tab switches, so stop() should NOT be called on tab $destroy
                 expect(autoSaveService.stop).not.toHaveBeenCalled();
             });
 
@@ -2160,7 +2256,6 @@ describe('ConceptSetPageController', function () {
 
                 rootScope.$broadcast('event:save-successful');
 
-                // Auto-save should continue running after a successful save
                 expect(autoSaveService.stop).not.toHaveBeenCalled();
             });
 

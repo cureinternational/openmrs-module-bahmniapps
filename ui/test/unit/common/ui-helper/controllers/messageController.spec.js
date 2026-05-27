@@ -117,4 +117,24 @@ describe("MessageController", function () {
             expect(messagingService.hideMessages).toHaveBeenCalledWith('alert');
         });
     });
+
+    describe("$stateChangeSuccess listener", function () {
+        it("should reset $state.discardChanges to false on successful state change", function () {
+            createController();
+            $state.discardChanges = true;
+            scope.$broadcast('$stateChangeSuccess');
+            expect($state.discardChanges).toBe(false);
+        });
+
+        it("should reset $state.discardChanges so popup appears again on subsequent navigation", function () {
+            $state.isPatientSearch = true;
+            createController();
+
+            scope.discardChanges('alert');
+            expect($state.discardChanges).toBe(true);
+
+            scope.$broadcast('$stateChangeSuccess');
+            expect($state.discardChanges).toBe(false);
+        });
+    });
 });
