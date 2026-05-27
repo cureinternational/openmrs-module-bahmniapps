@@ -101,10 +101,7 @@ var buildFhirDosageArray = function (stages, units, route) {
             timing: {
                 repeat: {
                     duration: isLoadingDose ? 1 : (parseFloat(stage.duration) || 1),
-                    durationUnit: isLoadingDose ? 'd' : toUcumDurationUnit(stage.durationUnit || 'Days'),
-                    frequency: 1,
-                    period: 1,
-                    periodUnit: 'd'
+                    durationUnit: isLoadingDose ? 'd' : toUcumDurationUnit(stage.durationUnit || 'Days')
                 },
                 code: { text: stage.frequency || '' }
             },

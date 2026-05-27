@@ -996,6 +996,32 @@ angular.module('bahmni.clinical')
                     $scope.variableDoseHostApi = {
                         onClose: function () {},
                         onSave: function (data) {
+                            if (($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration') &&
+                                    ($scope.obs.length === 0 ||
+                                     (($scope.currentEpoch - $scope.obs[0].observationDateTime) / 1000 > $scope.addTreatmentWithPatientWeight.duration))) ||
+                                ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length === 0)) {
+                                return;
+                            }
+                            var vdpDrugName = data.drug ? data.drug.name : '';
+                            var vdpCareSetting = ($scope.allMedicinesInPrescriptionAvailableForIPD && currentVisitType === 'IPD')
+                                ? Bahmni.Clinical.Constants.careSetting.inPatient
+                                : Bahmni.Clinical.Constants.careSetting.outPatient;
+                            var conflictingActiveOrder = _.find(
+                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []),
+                                function (order) {
+                                    return order.getDisplayName && order.getDisplayName() === vdpDrugName &&
+                                           order.careSetting === vdpCareSetting;
+                                }
+                            );
+                            if (conflictingActiveOrder) {
+                                $scope.alreadyActiveSimilarOrder = conflictingActiveOrder;
+                                ngDialog.open({
+                                    template: 'consultation/views/treatmentSections/conflictingDrugOrderModal.html',
+                                    scope: $scope
+                                });
+                                $scope.popupActive = true;
+                                return;
+                            }
                             $timeout(function () {
                                 $scope.consultation.variableDoseTreatments = $scope.consultation.variableDoseTreatments || [];
                                 var unit = data.units || '';
