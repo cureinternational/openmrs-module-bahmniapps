@@ -107,7 +107,7 @@ describe('patientService', function () {
                 }]
             };
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-123&concept=LMP&limit=1/).respond(lmpResponse);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-123&concept=LMP%20Date&limit=1/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid).then(function (data) {
                 expect(data).toBeTruthy();
@@ -122,7 +122,7 @@ describe('patientService', function () {
             var patientUuid = 'patient-uuid-456';
             var emptyResponse = {results: []};
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-456&concept=LMP&limit=1/).respond(emptyResponse);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-456&concept=LMP%20Date&limit=1/).respond(emptyResponse);
 
             patientService.getPatientLmpData(patientUuid).then(function (data) {
                 expect(data).toBeNull();
@@ -147,7 +147,7 @@ describe('patientService', function () {
                 }]
             };
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-789&concept=LMP&limit=1/).respond(responseWithoutValue);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-789&concept=LMP%20Date&limit=1/).respond(responseWithoutValue);
 
             patientService.getPatientLmpData(patientUuid).then(function (data) {
                 expect(data).toBeNull();
@@ -159,8 +159,7 @@ describe('patientService', function () {
         it('should handle API errors gracefully', function () {
             var patientUuid = 'patient-uuid-error';
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-error&concept=LMP&limit=1/).respond(500, 'Server Error');
-            spyOn(console, 'log');
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-error&concept=LMP%20Date&limit=1/).respond(500, 'Server Error');
 
             patientService.getPatientLmpData(patientUuid).then(function (data) {
                 expect(data).toBeNull();
@@ -181,7 +180,7 @@ describe('patientService', function () {
                 }]
             };
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-with-days&concept=LMP&limit=1/).respond(lmpResponse);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-with-days&concept=LMP%20Date&limit=1/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid).then(function (data) {
                 expect(data.lmpDate).toBe(lmpDate);

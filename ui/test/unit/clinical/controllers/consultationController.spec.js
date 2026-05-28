@@ -4,7 +4,7 @@ describe("ConsultationController", function () {
     var scope, rootScope, state, contextChangeHandler, urlHelper, location, clinicalAppConfigService,
         stateParams, appService, ngDialog, q, appDescriptor, controller, visitConfig, _window_, clinicalDashboardConfig,
         sessionService, conditionsService, encounterService, configurations, diagnosisService, messagingService, spinnerMock,
-        auditLogService,  confirmBox, virtualConsultService, adhocTeleconsultationService;
+        auditLogService, confirmBox, virtualConsultService, adhocTeleconsultationService, patientService;
 
     var encounterData = {
         "bahmniDiagnoses": [],
@@ -146,7 +146,8 @@ describe("ConsultationController", function () {
             auditLogService: auditLogService,
             confirmBox: confirmBox,
             virtualConsultService: virtualConsultService,
-            adhocTeleconsultationService: adhocTeleconsultationService
+            adhocTeleconsultationService: adhocTeleconsultationService,
+            patientService: patientService
         });
     };
     var setUpServiceMocks = function () {
@@ -169,8 +170,13 @@ describe("ConsultationController", function () {
             },
             getDefaultVisitType: function () {
                 return "IPD";
+            },
+            getLmpWarningConfig: function () {
+                return {};
             }
         };
+        patientService = jasmine.createSpyObj('patientService', ['getPatientLmpData', 'calculateDaysSinceLmp']);
+        patientService.getPatientLmpData.and.returnValue(specUtil.simplePromise(null));
 
         sessionService = {
             getLoginLocationUuid: function () {
