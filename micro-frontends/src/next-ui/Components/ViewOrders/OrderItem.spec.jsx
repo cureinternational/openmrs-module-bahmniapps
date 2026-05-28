@@ -77,7 +77,12 @@ describe("OrderItemContainer", () => {
         expect(screen.getByText("New")).toBeTruthy();
     });
 
-    it("should display New for UNKNOWN orderStatus", () => {
+    it("should display New for DRAFT orderStatus", () => {
+        render(<OrderItemContainer {...mockProps} orderStatus="DRAFT" />);
+        expect(screen.getByText("New")).toBeTruthy();
+    });
+
+    it("should display New for UNKNOWN orderStatus (backward compat)", () => {
         render(<OrderItemContainer {...mockProps} orderStatus="UNKNOWN" />);
         expect(screen.getByText("New")).toBeTruthy();
     });
