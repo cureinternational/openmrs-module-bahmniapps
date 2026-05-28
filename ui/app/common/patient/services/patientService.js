@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.common.patient')
-    .service('patientService', ['$http', 'sessionService', 'appService', function ($http, sessionService, appService) {
+    .service('patientService', ['$http', '$q', 'sessionService', 'appService', function ($http, $q, sessionService, appService) {
         this.getPatient = function (uuid, rep) {
             if (!rep) {
                 rep = "full";
@@ -91,7 +91,7 @@ angular.module('bahmni.common.patient')
             var self = this;
 
             if (!patientUuid || !angular.isString(patientUuid)) {
-                return Bahmni.Common.Promise.when(null);
+                return $q.when(null);
             }
 
             var resolvedConceptName = conceptName || Bahmni.Common.Constants.lmpConceptName;

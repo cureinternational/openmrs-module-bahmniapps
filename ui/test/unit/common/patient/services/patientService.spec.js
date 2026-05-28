@@ -112,7 +112,7 @@ describe('patientService', function () {
             patientService.getPatientLmpData(patientUuid).then(function (data) {
                 expect(data).toBeTruthy();
                 expect(data.lmpDate).toBe('2026-04-10');
-                expect(data.daysSinceLmp).toBeGreaterThanOrEqual(0);
+                expect(data.daysSinceLmp).not.toBeLessThan(0);
             });
 
             mockBackend.flush();
@@ -132,11 +132,12 @@ describe('patientService', function () {
         });
 
         it('should return null for empty or null patientUuid', function () {
-            var result1 = patientService.getPatientLmpData('');
-            var result2 = patientService.getPatientLmpData(null);
-
-            expect(result1).toEqual(null);
-            expect(result2).toEqual(null);
+            var result1, result2;
+            patientService.getPatientLmpData('').then(function (data) { result1 = data; });
+            patientService.getPatientLmpData(null).then(function (data) { result2 = data; });
+            rootScope.$apply();
+            expect(result1).toBeNull();
+            expect(result2).toBeNull();
         });
 
         it('should return null when observation value is empty', function () {
