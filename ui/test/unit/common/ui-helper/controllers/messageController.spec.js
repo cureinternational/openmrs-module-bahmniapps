@@ -31,7 +31,6 @@ describe("MessageController", function () {
             messagingService : messagingService,
             $state: $state,
             $location: $location,
-            $q: $q,
             exitAlertService: exitAlertService
         });
     }

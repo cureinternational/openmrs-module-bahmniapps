@@ -1,7 +1,7 @@
 "use strict";
 
-angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$scope", "messagingService", "$translate", "$state", "$location", "$q",
-    function ($scope, messagingService, $translate, $state, $location, $q) {
+angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$scope", "messagingService", "$translate", "$state", "$location",
+    function ($scope, messagingService, $translate, $state, $location) {
         $scope.messages = messagingService.messages;
 
         $scope.getMessageText = function (level) {
@@ -36,7 +36,7 @@ angular.module("bahmni.common.uiHelper").controller("MessageController", [ "$sco
             $state.discardChanges = true;
             $scope.hideMessage(level);
             var navigate = function () {
-                return $state.isPatientSearch ? $location.path('/default/patient/search') : $location.path('/default/patient/' + $state.newPatientUuid + "/dashboard");
+                $state.isPatientSearch ? $location.path('/default/patient/search') : $location.path('/default/patient/' + $state.newPatientUuid + "/dashboard");
             };
             if ($state.saveFormDraftIfDirty) {
                 $state.saveFormDraftIfDirty().then(navigate, navigate);

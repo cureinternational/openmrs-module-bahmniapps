@@ -506,10 +506,10 @@ angular.module('bahmni.clinical')
 
             var saveFormDraft = function () {
                 if (dirtyTrackingState.isSaving) {
-                    return $q.resolve();
+                    return $q.when();
                 }
                 if (!$scope.visitHistory || !$scope.visitHistory.activeVisit) {
-                    return $q.resolve();
+                    return $q.when();
                 }
 
                 dirtyTrackingState.isSaving = true;
@@ -550,7 +550,7 @@ angular.module('bahmni.clinical')
                 if ($scope.enableFormDraftFeature && $scope.formDraft.isDirty && !dirtyTrackingState.isSaving && $scope.visitHistory && $scope.visitHistory.activeVisit) {
                     return saveFormDraft();
                 }
-                return $q.resolve();
+                return $q.when();
             };
 
             var draftCheckPromise = null;

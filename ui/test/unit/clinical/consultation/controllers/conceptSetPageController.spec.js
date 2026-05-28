@@ -999,6 +999,24 @@ describe('ConceptSetPageController', function () {
             expect(formDraftService.saveDraft).not.toHaveBeenCalled();
         });
 
+        it('should not call saveDraft via $state.saveFormDraftIfDirty when there is no active visit', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+            appDescriptor.getConfigValue.and.returnValue(true);
+            appService.getAppDescriptor.and.returnValue(appDescriptor);
+
+            createControllerWithTimeoutAndFilter();
+            scope.formDraft.isDirty = true;
+            scope.visitHistory = {activeVisit: null};
+
+            state.saveFormDraftIfDirty();
+
+            expect(formDraftService.saveDraft).not.toHaveBeenCalled();
+        });
+
         it('should disable Save as Draft button (isDirty = false) when post-save handler is executed', function () {
             var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
             mockConceptSetService(conceptResponseData);
