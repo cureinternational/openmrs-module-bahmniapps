@@ -1,7 +1,6 @@
 import React from "react";
 import { fireEvent, render, waitFor, screen } from "@testing-library/react";
 import { PatientAlergiesControl } from "./PatientAlergiesControl";
-import {fetchAllergiesAndReactionsForPatient} from "../../utils/PatientAllergiesControl/AllergyControlUtils";
 import { IntlProvider } from "react-intl";
 
 const mockMedicationResponseData = {
@@ -117,10 +116,6 @@ const testHostData = {
     visitType: {
       uuid: "___visit_type_uuid__",
     },
-  },
-  provider: {
-    uuid: "___provider_uuid__",
-    name: "___provider_name__",
   },
   allergyControlConceptIdMap: {
     medicationAllergenUuid: "drug_allergen_Uuid",
