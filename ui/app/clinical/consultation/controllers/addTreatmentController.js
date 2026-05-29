@@ -27,6 +27,7 @@ angular.module('bahmni.clinical')
                 { patient: $state.params.patientUuid, includeInactive: false, v: "custom:(uuid,visitType,startDatetime,stopDatetime,location,encounters:(uuid))" }
             ).then(function (response) {
                 currentVisitType = response.data.results[0].visitType.display;
+                $scope.currentVisitType = currentVisitType;
             });
 
             $scope.getFilteredOrderSets = function (searchTerm) {
@@ -407,7 +408,7 @@ angular.module('bahmni.clinical')
                     ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length == 0)) {
                     return;
                 }
-                if (currentVisitType === 'IPD') {
+                if (currentVisitType === 'IPD' && !$scope.treatment.isDischargeMedication) {
                     $scope.treatment.careSetting = Bahmni.Clinical.Constants.careSetting.inPatient;
                 }
                 if ($scope.treatment.isNewOrderSet) {
@@ -1027,7 +1028,7 @@ angular.module('bahmni.clinical')
                                 var realStages = data.stages || [];
                                 var dosingRule = data.dosingRule || '';
                                 var drugName = data.drug ? data.drug.name : '';
-                                var careSetting = (currentVisitType === 'IPD')
+                                var careSetting = (currentVisitType === 'IPD' && !$scope.treatment.isDischargeMedication)
                                     ? Bahmni.Clinical.Constants.careSetting.inPatient
                                     : Bahmni.Clinical.Constants.careSetting.outPatient;
 

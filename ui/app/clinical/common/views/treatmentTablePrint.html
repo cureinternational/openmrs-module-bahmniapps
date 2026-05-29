@@ -30,3 +30,28 @@
 <br/><br/><br/>
 <span class="fr" ng-if="(drugOrders.length > 0)">( {{::drugOrders[drugOrders.length-1].provider.name}} )</span>
 
+<div ng-if="(drugOrders | filter: {isDischargeMedication: true}).length > 0">
+    <h3>Discharge Medications</h3>
+    <table class="printPrescription">
+        <tr>
+            <th class="sl-no-heading">{{'TREATMENT_SL_NO'|translate}}</th>
+            <th class="drug-name-heading">{{'MEDICATION_DRUG_NAME_TITLE'|translate}}</th>
+            <th class="dosage-instructions-heading">{{'MEDICATION_DOSAGE_INFORMATION_LABEL'|translate}}</th>
+            <th class="quantity-heading">{{'DRUG_DETAILS_QUANTITY_TEXT'|translate}}</th>
+            <th class="start-date-heading">{{'MEDICATION_LABEL_START_DATE'|translate}}</th>
+        </tr>
+        <tbody ng-repeat="drugOrder in drugOrders | filter: {isDischargeMedication: true}" ng-class="{'strike-through': drugOrder.isDiscontinuedOrStopped()}">
+        <tr>
+            <td>{{$index + 1}}.</td>
+            <td class="drug-name" bo-text="drugOrder.getDisplayName()" ng-class="{'strike-text':drugOrder.isDiscontinuedOrStopped()}"></td>
+            <td class="dosage-form">
+                <span bo-show="drugOrder.getDescription()" bo-text="drugOrder.getDescription()" ng-class="{'strike-text':drugOrder.isDiscontinuedOrStopped()}"></span>
+                <span bo-show="!drugOrder.getDescription()" bo-text="' - '"></span>
+            </td>
+            <td bo-text="(drugOrder.getQuantityWithUnit)"></td>
+            <td bo-text="(drugOrder.effectiveStartDate | bahmniDate)"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+

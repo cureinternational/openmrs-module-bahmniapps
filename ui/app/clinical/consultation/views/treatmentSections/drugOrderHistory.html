@@ -84,6 +84,7 @@
                                     <div ng-if="drugOrder.rate"> | {{drugOrder.rate}} ml/hr</div>
                                     <div ng-if="drugOrder.additives"> | {{drugOrder.additives}}</div>
                                     <div ng-if="drugOrder.getQuantityWithUnit()"> | {{drugOrder.getQuantityWithUnit()}}</div>
+                                    <div ng-show="drugOrder.isDischargeMedication"> | DISCH</div>
                                     <div class="footer-note">
                                         <span class="time-stamp">
                                             <span class="time">{{drugOrder.dateActivated | bahmniDateTime}}</span>

@@ -106,6 +106,7 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
     this.frequencyType = this.frequencyType || Bahmni.Clinical.Constants.dosingTypes.uniform;
     this.isLoadingDose = this.isLoadingDose || false;
     this.isVariableDoseOrder = this.isVariableDoseOrder || false;
+    this.isDischargeMedication = this.isDischargeMedication || false;
     this.uniformDosingType = this.uniformDosingType || {};
     if (this.uniformDosingType.dose && config.getDoseFractions && !_.isEmpty(config.getDoseFractions())) {
         var destructredNumber = destructureReal(this.uniformDosingType.dose);
@@ -822,6 +823,7 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
     viewModel.rate = administrationInstructions.rate;
     viewModel.additives = administrationInstructions.additives;
     viewModel.isLoadingDose = utils.isLoadingDoseOrder(adminInstructionsStr);
+    viewModel.isDischargeMedication = administrationInstructions.isDischargeMedication || false;
     viewModel.quantity = drugOrderResponse.dosingInstructions.quantity;
     viewModel.quantityUnit = drugOrderResponse.dosingInstructions.quantityUnits;
     viewModel.drug = drugOrderResponse.drug;

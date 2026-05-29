@@ -8,6 +8,14 @@ angular.module('bahmni.clinical')
             $scope.edit = function (drugOrder, index) {
                 $rootScope.$broadcast("event:editDrugOrder", drugOrder, index);
             };
+            $scope.toggleDischargeMedication = function (treatment) {
+                treatment.isDischargeMedication = !treatment.isDischargeMedication;
+                if (treatment.isDischargeMedication) {
+                    treatment.careSetting = Bahmni.Clinical.Constants.careSetting.outPatient;
+                } else if ($scope.currentVisitType === 'IPD') {
+                    treatment.careSetting = Bahmni.Clinical.Constants.careSetting.inPatient;
+                }
+            };
             $scope.remove = function (index) {
                 $rootScope.$broadcast("event:removeDrugOrder", index);
             };

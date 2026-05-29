@@ -2264,4 +2264,63 @@ describe("AddTreatmentController", function () {
             expect(treatment).toBe(drugOrder1);
         });
     });
+
+    describe("isDischargeMedication careSetting during IPD visit", function () {
+        var initControllerWithIPD = function () {
+            inject(function ($controller, $rootScope, _$q_) {
+                $q = _$q_;
+                scope = $rootScope.$new();
+                rootScope = $rootScope;
+                encounterDateTime = moment("2014-03-02").toDate();
+                scope.consultation = { preSaveHandler: new Bahmni.Clinical.Notifier(), encounterDateTime: encounterDateTime };
+                scope.currentBoard = { extension: {}, extensionParams: {} };
+                scope.addForm = { $invalid: false, $valid: true };
+                visitService = jasmine.createSpyObj('visitService', ['search']);
+                visitService.search.and.returnValue(specUtil.respondWithPromise($q, { data: { results: [{ visitType: { display: 'IPD' }, uuid: 'visit-uuid' }] } }));
+                $controller('AddTreatmentController', {
+                    $scope: scope,
+                    $stateParams: stateParams,
+                    $rootScope: rootScope,
+                    treatmentService: null,
+                    activeDrugOrders: [activeDrugOrder, scheduledOrder],
+                    contextChangeHandler: contextChangeHandler,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    ngDialog: ngDialog,
+                    appService: appService,
+                    appDescriptor: appDescriptor,
+                    locationService: locationService,
+                    drugService: drugService,
+                    treatmentConfig: treatmentConfig,
+                    orderSetService: orderSetService,
+                    $state: $state,
+                    cdssService: cdssService,
+                    diagnosisService: diagnosisService,
+                    visitService: visitService,
+                    observationsService: observationsService
+                });
+                scope.treatments = [];
+                scope.orderSetTreatments = [];
+                scope.newOrderSet = {};
+                rootScope.$apply();
+            });
+        };
+
+        beforeEach(initControllerWithIPD);
+
+        it("should set careSetting to INPATIENT for IPD visit when isDischargeMedication is false", function () {
+            var treatment = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, { drug: { name: true } });
+            treatment.isDischargeMedication = false;
+            scope.treatment = treatment;
+            scope.add();
+            expect(scope.treatments[0].careSetting).toBe(Bahmni.Clinical.Constants.careSetting.inPatient);
+        });
+
+        it("should keep careSetting as OUTPATIENT for IPD visit when isDischargeMedication is true", function () {
+            var treatment = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, { drug: { name: true } });
+            treatment.isDischargeMedication = true;
+            scope.treatment = treatment;
+            scope.add();
+            expect(scope.treatments[0].careSetting).not.toBe(Bahmni.Clinical.Constants.careSetting.inPatient);
+        });
+    });
 });
