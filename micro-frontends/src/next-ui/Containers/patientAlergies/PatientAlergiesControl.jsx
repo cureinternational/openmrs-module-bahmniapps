@@ -27,6 +27,21 @@ const AllergenKind = {
   ENVIRONMENT: "Environment",
   OTHER: "Other",
 };
+
+const SEVERITY_RANK = {
+  severe: 1,
+  moderate: 2,
+  mild: 3
+};
+const DEFAULT_SEVERITY_RANK = 4;
+
+const compareByRankThenDate = (a, b) => {
+  if (a?.severityRank !== b?.severityRank) {
+    return a?.severityRank - b?.severityRank;
+  }
+  return b?.date - a?.date;
+};
+
 export function PatientAlergiesControl(props) {
   const { hostData, appService } = props;
   const { patient, provider, activeVisit, allergyControlConceptIdMap } = hostData;
@@ -92,25 +107,11 @@ export function PatientAlergiesControl(props) {
     );
 
     return [
-      ...medicationAllergens,
-      ...environmentalAllergens,
-      ...foodAllergens,
-      ...otherAllergens,
+      ...(medicationAllergens ?? []),
+      ...(environmentalAllergens ?? []),
+      ...(foodAllergens ?? []),
+      ...(otherAllergens ?? []),
     ];
-  };
-
-  const SEVERITY_RANK = {
-    severe: 1,
-    moderate: 2,
-    mild: 3
-  };
-  const DEFAULT_SEVERITY_RANK = 4;
-
-  const compareByRankThenDate = (a, b) => {
-    if (a?.severityRank !== b?.severityRank) {
-      return a?.severityRank - b?.severityRank;
-    }
-    return b?.date - a?.date;
   };
 
   const allergiesAndReactionsForPatient = async () => {
@@ -145,7 +146,7 @@ export function PatientAlergiesControl(props) {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [error, setError] = useState('');
-  const [noKnownAllergyUuid, setnoKnownAllergyUuid] = useState('');
+  const [noKnownAllergyUuid, setNoKnownAllergyUuid] = useState('');
 
   const noAllergiesText = (
     <FormattedMessage
@@ -214,7 +215,7 @@ export function PatientAlergiesControl(props) {
 
   useEffect(() => {
     getNoKnownAllergyUuid().then((code) => {
-      setnoKnownAllergyUuid(code);
+      setNoKnownAllergyUuid(code);
     });
   }, []);
 
