@@ -2,15 +2,15 @@
 
 angular.module('bahmni.clinical').controller('ConsultationController',
     ['$scope', '$rootScope', '$state', '$location', '$translate', 'clinicalAppConfigService', 'diagnosisService', 'urlHelper', 'contextChangeHandler',
-        'spinner', 'encounterService', 'messagingService', 'sessionService', 'retrospectiveEntryService', 'patientContext', '$q', '$timeout',
+        'spinner', 'encounterService', 'messagingService', 'sessionService', 'retrospectiveEntryService', 'patientContext', '$q',
         'patientVisitHistoryService', '$stateParams', '$window', 'visitHistory', 'clinicalDashboardConfig', 'appService',
         'ngDialog', '$filter', 'configurations', 'visitConfig', 'conditionsService', 'configurationService', 'auditLogService', 'confirmBox',
-        'virtualConsultService', 'adhocTeleconsultationService', 'formDraftService', 'autoSaveService', 'patientService',
+        'virtualConsultService', 'adhocTeleconsultationService', 'formDraftService', 'autoSaveService',
         function ($scope, $rootScope, $state, $location, $translate, clinicalAppConfigService, diagnosisService, urlHelper, contextChangeHandler,
-                  spinner, encounterService, messagingService, sessionService, retrospectiveEntryService, patientContext, $q, $timeout,
+                  spinner, encounterService, messagingService, sessionService, retrospectiveEntryService, patientContext, $q,
                   patientVisitHistoryService, $stateParams, $window, visitHistory, clinicalDashboardConfig, appService,
                   ngDialog, $filter, configurations, visitConfig, conditionsService, configurationService, auditLogService, confirmBox,
-                  virtualConsultService, adhocTeleconsultationService, formDraftService, autoSaveService, patientService) {
+                  virtualConsultService, adhocTeleconsultationService, formDraftService, autoSaveService) {
             var ERROR = 1;
             var DateUtil = Bahmni.Common.Util.DateUtil;
             var getPreviousActiveCondition = Bahmni.Common.Domain.Conditions.getPreviousActiveCondition;
@@ -20,8 +20,6 @@ angular.module('bahmni.clinical').controller('ConsultationController',
             $scope.showDashboardMenu = false;
             $scope.showMobileMenu = false;
 
-            $scope.lmpWarning = null;
-            $scope.showLmpWarning = false;
             $scope.stateChange = function () {
                 return $state.current.name === 'patient.dashboard.show';
             };
@@ -181,41 +179,6 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                 }
             };
 
-            var initLmpWarning = function () {
-                if (!$scope.patient || !$scope.patient.uuid) {
-                    $scope.showLmpWarning = false;
-                    return;
-                }
-
-                var isFemale = $scope.patient.gender === 'F' || $scope.patient.gender === 'Female';
-
-                if (!isFemale) {
-                    $scope.showLmpWarning = false;
-                    return;
-                }
-
-                var lmpConfig = clinicalAppConfigService.getLmpWarningConfig();
-                var conceptName = lmpConfig.conceptName || Bahmni.Common.Constants.lmpConceptName;
-                var thresholdDays = lmpConfig.thresholdDays || Bahmni.Clinical.Constants.lmpWarningThresholdDays;
-
-                patientService.getPatientLmpData($scope.patient.uuid, conceptName).then(function (lmpData) {
-                    $timeout(function () {
-                        if (lmpData && lmpData.daysSinceLmp > thresholdDays) {
-                            $scope.lmpWarning = lmpData;
-                            $scope.showLmpWarning = true;
-                        } else {
-                            $scope.showLmpWarning = false;
-                        }
-                    });
-                }).catch(function () {
-                    $scope.showLmpWarning = false;
-                });
-            };
-
-            $scope.dismissLmpWarning = function () {
-                $scope.showLmpWarning = false;
-            };
-
             var initialize = function () {
                 var appExtensions = clinicalAppConfigService.getAllConsultationBoards();
                 $scope.adtNavigationConfig = {forwardUrl: Bahmni.Clinical.Constants.adtForwardUrl, title: $translate.instant("CLINICAL_GO_TO_DASHBOARD_LABEL"), privilege: Bahmni.Clinical.Constants.adtPrivilege };
@@ -224,7 +187,6 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                 var adtNavigationConfig = appService.getAppDescriptor().getConfigValue('adtNavigationConfig');
                 Object.assign($scope.adtNavigationConfig, adtNavigationConfig);
                 setCurrentBoardBasedOnPath();
-                initLmpWarning();
             };
 
             $scope.shouldDisplaySaveConfirmDialogForStateChange = function (toState, toParams, fromState, fromParams) {

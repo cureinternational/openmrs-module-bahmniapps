@@ -154,7 +154,6 @@ Bahmni.Common = Bahmni.Common || {};
         labOrderNotesConcept: "Lab Order Notes",
         impressionConcept: "Impression",
         qualifiedByRelationshipType: "qualified-by",
-        lmpConceptName: "LMP Date",
         dispositionConcept: "Disposition",
         dispositionGroupConcept: "Disposition Set",
         dispositionNoteConcept: "Disposition Note",
