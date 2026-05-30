@@ -90,12 +90,10 @@ angular.module('bahmni.common.patient')
         this.getPatientLmpData = function (patientUuid, conceptName) {
             var self = this;
 
-            if (!patientUuid || !angular.isString(patientUuid)) {
+            if (!patientUuid || !angular.isString(patientUuid) || !conceptName) {
                 return $q.when(null);
             }
-
-            var resolvedConceptName = conceptName || Bahmni.Common.Constants.lmpConceptName;
-            var url = Bahmni.Common.Constants.openmrsObsUrl + "?patient=" + patientUuid + "&concept=" + encodeURIComponent(resolvedConceptName) + "&limit=1";
+            var url = Bahmni.Common.Constants.openmrsObsUrl + "?patient=" + patientUuid + "&concept=" + encodeURIComponent(conceptName) + "&limit=1";
 
             return $http.get(url, {
                 withCredentials: true
