@@ -1,28 +1,7 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .factory('lmpWarningHelper', ['$q', 'patientService', 'clinicalAppConfigService', function ($q, patientService, clinicalAppConfigService) {
-        var getResolvedLmpConfig = function () {
-            var config = clinicalAppConfigService.getLmpWarningConfig();
-            var conceptName = config.conceptName;
-            var thresholdDays = config.thresholdDays;
-
-            if (!conceptName || !thresholdDays) {
-                return null;
-            }
-
-            return {
-                conceptName: conceptName,
-                thresholdDays: thresholdDays
-            };
-        };
-
-        var applyScope = function (scope) {
-            if (!scope.$$phase) {
-                scope.$apply();
-            }
-        };
-
+    .factory('lmpWarningHelper', ['patientService', 'clinicalAppConfigService', function (patientService, clinicalAppConfigService) {
         return {
             initializeLmpWarning: function (scope) {
                 if (!scope) {
@@ -31,23 +10,19 @@ angular.module('bahmni.clinical')
 
                 var patient = scope.patient || (scope.consultation && scope.consultation.patient);
 
-                if (!patient || !patient.uuid) {
-                    return;
-                }
-
-                if (patient.gender !== 'F') {
+                if (!patient || !patient.uuid || patient.gender !== 'F') {
                     scope.showLmpWarning = false;
                     return;
                 }
 
-                var lmpConfig = getResolvedLmpConfig();
-                if (!lmpConfig) {
+                var config = clinicalAppConfigService.getLmpWarningConfig();
+                if (!config.conceptName || !config.thresholdDays) {
                     scope.showLmpWarning = false;
                     return;
                 }
 
-                patientService.getPatientLmpData(patient.uuid, lmpConfig.conceptName).then(function (lmpData) {
-                    if (lmpData && lmpData.daysSinceLmp > lmpConfig.thresholdDays) {
+                patientService.getPatientLmpData(patient.uuid, config.conceptName).then(function (lmpData) {
+                    if (lmpData && lmpData.daysSinceLmp > config.thresholdDays) {
                         scope.showLmpWarning = true;
                         scope.lmpWarning = {
                             daysSinceLmp: lmpData.daysSinceLmp
@@ -55,11 +30,8 @@ angular.module('bahmni.clinical')
                     } else {
                         scope.showLmpWarning = false;
                     }
-
-                    applyScope(scope);
                 }).catch(function () {
                     scope.showLmpWarning = false;
-                    applyScope(scope);
                 });
             },
 

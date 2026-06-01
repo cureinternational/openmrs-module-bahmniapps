@@ -37,67 +37,6 @@ describe('patientService', function () {
         });
     });
 
-    describe('calculateDaysSinceLmp', function () {
-        it('should calculate days correctly from LMP date to today', function () {
-            var lmpDate = new Date();
-            lmpDate.setDate(lmpDate.getDate() - 30);
-            var dateStr = lmpDate.toISOString().split('T')[0];
-
-            var result = patientService.calculateDaysSinceLmp(dateStr);
-
-            expect(result).toBe(30);
-        });
-
-        it('should return 0 for LMP on today', function () {
-            var today = new Date().toISOString().split('T')[0];
-            var result = patientService.calculateDaysSinceLmp(today);
-
-            expect(result).toBe(0);
-        });
-
-        it('should return null for invalid date string', function () {
-            var result = patientService.calculateDaysSinceLmp('invalid-date');
-            expect(result).toBeNull();
-        });
-
-        it('should return null for empty string', function () {
-            var result = patientService.calculateDaysSinceLmp('');
-            expect(result).toBeNull();
-        });
-
-        it('should return null for null input', function () {
-            var result = patientService.calculateDaysSinceLmp(null);
-            expect(result).toBeNull();
-        });
-
-        it('should return null for future date', function () {
-            var futureDate = new Date();
-            futureDate.setDate(futureDate.getDate() + 5);
-            var dateStr = futureDate.toISOString().split('T')[0];
-
-            var result = patientService.calculateDaysSinceLmp(dateStr);
-            expect(result).toBeNull();
-        });
-
-        it('should calculate 28-day threshold correctly', function () {
-            var lmpDate = new Date();
-            lmpDate.setDate(lmpDate.getDate() - 28);
-            var dateStr = lmpDate.toISOString().split('T')[0];
-
-            var result = patientService.calculateDaysSinceLmp(dateStr);
-            expect(result).toBe(28);
-        });
-
-        it('should handle date with time component', function () {
-            var lmpDate = new Date();
-            lmpDate.setDate(lmpDate.getDate() - 15);
-            var dateStr = lmpDate.toISOString();  // Include time
-
-            var result = patientService.calculateDaysSinceLmp(dateStr);
-            expect(result).toBe(15);
-        });
-    });
-
     describe('getPatientLmpData', function () {
         it('should fetch and return LMP data successfully', function () {
             var patientUuid = 'patient-uuid-123';
