@@ -2320,7 +2320,7 @@ describe("AddTreatmentController", function () {
             treatment.isDischargeMedication = true;
             scope.treatment = treatment;
             scope.add();
-            expect(scope.treatments[0].careSetting).not.toBe(Bahmni.Clinical.Constants.careSetting.inPatient);
+            expect(scope.treatments[0].careSetting).toBe(Bahmni.Clinical.Constants.careSetting.outPatient);
         });
     });
 });

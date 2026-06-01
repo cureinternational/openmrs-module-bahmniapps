@@ -27,7 +27,7 @@ angular.module('bahmni.clinical')
                 { patient: $state.params.patientUuid, includeInactive: false, v: "custom:(uuid,visitType,startDatetime,stopDatetime,location,encounters:(uuid))" }
             ).then(function (response) {
                 currentVisitType = response.data.results[0].visitType.display;
-                $scope.currentVisitType = currentVisitType;
+                $rootScope.$broadcast('event:visitTypeLoaded', currentVisitType);
             });
 
             $scope.getFilteredOrderSets = function (searchTerm) {

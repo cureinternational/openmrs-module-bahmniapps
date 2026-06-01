@@ -44,6 +44,10 @@
                                 </div>
 								<div class="button-group-wrapper">
                                     <div class="button-group">
+                                        <button type="button" class="disch-btn" ng-disabled="true">
+                                            <i class="fa fa-check" ng-show="drugOrder.isDischargeMedication"></i>
+                                            {{ ::'DISCH_BUTTON' | translate }}
+                                        </button>
                                         <button type="button" ng-repeat="orderAttribute in drugOrder.orderAttributes" show-if-privilege="{{dispensePrivilege}}"
                                                 class="dispense-btn" ng-disabled="shouldBeDisabled(drugOrder,orderAttribute)"
                                                 ng-click="updateOrderAttribute(drugOrder,orderAttribute)">
@@ -84,7 +88,6 @@
                                     <div ng-if="drugOrder.rate"> | {{drugOrder.rate}} ml/hr</div>
                                     <div ng-if="drugOrder.additives"> | {{drugOrder.additives}}</div>
                                     <div ng-if="drugOrder.getQuantityWithUnit()"> | {{drugOrder.getQuantityWithUnit()}}</div>
-                                    <div ng-show="drugOrder.isDischargeMedication"> | DISCH</div>
                                     <div class="footer-note">
                                         <span class="time-stamp">
                                             <span class="time">{{drugOrder.dateActivated | bahmniDateTime}}</span>

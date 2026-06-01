@@ -51,7 +51,7 @@
                 <div class="button-group">
                     <button class="disch-btn" ng-show="currentVisitType === 'IPD'" ng-click="toggleDischargeMedication(newTreatment)">
                         <i class="fa fa-check" ng-show="newTreatment.isDischargeMedication"></i>
-                        DISCH
+                        {{ ::'DISCH_BUTTON' | translate }}
                     </button>
                     <button ng-click="edit(newTreatment, $index)" ng-disabled="showBulkChangeToggle"><i class="fa fa-edit"></i>
                     </button>
@@ -75,7 +75,7 @@
                 <div ng-if="newTreatment.rate"> | {{newTreatment.rate}} ml/hr</div>
                 <div ng-if="newTreatment.additives"> | {{newTreatment.additives}}</div>
                 <div ng-if="newTreatment.getQuantityWithUnit()"> | {{newTreatment.getQuantityWithUnit()}}</div>
-                <div ng-show="newTreatment.isDischargeMedication"> | DISCH</div>
+                <div ng-show="newTreatment.isDischargeMedication"> | {{ ::'DISCH_LABEL' | translate }}</div>
             </div>
             <cdss-alert-row alerts="newTreatment.alerts"></cdss-alert-row>
         </li>

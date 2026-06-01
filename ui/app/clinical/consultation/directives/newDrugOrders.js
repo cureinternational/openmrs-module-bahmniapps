@@ -2,9 +2,7 @@
 
 angular.module('bahmni.clinical')
     .directive('newDrugOrders', ['messagingService', function (messagingService) {
-        var controller = function ($scope, $rootScope, appService) {
-            var allMedicinesConfig = appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD");
-            $scope.allMedicinesInPrescriptionAvailableForIPD = allMedicinesConfig !== null ? allMedicinesConfig : true;
+        var controller = function ($scope, $rootScope) {
             $scope.edit = function (drugOrder, index) {
                 $rootScope.$broadcast("event:editDrugOrder", drugOrder, index);
             };
@@ -108,7 +106,8 @@ angular.module('bahmni.clinical')
             scope: {
                 treatments: "=",
                 treatmentConfig: "=",
-                variableDoseTreatments: "="
+                variableDoseTreatments: "=",
+                currentVisitType: "@"
             },
             controller: controller
         };

@@ -31,7 +31,7 @@
 <span class="fr" ng-if="(drugOrders.length > 0)">( {{::drugOrders[drugOrders.length-1].provider.name}} )</span>
 
 <div ng-if="(drugOrders | filter: {isDischargeMedication: true}).length > 0">
-    <h3>Discharge Medications</h3>
+    <h3>{{ ::'DISCHARGE_MEDICATIONS_HEADING' | translate }}</h3>
     <table class="printPrescription">
         <tr>
             <th class="sl-no-heading">{{'TREATMENT_SL_NO'|translate}}</th>
@@ -48,7 +48,7 @@
                 <span bo-show="drugOrder.getDescription()" bo-text="drugOrder.getDescription()" ng-class="{'strike-text':drugOrder.isDiscontinuedOrStopped()}"></span>
                 <span bo-show="!drugOrder.getDescription()" bo-text="' - '"></span>
             </td>
-            <td bo-text="(drugOrder.getQuantityWithUnit)"></td>
+            <td bo-text="drugOrder.getQuantityWithUnit()"></td>
             <td bo-text="(drugOrder.effectiveStartDate | bahmniDate)"></td>
         </tr>
         </tbody>

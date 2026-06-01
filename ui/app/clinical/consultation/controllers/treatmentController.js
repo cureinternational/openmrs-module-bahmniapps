@@ -64,6 +64,10 @@ angular.module('bahmni.clinical')
 
                 $scope.enrollment = $stateParams.enrollment;
                 $scope.treatmentConfig = treatmentConfig;
+
+                $rootScope.$on('event:visitTypeLoaded', function (event, visitType) {
+                    $scope.currentVisitType = visitType;
+                });
             };
 
             init();
