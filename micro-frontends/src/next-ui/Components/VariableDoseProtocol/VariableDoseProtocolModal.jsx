@@ -133,7 +133,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
     );
     const totalDosage = stages.reduce(
         (sum, s) => sum + (parseFloat(s.dose) || 0) * normalizeToDays(s.duration, s.durationUnit?.value),
-        0
+        isLoadingDose && loadingDoseValue > 0 ? parseFloat(loadingDoseValue) : 0
     );
 
     const handleSave = () => {
@@ -239,14 +239,19 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
     const TOTAL_DURATION_LABEL = intl.formatMessage({ id: "VARIABLE_DOSE_TOTAL_DURATION_LABEL", defaultMessage: "Total Duration" });
     const DAYS_LABEL = intl.formatMessage({ id: "VARIABLE_DOSE_DAYS", defaultMessage: "Day(s)" });
 
+    const toNum = (v, fallback) => {
+        const n = parseFloat(v);
+        return isNaN(n) ? fallback : n;
+    };
+
     const numberInputHandler = (setter) => (e, dirOrObj, legacyVal) => {
         const v = (dirOrObj !== null && typeof dirOrObj === "object") ? dirOrObj.value : legacyVal;
-        setter(v !== undefined ? v : Number(e?.target?.value || 0));
+        setter(toNum(v !== undefined ? v : e?.target?.value, 0));
     };
 
     const stageNumberInputHandler = (index, field) => (e, dirOrObj, legacyVal) => {
         const v = (dirOrObj !== null && typeof dirOrObj === "object") ? dirOrObj.value : legacyVal;
-        updateStage(index, field, v !== undefined ? v : Number(e?.target?.value || 0));
+        updateStage(index, field, toNum(v !== undefined ? v : e?.target?.value, 0));
     };
 
     return (

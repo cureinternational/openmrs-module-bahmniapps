@@ -2,7 +2,6 @@
 
 var LOADING_DOSE_STAGE_NAME = 'Loading Dose';
 var LOADING_DOSE_FREQUENCY_DISPLAY = 'Once';
-var LOADING_DOSE_DURATION_DISPLAY = '1 Occurrence';
 
 angular.module('bahmni.clinical')
     .controller('AddTreatmentController', ['$scope', '$rootScope', 'contextChangeHandler', 'treatmentConfig', 'drugService',
@@ -1072,7 +1071,7 @@ angular.module('bahmni.clinical')
                                             dose: String(calculatedLoadingDose.dose || data.loadingDose.dose || ''),
                                             unit: calculatedLoadingDose.doseUnit || unit,
                                             frequency: LOADING_DOSE_FREQUENCY_DISPLAY,
-                                            duration: LOADING_DOSE_DURATION_DISPLAY,
+                                            duration: '1',
                                             durationUnit: 'Occurrence(s)',
                                             instructions: data.loadingDose.instructions || '',
                                             rate: data.loadingDose.rate || '',

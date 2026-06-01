@@ -3,7 +3,7 @@
 var FHIR_DOSING_INSTRUCTION_TYPE = 'org.openmrs.module.bahmniemrapi.drugorder.dosinginstructions.FhirDosingInstructions';
 
 var LOADING_DOSE_STAGE_NAME = 'Loading Dose';
-var LOADING_DOSE_DURATION_DISPLAY = '1 Occurrence';
+var LOADING_DOSE_DURATION_DISPLAY = '1 Occurrence(s)';
 
 var DURATION_UNIT_TO_DAYS = {
     'day': 1, 'days': 1, 'day(s)': 1,
@@ -81,9 +81,6 @@ var buildFhirDosageArray = function (stages, units, route) {
         var extensions = [
             { url: 'isLoadingDose', valueBoolean: isLoadingDose }
         ];
-        if (isLoadingDose) {
-            extensions.push({ url: 'durationDisplay', valueString: LOADING_DOSE_DURATION_DISPLAY });
-        }
         if (stage.additives) {
             extensions.push({ url: 'additives', valueString: stage.additives });
         }
@@ -95,16 +92,17 @@ var buildFhirDosageArray = function (stages, units, route) {
         if (rateValue > 0) {
             doseAndRate[0].rateQuantity = { value: rateValue, unit: 'ml/hr' };
         }
+        var timing = { code: { text: stage.frequency || '' } };
+        if (!isLoadingDose) {
+            timing.repeat = {
+                duration: parseFloat(stage.duration) || 1,
+                durationUnit: toUcumDurationUnit(stage.durationUnit || 'Days')
+            };
+        }
         return {
             sequence: index + 1,
             text: stage.stageName,
-            timing: {
-                repeat: {
-                    duration: isLoadingDose ? 1 : (parseFloat(stage.duration) || 1),
-                    durationUnit: isLoadingDose ? 'd' : toUcumDurationUnit(stage.durationUnit || 'Days')
-                },
-                code: { text: stage.frequency || '' }
-            },
+            timing: timing,
             route: { text: route || '' },
             doseAndRate: doseAndRate,
             additionalInstruction: stage.instructions ? [{ text: stage.instructions }] : [],
@@ -119,7 +117,7 @@ var fhirDosageToStage = function (dosage) {
     var dr = dosage.doseAndRate && dosage.doseAndRate[0];
     var isLoadingDose = extMap.isLoadingDose === true;
     var durationDisplay = isLoadingDose
-        ? (extMap.durationDisplay || LOADING_DOSE_DURATION_DISPLAY)
+        ? LOADING_DOSE_DURATION_DISPLAY
         : ((dosage.timing && dosage.timing.repeat)
             ? String(dosage.timing.repeat.duration) + ' ' + fromUcumDurationUnit(dosage.timing.repeat.durationUnit)
             : '');

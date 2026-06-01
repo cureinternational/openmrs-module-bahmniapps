@@ -95,12 +95,13 @@ describe('FhirDosingUtils', function () {
     });
 
     describe('buildFhirDosageArray', function () {
-        it('should return loading dose with durationDisplay extension', function () {
+        it('should build loading dose with isLoadingDose extension and no timing.repeat', function () {
             var stages = [{ stageName: 'Loading Dose', dose: '5', frequency: 'Once', duration: '1', durationUnit: 'Occurrence(s)', rate: '', additives: '', instructions: '', additionalInstructions: '' }];
             var result = utils.buildFhirDosageArray(stages, 'mg', 'Oral');
-            var ext = result[0].extension.find(function (e) { return e.url === 'durationDisplay'; });
+            var ext = result[0].extension.find(function (e) { return e.url === 'isLoadingDose'; });
             expect(ext).toBeTruthy();
-            expect(ext.valueString).toBe('1 Occurrence');
+            expect(ext.valueBoolean).toBe(true);
+            expect(result[0].timing.repeat).toBeUndefined();
         });
 
         it('should add rateQuantity when rate > 0', function () {
@@ -126,20 +127,19 @@ describe('FhirDosingUtils', function () {
     });
 
     describe('fhirDosageToStage', function () {
-        it('should use durationDisplay extension for loading dose', function () {
+        it('should return loading dose duration from constant', function () {
             var dosage = {
                 sequence: 1, text: 'Loading Dose',
-                timing: { repeat: { duration: 1, durationUnit: 'd' }, code: { text: 'Once' } },
+                timing: { code: { text: 'Once' } },
                 route: { text: 'Oral' },
                 doseAndRate: [{ type: { text: 'ordered' }, doseQuantity: { value: 5, unit: 'mg' } }],
                 additionalInstruction: [], patientInstruction: '',
                 extension: [
-                    { url: 'isLoadingDose', valueBoolean: true },
-                    { url: 'durationDisplay', valueString: '1 Occurrence' }
+                    { url: 'isLoadingDose', valueBoolean: true }
                 ]
             };
             var result = utils.fhirDosageToStage(dosage);
-            expect(result.duration).toBe('1 Occurrence');
+            expect(result.duration).toBe('1 Occurrence(s)');
             expect(result.durationDays).toBe(0);
             expect(result.isLoadingDose).toBe(true);
         });

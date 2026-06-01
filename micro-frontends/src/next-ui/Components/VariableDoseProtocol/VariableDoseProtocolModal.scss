@@ -40,12 +40,10 @@
     color: #161616 !important;
   }
 
-  /* bahmni-carbon-ui sets max-width: 250px on bx--list-box__wrapper */
   .bx--list-box__wrapper {
     max-width: 100% !important;
   }
 
-  /* AngularJS global input CSS overrides Carbon's visually-hidden native checkboxes */
   input.bx--checkbox[type="checkbox"],
   input.bx--toggle-input[type="checkbox"] {
     position: absolute !important;
@@ -59,12 +57,10 @@
     appearance: none !important;
   }
 
-  /* Carbon default is justify-content: space-between, which gaps label from field */
   .bx--date-picker-container {
     justify-content: flex-start !important;
   }
 
-  /* Carbon modal SCSS sets $field-02 (#fff) on date picker inputs inside .bx--modal-container */
   .bx--date-picker,
   .bx--date-picker-container,
   .bx--date-picker-input__wrapper,
@@ -202,9 +198,6 @@
   box-sizing: border-box;
 }
 
-.vdp-loading-dose-stepper .bx--number__input-wrapper {
-  min-height: 40px !important;
-}
 
 .vdp-loading-dose-unit .bx--list-box__wrapper,
 .vdp-loading-dose-unit .bx--form-item,
@@ -221,20 +214,7 @@
   min-height: 40px !important;
 }
 
-/*
- * Carbon draws the focus ring as outline on the <input> element. clinical.css button borders
- * and Carbon's own ::before/::after divider pseudo-elements overlap the input's top edge at
- * the button positions, creating visible breaks. Fix: suppress per-element outlines and draw
- * a single clean focus ring on the wrapper via :focus-within instead.
- */
-.vdp-loading-dose-stepper .bx--number input[type='number']:focus,
-.vdp-loading-dose-stepper .bx--number__control-btn:focus,
-.vdp-loading-dose-details-row .bx--number input[type='number']:focus,
-.vdp-loading-dose-details-row .bx--number__control-btn:focus {
-  outline: none !important;
-}
 
-/* clinical.css adds a border to button elements — remove it from the chevron */
 .vdp-loading-dose-unit .bx--list-box__menu-icon {
   border: none !important;
   background-color: transparent !important;
@@ -264,57 +244,54 @@
   width: 100%;
 }
 
-/* clinical.css sets .treatment-section-left textarea { width: 185px } — override both background and width */
 .variable-dose-modal .bx--text-area {
   background-color: #f4f4f4 !important;
   width: 100% !important;
   height: 52px;
 }
 
-/* Carbon sets $field-02 (#fff) on inputs inside .bx--modal-container — restore field-01 gray */
 .variable-dose-modal .bx--number input[type='number'],
 .variable-dose-modal .bx--text-input {
   background-color: #f4f4f4 !important;
 }
 
-/* Fix NumberInput +/- hover highlight and border alignment.
-   overflow:hidden on the wrapper clips the controls' hover background.
-   The input's border-bottom is clipped too (it sits outside content-box at 40px),
-   so we restore it as a ::after pseudo-element at bottom:0 inside the 40px box.
-   border:none on buttons strips clinical.css borders that inflate height. */
 .variable-dose-modal .bx--number__input-wrapper {
   position: relative !important;
   box-sizing: border-box !important;
   height: 40px !important;
-  overflow: hidden !important;
+  overflow: hidden;
+  border-bottom: 1px solid #8d8d8d;
 }
 
-/* Bottom border drawn as a pseudo-element inside the 40px box (not clipped) */
-.variable-dose-modal .bx--number__input-wrapper::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: #8d8d8d;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.variable-dose-modal .bx--number__input-wrapper:focus-within::after {
-  background-color: #0f62fe;
+.variable-dose-modal .bx--number__input-wrapper:has(input[type='number']:focus) {
+  border-bottom: 2px solid #0f62fe;
 }
 
 .variable-dose-modal .bx--number input[type='number'] {
   border-bottom: none !important;
   box-sizing: border-box !important;
+  min-width: 0;
+}
+
+.variable-dose-modal .bx--number__controls {
+  top: 0 !important;
+  transform: none !important;
+  height: 100% !important;
+  overflow: hidden !important;
 }
 
 .variable-dose-modal .bx--number__control-btn {
   border: none !important;
-  padding: 0 !important;
   box-sizing: border-box !important;
+}
+
+.variable-dose-modal .bx--number__control-btn:hover:not(:active):not(:focus) {
+  outline: none !important;
+}
+
+.variable-dose-modal .bx--number__control-btn::before,
+.variable-dose-modal .bx--number__control-btn::after {
+  background-color: transparent !important;
 }
 
 .vdp-stage-card {
@@ -347,9 +324,6 @@
   margin-bottom: 16px;
 }
 
-/* Instructions row: same 4-column grid as main row.
-   Instructions=col1(1fr=Dose), Rate=col2(2fr=Frequency), Additives=col3+4(span 2=Duration+Units).
-   When Rate/Additives hidden, Instructions stays at 1fr — never expands. */
 .vdp-stage-instructions-row {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr 1fr;
@@ -372,16 +346,6 @@
   width: 100%;
 }
 
-.variable-dose-modal .bx--number input[type='number']:focus,
-.variable-dose-modal .bx--number__control-btn:focus {
-  outline: none !important;
-}
-
-/* Focus: ::after pseudo-element color handles the bottom line; outline is clipped by
-   overflow:hidden but the ::after color change signals focus clearly enough */
-.variable-dose-modal .bx--number__input-wrapper:has(input:focus) {
-  outline: none;
-}
 
 .vdp-toggle-instructions-btn.bx--btn--ghost {
   color: #0f62fe;
