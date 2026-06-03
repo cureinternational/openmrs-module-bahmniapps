@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .controller('VisitController', ['$scope', '$state', '$rootScope', '$q', 'encounterService', '$window', 'clinicalAppConfigService', 'configurations', 'visitSummary', '$timeout', 'printer', 'visitConfig', 'visitHistory', '$stateParams', 'locationService', 'visitService', 'appService', 'diagnosisService', 'observationsService', 'allergyService', 'auditLogService', 'sessionService', '$location',
-        function ($scope, $state, $rootScope, $q, encounterService, $window, clinicalAppConfigService, configurations, visitSummary, $timeout, printer, visitConfig, visitHistory, $stateParams, locationService, visitService, appService, diagnosisService, observationsService, allergyService, auditLogService, sessionService, $location) {
+    .controller('VisitController', ['$scope', '$state', '$rootScope', '$q', 'encounterService', '$window', 'clinicalAppConfigService', 'configurations', 'visitSummary', '$timeout', 'printer', 'visitConfig', 'visitHistory', '$stateParams', 'locationService', 'visitService', 'appService', 'diagnosisService', 'observationsService', 'allergyService', 'auditLogService', 'sessionService', '$location', '$http',
+        function ($scope, $state, $rootScope, $q, encounterService, $window, clinicalAppConfigService, configurations, visitSummary, $timeout, printer, visitConfig, visitHistory, $stateParams, locationService, visitService, appService, diagnosisService, observationsService, allergyService, auditLogService, sessionService, $location, $http) {
             function handleLogoutShortcut (event) {
                 if ((event.metaKey || event.ctrlKey) && event.key === $rootScope.quickLogoutComboKey) {
                     $scope.ipdDashboard.hostApi.onLogOut();
@@ -189,7 +189,33 @@ angular.module('bahmni.clinical')
                     });
                     promises.push(allergyPromise);
 
-                    Promise.all(promises).then(function () {
+                    var primaryIdentifierTypeUuid = '8d79403a-c2cc-11de-8d13-0010c6dffd0f';
+                    Promise.all(promises)
+                    .then(function () {
+                        return $http.get('/openmrs/ws/rest/v1/patient/' + $scope.patient.uuid + '/identifier', {
+                            params: { v: 'full' }
+                        });
+                    })
+                    .then(function (identifierResponse) {
+                        $scope.patient.extraIdentifiers = (identifierResponse.data.results || [])
+                            .filter(function (id) { return !id.voided; })
+                            .map(function (id) {
+                                return {
+                                    identifier: id.identifier,
+                                    preferred: id.preferred,
+                                    voided: id.voided,
+                                    identifierType: {
+                                        uuid: id.identifierType.uuid,
+                                        name: id.identifierType.display || id.identifierType.name,
+                                        display: id.identifierType.display || id.identifierType.name
+                                    }
+                                };
+                            })
+                            .filter(function (id) {
+                                return id.identifierType.uuid !== primaryIdentifierTypeUuid;
+                            });
+                    })
+                    .then(function () {
                         $scope.additionalInfo = {};
                         $scope.additionalInfo.visitSummary = $scope.visitSummary;
                         $scope.additionalInfo.currentDate = new Date();
