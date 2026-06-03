@@ -23,12 +23,11 @@ var vdpHeaders = [
     { key: "duration", id: "VARIABLE_DOSE_TABLE_HEADER_DURATION", defaultMessage: "Duration" },
 ];
 
-function formatStageDate(date) {
+function formatStageDate(date, intl) {
     if (!date) return "";
     var d = new Date(date);
     if (isNaN(d.getTime())) return "";
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+    return intl.formatDate(d, { day: "numeric", month: "short", year: "numeric" });
 }
 
 var detailFields = [
@@ -149,7 +148,7 @@ function VariableDoseProtocolTableInner(props) {
                                         )}
                                     </TableCell>
                                     <TableCell>{getStageDisplay(stage)}</TableCell>
-                                    <TableCell>{formatStageDate(stage.startDate)}</TableCell>
+                                    <TableCell>{formatStageDate(stage.startDate, intl)}</TableCell>
                                     <TableCell>{stage.dose} {stage.unit}</TableCell>
                                     <TableCell>{stage.frequency}</TableCell>
                                     <TableCell>{stage.duration}{stage.durationUnit ? ` ${stage.durationUnit}` : ''}</TableCell>
