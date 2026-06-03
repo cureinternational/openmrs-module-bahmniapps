@@ -398,7 +398,8 @@ angular.module('bahmni.clinical')
                 cleanState: null,
                 initialized: false,
                 watchDeregister: null,
-                postSaveRefreshPending: sessionStorage.getItem('formSaveCompleted') === 'true',
+                postSaveRefreshPending: false,
+                postSaveRefreshTimeout: null,
                 form2ListenerState: null,
                 isSaving: false
             };
@@ -427,6 +428,39 @@ angular.module('bahmni.clinical')
                 } else {
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    dirtyTrackingState.postSaveRefreshPending = true;
+                    if (dirtyTrackingState.postSaveRefreshTimeout) {
+                        $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
+                    }
+                    // Two-tick fallback: gives HTTP responses one extra JS event-loop tick
+                    // to arrive before we commit to the current state as clean.
+                    // (On first cold load, conceptSetService.getConcept takes ~20ms;
+                    // the $timeout(0) fires in ~1ms. The second tick covers the common
+                    // gap for browser-cached responses arriving at ~1-4ms.)
+                    dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                        if (!dirtyTrackingState.postSaveRefreshPending) {
+                            dirtyTrackingState.postSaveRefreshTimeout = null;
+                            return; // Watcher debounce already took over
+                        }
+                        // Tick 1: update cleanState but do NOT clear pending yet.
+                        var tick1State = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                        dirtyTrackingState.cleanState = tick1State;
+                        $scope.consultation._draftCleanState = tick1State;
+                        $scope.formDraft.isDirty = false;
+                        dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                            if (!dirtyTrackingState.postSaveRefreshPending) {
+                                dirtyTrackingState.postSaveRefreshTimeout = null;
+                                return; // Watcher debounce already took over between tick-1 and tick-2
+                            }
+                            // Tick 2: now safe to finalize cleanState and clear pending.
+                            var tick2State = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                            dirtyTrackingState.cleanState = tick2State;
+                            $scope.consultation._draftCleanState = tick2State;
+                            $scope.formDraft.isDirty = false;
+                            dirtyTrackingState.postSaveRefreshPending = false;
+                            dirtyTrackingState.postSaveRefreshTimeout = null;
+                        }, 0);
+                    }, 0);
                 }
 
                 dirtyTrackingState.watchDeregister = $scope.$watch(
@@ -434,11 +468,19 @@ angular.module('bahmni.clinical')
                     function (newVal, oldVal) {
                         if (newVal !== oldVal) {
                             if (dirtyTrackingState.postSaveRefreshPending) {
+                                // During init, track the evolving state as the new clean baseline.
+                                // Debounce: reset the clear-timeout so we finalize only after the
+                                // last async initializer (e.g. conceptSetService HTTP response) fires.
                                 dirtyTrackingState.cleanState = newVal;
                                 $scope.consultation._draftCleanState = newVal;
                                 $scope.formDraft.isDirty = false;
-                                dirtyTrackingState.postSaveRefreshPending = false;
-                                sessionStorage.removeItem('formSaveCompleted');
+                                if (dirtyTrackingState.postSaveRefreshTimeout) {
+                                    $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
+                                }
+                                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                                    dirtyTrackingState.postSaveRefreshPending = false;
+                                    dirtyTrackingState.postSaveRefreshTimeout = null;
+                                }, 0);
                                 return;
                             }
                             $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
@@ -491,6 +533,17 @@ angular.module('bahmni.clinical')
                     $scope.formDraft.hasDrafts = true;
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    dirtyTrackingState.postSaveRefreshPending = true;
+                    if (dirtyTrackingState.postSaveRefreshTimeout) {
+                        $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
+                    }
+                    dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                        dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                        $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                        $scope.formDraft.isDirty = false;
+                        dirtyTrackingState.postSaveRefreshPending = false;
+                        dirtyTrackingState.postSaveRefreshTimeout = null;
+                    }, 0);
                     $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
                 }, function () {
                     $scope.formDraft.statusMessage = 'CHANGES_NOT_SAVED_KEY';
@@ -599,6 +652,17 @@ angular.module('bahmni.clinical')
                 $scope.formDraft.isDirty = false;
                 $scope.formDraft.hasDrafts = false;
                 dirtyTrackingState.postSaveRefreshPending = true;
+                if (dirtyTrackingState.postSaveRefreshTimeout) {
+                    $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
+                }
+                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                    dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    $scope.formDraft.isDirty = false;
+                    dirtyTrackingState.postSaveRefreshPending = false;
+                    dirtyTrackingState.postSaveRefreshTimeout = null;
+                    sessionStorage.removeItem('formSaveCompleted');
+                }, 0);
                 clearDraftStatus(true);
             };
             $scope.consultation.postSaveHandler.register("resetDraftStateAfterSave", resetDraftStateAfterSave);
@@ -609,6 +673,17 @@ angular.module('bahmni.clinical')
                 dirtyTrackingState.postSaveRefreshPending = true;
                 $scope.formDraft.showSpinner = false;
                 clearDraftStatus(true);
+                if (dirtyTrackingState.postSaveRefreshTimeout) {
+                    $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
+                }
+                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                    dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    $scope.formDraft.isDirty = false;
+                    dirtyTrackingState.postSaveRefreshPending = false;
+                    dirtyTrackingState.postSaveRefreshTimeout = null;
+                    sessionStorage.removeItem('formSaveCompleted');
+                }, 0);
             });
 
             var saveStartedListener = $rootScope.$on('event:save-started', function () {
@@ -619,6 +694,9 @@ angular.module('bahmni.clinical')
             $scope.$on('$destroy', function () {
                 if (dirtyTrackingState.watchDeregister) {
                     dirtyTrackingState.watchDeregister();
+                }
+                if (dirtyTrackingState.postSaveRefreshTimeout) {
+                    $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                 }
                 formDirtyStateService.unregisterForm2SyncListeners(dirtyTrackingState.form2ListenerState);
                 if (draftContextWatchDeregister) {
