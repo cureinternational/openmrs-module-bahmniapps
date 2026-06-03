@@ -432,17 +432,11 @@ angular.module('bahmni.clinical')
                     if (dirtyTrackingState.postSaveRefreshTimeout) {
                         $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                     }
-                    // Two-tick fallback: gives HTTP responses one extra JS event-loop tick
-                    // to arrive before we commit to the current state as clean.
-                    // (On first cold load, conceptSetService.getConcept takes ~20ms;
-                    // the $timeout(0) fires in ~1ms. The second tick covers the common
-                    // gap for browser-cached responses arriving at ~1-4ms.)
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                         if (!dirtyTrackingState.postSaveRefreshPending) {
                             dirtyTrackingState.postSaveRefreshTimeout = null;
-                            return; // Watcher debounce already took over
+                            return;
                         }
-                        // Tick 1: update cleanState but do NOT clear pending yet.
                         var tick1State = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                         dirtyTrackingState.cleanState = tick1State;
                         $scope.consultation._draftCleanState = tick1State;
@@ -450,9 +444,8 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                             if (!dirtyTrackingState.postSaveRefreshPending) {
                                 dirtyTrackingState.postSaveRefreshTimeout = null;
-                                return; // Watcher debounce already took over between tick-1 and tick-2
+                                return;
                             }
-                            // Tick 2: now safe to finalize cleanState and clear pending.
                             var tick2State = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                             dirtyTrackingState.cleanState = tick2State;
                             $scope.consultation._draftCleanState = tick2State;
@@ -468,9 +461,6 @@ angular.module('bahmni.clinical')
                     function (newVal, oldVal) {
                         if (newVal !== oldVal) {
                             if (dirtyTrackingState.postSaveRefreshPending) {
-                                // During init, track the evolving state as the new clean baseline.
-                                // Debounce: reset the clear-timeout so we finalize only after the
-                                // last async initializer (e.g. conceptSetService HTTP response) fires.
                                 dirtyTrackingState.cleanState = newVal;
                                 $scope.consultation._draftCleanState = newVal;
                                 $scope.formDraft.isDirty = false;
