@@ -125,18 +125,20 @@ describe('patientService', function () {
             var conceptName = 'LMP Date';
             var thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            var lmpDate = thirtyDaysAgo.toISOString().split('T')[0];
+            var lmpDateStr = thirtyDaysAgo.getFullYear() + '-' +
+                String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0') + '-' +
+                String(thirtyDaysAgo.getDate()).padStart(2, '0');
 
             var lmpResponse = {
                 results: [{
-                    value: lmpDate
+                    value: lmpDateStr
                 }]
             };
 
             mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-with-days&concept=LMP%20Date&limit=1/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
-                expect(data.lmpDate).toBe(lmpDate);
+                expect(data.lmpDate).toBe(lmpDateStr);
                 expect(data.daysSinceLmp).toBe(30);
             });
 
