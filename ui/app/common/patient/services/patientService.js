@@ -78,8 +78,10 @@ angular.module('bahmni.common.patient')
                     return null;
                 }
 
-                var lmpDateStr = response.data.results[0].value;
-                if (!lmpDateStr || !angular.isString(lmpDateStr)) {
+                var obs = response.data.results[0];
+                var lmpDateStr = obs.value || (obs.display && obs.display.match(/(\d{4}-\d{2}-\d{2})/) || [])[1];
+
+                if (!lmpDateStr) {
                     return null;
                 }
 
@@ -89,18 +91,20 @@ angular.module('bahmni.common.patient')
                 }
 
                 var today = new Date();
-                lmpDate.setHours(0, 0, 0, 0);
-                today.setHours(0, 0, 0, 0);
+                var normalizeDate = function (date) {
+                    date.setHours(0, 0, 0, 0);
+                    return date;
+                };
+                lmpDate = normalizeDate(lmpDate);
+                today = normalizeDate(today);
 
                 if (lmpDate > today) {
                     return null;
                 }
 
-                var daysSinceLmp = Math.floor((today.getTime() - lmpDate.getTime()) / (24 * 60 * 60 * 1000));
-
                 return {
                     lmpDate: lmpDateStr,
-                    daysSinceLmp: daysSinceLmp
+                    daysSinceLmp: Math.floor((today.getTime() - lmpDate.getTime()) / (24 * 60 * 60 * 1000))
                 };
             }).catch(function () {
                 return null;
