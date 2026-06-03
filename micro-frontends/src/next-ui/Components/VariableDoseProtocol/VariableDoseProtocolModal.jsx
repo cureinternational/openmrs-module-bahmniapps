@@ -602,7 +602,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
                             {ADD_STAGE_LABEL}
                         </Button>
                         <span className="vdp-totals">
-                            {TOTAL_DOSAGE_LABEL}: {totalDosage.toFixed(1)} {units?.value || ""} | {TOTAL_DURATION_LABEL}: {totalDuration} {DAYS_LABEL}
+                            {!dosingRule && <>{TOTAL_DOSAGE_LABEL}: {totalDosage.toFixed(1)} {units?.value || ""} | </>}{TOTAL_DURATION_LABEL}: {totalDuration} {DAYS_LABEL}
                         </span>
                     </div>
                 </div>
