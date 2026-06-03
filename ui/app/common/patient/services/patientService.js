@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.common.patient')
-    .service('patientService', ['$http', 'sessionService', 'appService', function ($http, sessionService, appService) {
+    .service('patientService', ['$http', '$q', 'sessionService', 'appService', function ($http, $q, sessionService, appService) {
         this.getPatient = function (uuid, rep) {
             if (!rep) {
                 rep = "full";
@@ -62,6 +62,48 @@ angular.module('bahmni.common.patient')
                     patientIdentifiers: patientIdentifiers
                 },
                 withCredentials: true
+            });
+        };
+
+        this.getPatientLmpData = function (patientUuid, conceptName) {
+            if (!patientUuid || !angular.isString(patientUuid) || !conceptName) {
+                return $q.when(null);
+            }
+            var url = Bahmni.Common.Constants.openmrsObsUrl + "?patient=" + patientUuid + "&concept=" + encodeURIComponent(conceptName) + "&limit=1";
+
+            return $http.get(url, {
+                withCredentials: true
+            }).then(function (response) {
+                if (!response.data || !response.data.results || response.data.results.length === 0) {
+                    return null;
+                }
+
+                var lmpDateStr = response.data.results[0].value;
+                if (!lmpDateStr || !angular.isString(lmpDateStr)) {
+                    return null;
+                }
+
+                var lmpDate = new Date(lmpDateStr);
+                if (isNaN(lmpDate.getTime())) {
+                    return null;
+                }
+
+                var today = new Date();
+                lmpDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+
+                if (lmpDate > today) {
+                    return null;
+                }
+
+                var daysSinceLmp = Math.floor((today.getTime() - lmpDate.getTime()) / (24 * 60 * 60 * 1000));
+
+                return {
+                    lmpDate: lmpDateStr,
+                    daysSinceLmp: daysSinceLmp
+                };
+            }).catch(function () {
+                return null;
             });
         };
     }]);

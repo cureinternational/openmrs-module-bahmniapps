@@ -14,10 +14,12 @@ angular.module('bahmni.clinical').controller('ConsultationController',
             var ERROR = 1;
             var DateUtil = Bahmni.Common.Util.DateUtil;
             var getPreviousActiveCondition = Bahmni.Common.Domain.Conditions.getPreviousActiveCondition;
+
             $scope.togglePrintList = false;
             $scope.patient = patientContext.patient;
             $scope.showDashboardMenu = false;
             $scope.showMobileMenu = false;
+
             $scope.stateChange = function () {
                 return $state.current.name === 'patient.dashboard.show';
             };

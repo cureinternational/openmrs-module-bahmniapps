@@ -1,0 +1,12 @@
+<div class="lmp-warning-banner" ng-if="showLmpWarning && lmpWarning" data-testid="lmp-warning-banner">
+    <div class="warning-content">
+        <span class="warning-icon-wrapper">
+            <i class="fa fa-circle warning-icon-circle"></i>
+            <i class="fa fa-exclamation warning-icon-mark"></i>
+        </span>
+        <span class="warning-text">{{ 'LMP_WARNING_CONSULTATION_LABEL' | translate }}<span class="warning-days">{{lmpWarning.daysSinceLmp}} {{ 'LMP_WARNING_DAYS_UNIT' | translate }}</span></span>
+        <button class="close-btn" ng-click="dismissLmpWarning()" title="Close">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+</div>

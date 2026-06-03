@@ -72,4 +72,8 @@ angular.module('bahmni.clinical')
         this.getVisitTypeForRetrospectiveEntries = function () {
             return appService.getAppDescriptor().getConfigValue("visitTypeForRetrospectiveEntries");
         };
+
+        this.getLmpWarningConfig = function () {
+            return appService.getAppDescriptor().getConfigValue("lmpWarningConfig") || {};
+        };
     }]);

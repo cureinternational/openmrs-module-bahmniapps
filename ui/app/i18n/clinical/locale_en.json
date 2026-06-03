@@ -445,5 +445,8 @@
   "DISCARD": "Discard",
   "DRAFT_DISCARDED_SUCCESS": "The saved draft session is discarded",
   "FORMS_DRAFT_BANNER_TITLE": "Observation Forms are in Progress",
-  "FORMS_DRAFT_BANNER_SUBTITLE": "Your inputs were saved as a draft on {{ draftDate }} at {{ draftTime }}. Click Resume to continue where you left off or Discard Draft to start over."
+  "FORMS_DRAFT_BANNER_SUBTITLE": "Your inputs were saved as a draft on {{ draftDate }} at {{ draftTime }}. Click Resume to continue where you left off or Discard Draft to start over.",
+
+  "LMP_WARNING_CONSULTATION_LABEL": "Days since LMP - ",
+  "LMP_WARNING_DAYS_UNIT": "days"
 }
