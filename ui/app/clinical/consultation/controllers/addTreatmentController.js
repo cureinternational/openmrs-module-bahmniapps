@@ -408,8 +408,10 @@ angular.module('bahmni.clinical')
                     ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length == 0)) {
                     return;
                 }
-                if (currentVisitType === 'IPD' && !$scope.treatment.isDischargeMedication) {
-                    $scope.treatment.careSetting = Bahmni.Clinical.Constants.careSetting.inPatient;
+                if (currentVisitType === 'IPD') {
+                    $scope.treatment.careSetting = $scope.treatment.isDischargeMedication
+                        ? Bahmni.Clinical.Constants.careSetting.outPatient
+                        : Bahmni.Clinical.Constants.careSetting.inPatient;
                 }
                 if ($scope.treatment.isNewOrderSet) {
                     treatments = $scope.orderSetTreatments;
