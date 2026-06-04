@@ -27,7 +27,10 @@ function formatStageDate(date, intl) {
     if (!date) return "";
     var d = new Date(date);
     if (isNaN(d.getTime())) return "";
-    return intl.formatDate(d, { day: "numeric", month: "short", year: "numeric" });
+    var day = intl.formatDate(d, { day: "2-digit" });
+    var month = intl.formatDate(d, { month: "short" });
+    var year = intl.formatDate(d, { year: "numeric" });
+    return day + " " + month + " " + year;
 }
 
 var detailFields = [

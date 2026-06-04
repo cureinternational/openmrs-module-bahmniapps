@@ -1002,7 +1002,7 @@ angular.module('bahmni.clinical')
                                 return;
                             }
                             var vdpDrugName = data.drug ? data.drug.name : '';
-                            var vdpCareSetting = ($scope.allMedicinesInPrescriptionAvailableForIPD && currentVisitType === 'IPD')
+                            var vdpCareSetting = (currentVisitType === 'IPD')
                                 ? Bahmni.Clinical.Constants.careSetting.inPatient
                                 : Bahmni.Clinical.Constants.careSetting.outPatient;
                             var conflictingActiveOrder = _.find(
