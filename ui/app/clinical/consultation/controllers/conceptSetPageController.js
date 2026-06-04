@@ -437,18 +437,18 @@ angular.module('bahmni.clinical')
                             dirtyTrackingState.postSaveRefreshTimeout = null;
                             return;
                         }
-                        var tick1State = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                        dirtyTrackingState.cleanState = tick1State;
-                        $scope.consultation._draftCleanState = tick1State;
+                        var partialRefreshState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                        dirtyTrackingState.cleanState = partialRefreshState;
+                        $scope.consultation._draftCleanState = partialRefreshState;
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                             if (!dirtyTrackingState.postSaveRefreshPending) {
                                 dirtyTrackingState.postSaveRefreshTimeout = null;
                                 return;
                             }
-                            var tick2State = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                            dirtyTrackingState.cleanState = tick2State;
-                            $scope.consultation._draftCleanState = tick2State;
+                            var settledCleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                            dirtyTrackingState.cleanState = settledCleanState;
+                            $scope.consultation._draftCleanState = settledCleanState;
                             $scope.formDraft.isDirty = false;
                             dirtyTrackingState.postSaveRefreshPending = false;
                             dirtyTrackingState.postSaveRefreshTimeout = null;
