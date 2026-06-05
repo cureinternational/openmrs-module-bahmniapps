@@ -76,9 +76,10 @@ function VariableDoseProtocolTableInner(props) {
     }
 
     var loadingDoseCount = hostData.stages.filter(function (s) { return s.isLoadingDose; }).length;
+    var LOADING_DOSE_LABEL = intl.formatMessage({ id: "VARIABLE_DOSE_LOADING_DOSE_LABEL", defaultMessage: "Loading Dose" });
 
     var getStageDisplay = function (stage) {
-        if (stage.isLoadingDose) { return "Loading Dose"; }
+        if (stage.isLoadingDose) { return LOADING_DOSE_LABEL; }
         if (stage.sequence != null) { return String(stage.sequence - loadingDoseCount); }
         return stage.stageName || '';
     };
