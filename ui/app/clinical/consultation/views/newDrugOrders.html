@@ -102,10 +102,6 @@
             </div>
             <div class="button-group-wrapper">
                 <div class="button-group">
-                    <button class="disch-btn" ng-show="currentVisitType === 'IPD'" ng-click="toggleDischargeMedication(treatment)">
-                        <i class="fa fa-check" ng-show="treatment.isDischargeMedication"></i>
-                        {{ ::'DISCH_BUTTON' | translate }}
-                    </button>
                     <button ng-confirm-click="removeVariableDose($index)"
                             confirm-message="{{ 'REMOVE_CONFIRMATION_KEY' | translate }}">
                         <i class="fa fa-remove"></i>
