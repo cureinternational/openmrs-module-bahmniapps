@@ -11,12 +11,6 @@ angular.module('bahmni.clinical')
             $scope.remove = function (index) {
                 $rootScope.$broadcast("event:removeDrugOrder", index);
             };
-            $scope.editVariableDose = function (index) {
-                $rootScope.$broadcast('openVariableDoseModal', {
-                    editIndex: index,
-                    treatment: $scope.variableDoseTreatments[index]
-                });
-            };
             $scope.removeVariableDose = function (index) {
                 $scope.variableDoseTreatments.splice(index, 1);
             };
