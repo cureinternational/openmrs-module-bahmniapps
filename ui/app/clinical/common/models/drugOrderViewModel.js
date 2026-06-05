@@ -1,5 +1,7 @@
 'use strict';
 
+var MILLISECONDS_PER_DAY = 86400000;
+
 var constructDrugNameDisplayWithConcept = function (drug, concept) {
     if (!_.isEmpty(drug)) {
         if (drug.name) {
@@ -714,48 +716,61 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
     if (drugOrderResponse.dosingInstructionType === utils.FHIR_DOSING_INSTRUCTION_TYPE) {
         var fhirDosages = utils.parseFhirDosages(adminInstructionsStr) || [];
         viewModel.isVariableDoseOrder = true;
+        var FHIR_PROPERTY_MAPPING = {
+            drug: 'drug',
+            route: 'dosingInstructions.route',
+            durationUnit: 'durationUnits',
+            scheduledDate: 'effectiveStartDate',
+            duration: 'duration',
+            effectiveStopDate: 'effectiveStopDate',
+            totalDays: 'duration',
+            totalDosage: 'dosingInstructions.quantity',
+            totalDosageUnits: 'dosingInstructions.quantityUnits',
+            quantity: 'dosingInstructions.quantity',
+            quantityUnit: 'dosingInstructions.quantityUnits',
+            provider: 'provider',
+            creatorName: 'creatorName',
+            action: 'action',
+            careSetting: 'careSetting',
+            dateStopped: 'dateStopped',
+            uuid: 'uuid',
+            dateActivated: 'dateActivated',
+            encounterUuid: 'encounterUuid',
+            voided: 'voided',
+            visit: 'visit',
+            concept: 'concept',
+            drugNonCoded: 'drugNonCoded',
+            isDrugRetired: 'retired'
+        };
+        var FHIR_PROPERTY_DEFAULTS = {
+            totalDays: 0,
+            totalDosage: 0,
+            totalDosageUnits: '',
+            voided: false
+        };
+
+        Object.keys(FHIR_PROPERTY_MAPPING).forEach(function (vmKey) {
+            viewModel[vmKey] = _.get(drugOrderResponse, FHIR_PROPERTY_MAPPING[vmKey]) || FHIR_PROPERTY_DEFAULTS[vmKey];
+        });
+
         var cumulativeDays = 0;
         viewModel.stages = fhirDosages.map(function (dosage) {
             var stage = utils.fhirDosageToStage(dosage);
-            stage.startDate = new Date(new Date(drugOrderResponse.effectiveStartDate).getTime() + cumulativeDays * 86400000);
+            stage.startDate = new Date(new Date(drugOrderResponse.effectiveStartDate).getTime() + cumulativeDays * MILLISECONDS_PER_DAY);
             cumulativeDays += stage.durationDays || 0;
             return stage;
         });
         viewModel.stageCount = viewModel.stages.filter(function (s) {
             return s.stageName !== utils.LOADING_DOSE_STAGE_NAME;
         }).length;
-        viewModel.totalDays = drugOrderResponse.duration || 0;
-        viewModel.totalDosage = drugOrderResponse.dosingInstructions.quantity || 0;
-        viewModel.totalDosageUnits = drugOrderResponse.dosingInstructions.quantityUnits || '';
-        viewModel.drug = drugOrderResponse.drug;
         viewModel.drugName = drugOrderResponse.drug ? drugOrderResponse.drug.name : '';
         viewModel.drugForm = drugOrderResponse.drug && drugOrderResponse.drug.dosageForm
             ? drugOrderResponse.drug.dosageForm.display : '';
         viewModel.drugNameDisplay = constructDrugNameDisplayWithConcept(viewModel.drug, viewModel.concept) || viewModel.drugName;
-        viewModel.route = drugOrderResponse.dosingInstructions.route;
-        viewModel.durationUnit = drugOrderResponse.durationUnits;
-        viewModel.scheduledDate = drugOrderResponse.effectiveStartDate;
-        viewModel.duration = drugOrderResponse.duration;
-        viewModel.effectiveStopDate = drugOrderResponse.effectiveStopDate;
+        viewModel.isNonCodedDrug = !!drugOrderResponse.drugNonCoded;
         viewModel.asNeeded = false;
-        viewModel.quantity = drugOrderResponse.dosingInstructions.quantity;
-        viewModel.quantityUnit = drugOrderResponse.dosingInstructions.quantityUnits;
-        viewModel.provider = drugOrderResponse.provider;
-        viewModel.creatorName = drugOrderResponse.creatorName;
-        viewModel.action = drugOrderResponse.action;
-        viewModel.careSetting = drugOrderResponse.careSetting;
-        viewModel.dateStopped = drugOrderResponse.dateStopped;
-        viewModel.uuid = drugOrderResponse.uuid;
-        viewModel.dateActivated = drugOrderResponse.dateActivated;
-        viewModel.encounterUuid = drugOrderResponse.encounterUuid;
-        viewModel.voided = drugOrderResponse.voided || false;
-        viewModel.visit = drugOrderResponse.visit;
         viewModel.dosage = '';
         viewModel.orderNumber = drugOrderResponse.orderNumber && parseInt(drugOrderResponse.orderNumber.replace('ORD-', ''));
-        viewModel.drugNonCoded = drugOrderResponse.drugNonCoded;
-        viewModel.isNonCodedDrug = !!drugOrderResponse.drugNonCoded;
-        viewModel.concept = drugOrderResponse.concept;
-        viewModel.isDrugRetired = drugOrderResponse.retired;
         if (drugOrderResponse.orderGroup) {
             viewModel.orderGroupUuid = drugOrderResponse.orderGroup.uuid;
             viewModel.orderSetUuid = drugOrderResponse.orderGroup.orderSet && drugOrderResponse.orderGroup.orderSet.uuid;
