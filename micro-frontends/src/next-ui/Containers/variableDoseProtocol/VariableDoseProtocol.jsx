@@ -45,7 +45,7 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
                 kind="tertiary"
                 size="md"
                 renderIcon={Add16}
-                onClick={() => { setEditInitialValues(null); setIsSavedOrderEdit(false); setIsEditMode(false); setIsOpen(true); }}
+                onClick={() => { setEditInitialValues(null); setIsEditMode(false); setIsOpen(true); }}
                 className="variable-dose-trigger-btn"
                 style={{ width: "98%", fontSize: "1.1rem", lineHeight: "1em", whiteSpace: "nowrap" }}
             >
