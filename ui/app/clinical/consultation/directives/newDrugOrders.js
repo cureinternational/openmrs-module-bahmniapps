@@ -2,11 +2,17 @@
 
 angular.module('bahmni.clinical')
     .directive('newDrugOrders', ['messagingService', function (messagingService) {
-        var controller = function ($scope, $rootScope, appService) {
-            var allMedicinesConfig = appService.getAppDescriptor().getConfigValue("allMedicinesInPrescriptionAvailableForIPD");
-            $scope.allMedicinesInPrescriptionAvailableForIPD = allMedicinesConfig !== null ? allMedicinesConfig : true;
+        var controller = function ($scope, $rootScope) {
             $scope.edit = function (drugOrder, index) {
                 $rootScope.$broadcast("event:editDrugOrder", drugOrder, index);
+            };
+            $scope.toggleDischargeMedication = function (treatment) {
+                treatment.isDischargeMedication = !treatment.isDischargeMedication;
+                if (treatment.isDischargeMedication) {
+                    treatment.careSetting = Bahmni.Clinical.Constants.careSetting.outPatient;
+                } else if ($scope.currentVisitType === 'IPD') {
+                    treatment.careSetting = Bahmni.Clinical.Constants.careSetting.inPatient;
+                }
             };
             $scope.remove = function (index) {
                 $rootScope.$broadcast("event:removeDrugOrder", index);
@@ -100,7 +106,8 @@ angular.module('bahmni.clinical')
             scope: {
                 treatments: "=",
                 treatmentConfig: "=",
-                variableDoseTreatments: "="
+                variableDoseTreatments: "=",
+                currentVisitType: "@"
             },
             controller: controller
         };

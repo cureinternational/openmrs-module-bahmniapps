@@ -802,6 +802,62 @@ describe("drugOrderViewModel", function () {
             expect(drugOrderViewModel.additionalInstructions).toBe(null);
         });
 
+        it("should deserialize isDischargeMedication from administrationInstructions JSON", function () {
+            var drugOrder = {
+                "uuid": "disch-order-uuid",
+                "action": "NEW",
+                "careSetting": "Outpatient",
+                "orderType": "Drug Order",
+                "drug": {
+                    "form": "Tablet",
+                    "uuid": "8d7e3dc0-f4ad-400c-9468-5a9e2b1f4230",
+                    "name": "Paracetamol 500mg"
+                },
+                "dosingInstructions": {
+                    "quantity": 10,
+                    "route": "Orally",
+                    "frequency": "Once a day",
+                    "doseUnits": "Tablet",
+                    "asNeeded": false,
+                    "quantityUnits": "Tablet",
+                    "dose": 1,
+                    "administrationInstructions": "{\"instructions\":\"After food\",\"isDischargeMedication\":true}",
+                    "numberOfRefills": null
+                },
+                "durationUnits": "Days",
+                "dateActivated": 1410322624000,
+                "effectiveStartDate": 1410322624000,
+                "duration": 5,
+                "provider": { name: "Dr. Test" },
+                "orderAttributes": []
+            };
+            var drugOrderViewModel = Bahmni.Clinical.DrugOrderViewModel.createFromContract(drugOrder);
+
+            expect(drugOrderViewModel.isDischargeMedication).toBe(true);
+        });
+
+        it("should default isDischargeMedication to false when absent from administrationInstructions JSON", function () {
+            var drugOrder = {
+                "uuid": "regular-order-uuid",
+                "action": "NEW",
+                "careSetting": "Inpatient",
+                "orderType": "Drug Order",
+                "drug": { "form": "Tablet", "uuid": "8d7e3dc0-f4ad-400c-9468-5a9e2b1f4230", "name": "Paracetamol 500mg" },
+                "dosingInstructions": {
+                    "quantity": 10, "route": "Orally", "frequency": "Once a day",
+                    "doseUnits": "Tablet", "asNeeded": false, "quantityUnits": "Tablet", "dose": 1,
+                    "administrationInstructions": "{\"instructions\":\"After food\"}",
+                    "numberOfRefills": null
+                },
+                "durationUnits": "Days", "dateActivated": 1410322624000,
+                "effectiveStartDate": 1410322624000, "duration": 5,
+                "provider": { name: "Dr. Test" }, "orderAttributes": []
+            };
+            var drugOrderViewModel = Bahmni.Clinical.DrugOrderViewModel.createFromContract(drugOrder);
+
+            expect(drugOrderViewModel.isDischargeMedication).toBe(false);
+        });
+
 
     });
 

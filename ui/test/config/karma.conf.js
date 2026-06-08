@@ -2,7 +2,7 @@ module.exports = function (config) {
     config.set({
         basePath: '../..',
         frameworks: ['jasmine'],
-        browsers: ['Firefox'],
+        browsers: ['ChromeHeadless'],
         browserNoActivityTimeout: 100000,
         autoWatch: false,
         singleRun: true,
