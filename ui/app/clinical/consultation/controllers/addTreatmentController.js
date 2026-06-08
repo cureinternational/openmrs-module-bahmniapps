@@ -455,6 +455,25 @@ angular.module('bahmni.clinical')
                 return cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient);
             };
 
+            var buildVdpProxyOrders = function (variableDoseTreatments) {
+                return (variableDoseTreatments || []).map(function (vdp) {
+                    var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
+                    var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
+                    return {
+                        getDisplayName: function () { return vdp.drugName; },
+                        effectiveStartDate: start,
+                        effectiveStopDate: stop,
+                        careSetting: vdp.careSetting,
+                        overlappingScheduledWith: function (other) {
+                            if (!other.effectiveStopDate && !stop) { return true; }
+                            if (!other.effectiveStopDate) { return DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1; }
+                            if (!stop) { return DateUtil.diffInSeconds(start, other.effectiveStartDate) > -1 && DateUtil.diffInSeconds(start, other.effectiveStopDate) < 1; }
+                            return DateUtil.diffInSeconds(start, other.effectiveStopDate) <= 0 && DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1;
+                        }
+                    };
+                });
+            };
+
             var getConflictingDrugOrder = function (newDrugOrder) {
                 var allDrugOrders = $scope.treatments.concat($scope.orderSetTreatments);
                 allDrugOrders = _.reject(allDrugOrders, newDrugOrder);
@@ -467,24 +486,7 @@ angular.module('bahmni.clinical')
                 }
                 existingDrugOrders = existingDrugOrders.concat(unsavedNotBeingEditedOrders);
 
-                var dateUtil = Bahmni.Common.Util.DateUtil;
-                var vdpOrders = ($scope.consultation.variableDoseTreatments || []).map(function (vdp) {
-                    var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
-                    var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
-                    return {
-                        getDisplayName: function () { return vdp.drugName; },
-                        effectiveStartDate: start,
-                        effectiveStopDate: stop,
-                        careSetting: vdp.careSetting,
-                        overlappingScheduledWith: function (other) {
-                            if (!other.effectiveStopDate && !stop) { return true; }
-                            if (!other.effectiveStopDate) { return dateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1; }
-                            if (!stop) { return dateUtil.diffInSeconds(start, other.effectiveStartDate) > -1 && dateUtil.diffInSeconds(start, other.effectiveStopDate) < 1; }
-                            return dateUtil.diffInSeconds(start, other.effectiveStopDate) <= 0 && dateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1;
-                        }
-                    };
-                });
-                existingDrugOrders = existingDrugOrders.concat(vdpOrders);
+                existingDrugOrders = existingDrugOrders.concat(buildVdpProxyOrders($scope.consultation.variableDoseTreatments));
 
                 var potentiallyOverlappingOrders = existingDrugOrders.filter(function (drugOrder) {
                     return (drugOrder.getDisplayName() === newDrugOrder.getDisplayName() && drugOrder.overlappingScheduledWith(newDrugOrder) && newDrugOrder.careSetting === drugOrder.careSetting);
@@ -1025,32 +1027,16 @@ angular.module('bahmni.clinical')
                                 ? Bahmni.Clinical.Constants.careSetting.inPatient
                                 : Bahmni.Clinical.Constants.careSetting.outPatient;
                             var newVdpStart = data.startDate ? new Date(data.startDate) : new Date();
-                            var newVdpTotalDays = (data.stages || []).reduce(function (sum, s) {
+                            var loadingDoseDays = (data.loadingDose && data.loadingDose.dose) ? 1 : 0;
+                            var newVdpTotalDays = loadingDoseDays + (data.stages || []).reduce(function (sum, s) {
                                 return sum + Bahmni.Clinical.FhirDosingUtils.normalizeToDays(s.duration, s.durationUnit);
                             }, 0);
                             var newVdpOrder = {
                                 effectiveStartDate: newVdpStart,
                                 effectiveStopDate: newVdpTotalDays > 0 ? new Date(newVdpStart.getTime() + newVdpTotalDays * 86400000) : null
                             };
-                            var vdpEntries = ($scope.consultation.variableDoseTreatments || []).map(function (vdp) {
-                                var dateUtil = Bahmni.Common.Util.DateUtil;
-                                var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
-                                var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
-                                return {
-                                    getDisplayName: function () { return vdp.drugName; },
-                                    careSetting: vdp.careSetting,
-                                    effectiveStartDate: start,
-                                    effectiveStopDate: stop,
-                                    overlappingScheduledWith: function (other) {
-                                        if (!other.effectiveStopDate && !stop) { return true; }
-                                        if (!other.effectiveStopDate) { return dateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1; }
-                                        if (!stop) { return dateUtil.diffInSeconds(start, other.effectiveStartDate) > -1 && dateUtil.diffInSeconds(start, other.effectiveStopDate) < 1; }
-                                        return dateUtil.diffInSeconds(start, other.effectiveStopDate) <= 0 && dateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1;
-                                    }
-                                };
-                            });
                             var conflictingActiveOrder = _.find(
-                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(vdpEntries),
+                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(buildVdpProxyOrders($scope.consultation.variableDoseTreatments)),
                                 function (order) {
                                     return order.getDisplayName && order.getDisplayName() === vdpDrugName &&
                                            order.careSetting === vdpCareSetting &&
