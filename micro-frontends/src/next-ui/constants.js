@@ -50,6 +50,7 @@ export const FHIR_TASK_STATUS_TO_UI_STATUS = {
     ACCEPTED: 'In Progress',
     ONHOLD: 'On Hold',
     COMPLETED: 'Completed',
+    READY: 'Ready for Pickup',
 };
 export const FORM_COMMENT = "FORM_COMMENT";
 export const FORM_APPROVAL = "FORM_APPROVAL";
