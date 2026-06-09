@@ -728,6 +728,9 @@ concept-set {
           }
 
         }
+        &.has-draft-indicator {
+          border-left: 3px solid #FFA500;
+        }
       }
     }
   }
