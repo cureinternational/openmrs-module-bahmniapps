@@ -2457,22 +2457,18 @@ describe('ConceptSetPageController', function () {
                 var observationValue;
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                scope.consultation.selectedObsTemplate = [{
-                    uuid: conceptUuid,
-                    component: {
-                        getValue: function () {
-                            return {observations: [{value: observationValue}]};
-                        }
-                    },
-                    observations: []
-                }];
+                // Add component.getValue to the existing template object (same reference captured by WeakMap at init)
+                var template = _.find(scope.consultation.selectedObsTemplate, function (t) { return t.uuid === conceptUuid; });
+                template.component = {
+                    getValue: function () { return {observations: [{value: observationValue}]}; }
+                };
 
                 scope.$digest();
-                expect(scope.consultation.selectedObsTemplate[0].isDraftIndicator).toBeFalsy();
+                expect(template.isDraftIndicator).toBeFalsy();
 
                 observationValue = 'some-value';
                 scope.$digest();
-                expect(scope.consultation.selectedObsTemplate[0].isDraftIndicator).toBe(true);
+                expect(template.isDraftIndicator).toBe(true);
             });
 
             it('should not set isDraftIndicator on templates that have not changed', function () {
@@ -2485,25 +2481,18 @@ describe('ConceptSetPageController', function () {
                 var formAValue;
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                scope.consultation.selectedObsTemplate = [
-                    {
-                        uuid: 'uuid-a',
-                        component: {getValue: function () { return {observations: [{value: formAValue}]}; }},
-                        observations: []
-                    },
-                    {
-                        uuid: 'uuid-b',
-                        observations: [{value: null}]
-                    }
-                ];
+                // Add component.getValue to existing template objects (same references captured by WeakMap at init)
+                var templateA = _.find(scope.consultation.selectedObsTemplate, function (t) { return t.uuid === 'uuid-a'; });
+                var templateB = _.find(scope.consultation.selectedObsTemplate, function (t) { return t.uuid === 'uuid-b'; });
+                templateA.component = {getValue: function () { return {observations: [{value: formAValue}]}; }};
 
                 scope.$digest();
 
                 formAValue = 'changed';
                 scope.$digest();
 
-                expect(scope.consultation.selectedObsTemplate[0].isDraftIndicator).toBe(true);
-                expect(scope.consultation.selectedObsTemplate[1].isDraftIndicator).toBeFalsy();
+                expect(templateA.isDraftIndicator).toBe(true);
+                expect(templateB.isDraftIndicator).toBeFalsy();
             });
 
             it('should set isDraftIndicator on concept-set template when draft is resumed on direct navigation', function () {

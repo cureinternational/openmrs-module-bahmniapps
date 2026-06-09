@@ -398,7 +398,7 @@ angular.module('bahmni.clinical')
 
             var dirtyTrackingState = {
                 cleanState: null,
-                templateCleanStates: {},
+                templateCleanStates: new WeakMap(),
                 initialized: false,
                 watchDeregister: null,
                 postSaveRefreshPending: false,
@@ -407,28 +407,22 @@ angular.module('bahmni.clinical')
                 isSaving: false
             };
 
-            var getTemplateKey = function (template) {
-                return template.uuid || template.formUuid || template.label;
-            };
-
             var captureTemplateCleanStates = function () {
-                dirtyTrackingState.templateCleanStates = {};
+                dirtyTrackingState.templateCleanStates = new WeakMap();
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
-                    dirtyTrackingState.templateCleanStates[getTemplateKey(template)] =
-                        formDirtyStateService.getObsValuesForTemplate(template);
+                    dirtyTrackingState.templateCleanStates.set(template,
+                        formDirtyStateService.getObsValuesForTemplate(template));
                 });
             };
 
             var updateTemplateDirtyIndicators = function () {
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
                     if (template.isDraftIndicator) { return; }
-                    var key = getTemplateKey(template);
-                    if (dirtyTrackingState.templateCleanStates[key] === undefined) {
-                        dirtyTrackingState.templateCleanStates[key] =
-                            formDirtyStateService.getObsValuesForTemplate(template);
-                    }
                     var currentVal = formDirtyStateService.getObsValuesForTemplate(template);
-                    if (currentVal !== dirtyTrackingState.templateCleanStates[key]) {
+                    if (!dirtyTrackingState.templateCleanStates.has(template)) {
+                        dirtyTrackingState.templateCleanStates.set(template, currentVal);
+                    }
+                    if (currentVal !== dirtyTrackingState.templateCleanStates.get(template)) {
                         template.isDraftIndicator = true;
                     }
                 });
