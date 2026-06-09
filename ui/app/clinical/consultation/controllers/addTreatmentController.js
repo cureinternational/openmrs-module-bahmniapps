@@ -1112,6 +1112,11 @@ angular.module('bahmni.clinical')
                                         });
                                     }
 
+                                    var stageFrequencyPerDay = function (frequencyName) {
+                                        var freq = _.find(treatmentConfig.getFrequencies(), function (f) { return f.name === frequencyName; });
+                                        return freq ? (freq.frequencyPerDay || 1) : 1;
+                                    };
+
                                     calculatedStages.forEach(function (cs, idx) {
                                         var s = cs.original;
                                         var stageDays = Bahmni.Clinical.FhirDosingUtils.normalizeToDays(s.duration, s.durationUnit);
@@ -1122,6 +1127,7 @@ angular.module('bahmni.clinical')
                                             dose: cs.calculatedDose,
                                             unit: cs.doseUnit,
                                             frequency: s.frequency || '',
+                                            frequencyPerDay: stageFrequencyPerDay(s.frequency),
                                             duration: s.duration,
                                             durationUnit: s.durationUnit || '',
                                             instructions: s.instructions || '',
@@ -1135,7 +1141,7 @@ angular.module('bahmni.clinical')
 
                                     var totalDosage = calculatedStages.reduce(function (sum, cs) {
                                         var s = cs.original;
-                                        return sum + (parseFloat(cs.calculatedDose) || 0) * Bahmni.Clinical.FhirDosingUtils.normalizeToDays(s.duration, s.durationUnit);
+                                        return sum + (parseFloat(cs.calculatedDose) || 0) * stageFrequencyPerDay(s.frequency) * Bahmni.Clinical.FhirDosingUtils.normalizeToDays(s.duration, s.durationUnit);
                                     }, 0);
                                     if (data.loadingDose && calculatedLoadingDose) {
                                         totalDosage += parseFloat(calculatedLoadingDose.dose || 0);
