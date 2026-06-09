@@ -8,9 +8,13 @@ import { VariableDoseProtocolModalInner } from "../../Components/VariableDosePro
 
 function VariableDoseProtocolInner({ hostData, hostApi }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [editInitialValues, setEditInitialValues] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const handleClose = () => {
         setIsOpen(false);
+        setEditInitialValues(null);
+        setIsEditMode(false);
         hostApi?.onClose?.();
     };
 
@@ -19,7 +23,21 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
         hostApi?.onSave?.(data);
     };
 
-    const augmentedHostApi = { ...hostApi, onClose: handleClose, onSave: handleSave };
+    const augmentedHostApi = {
+        ...hostApi,
+        onClose: handleClose,
+        onSave: handleSave,
+        openModal: (initialValues, isSavedOrder, editMode) => {
+            setEditInitialValues(initialValues || null);
+            setIsEditMode(editMode || false);
+            setIsOpen(true);
+        }
+    };
+
+    // Expose openModal on the hostApi reference so AngularJS can call it directly.
+    if (hostApi) {
+        hostApi.openModal = augmentedHostApi.openModal;
+    }
 
     return (
         <>
@@ -27,7 +45,7 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
                 kind="tertiary"
                 size="md"
                 renderIcon={Add16}
-                onClick={() => setIsOpen(true)}
+                onClick={() => { setEditInitialValues(null); setIsSavedOrderEdit(false); setIsEditMode(false); setIsOpen(true); }}
                 className="variable-dose-trigger-btn"
                 style={{ width: "98%", fontSize: "1.1rem", lineHeight: "1em", whiteSpace: "nowrap" }}
             >
@@ -38,7 +56,7 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
             </Button>
             {isOpen && (
                 <VariableDoseProtocolModalInner
-                    hostData={hostData}
+                    hostData={{ ...hostData, initialValues: editInitialValues, editMode: isEditMode }}
                     hostApi={augmentedHostApi}
                 />
             )}
