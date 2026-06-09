@@ -1,9 +1,9 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .factory('visitActionsService', ['$http', 'printer', 'labOrderResultService', function ($http, printer, labOrderResultService) {
-        var primaryIdentifierTypeUuid = '8d79403a-c2cc-11de-8d13-0010c6dffd0f';
+    .factory('visitActionsService', ['$http', 'printer', 'labOrderResultService', 'appService', function ($http, printer, labOrderResultService, appService) {
         var fetchExtraIdentifiers = function (patient) {
+            var primaryIdentifierTypeUuid = appService.getAppDescriptor().getConfigValue('primaryIdentifierTypeUuid');
             return $http.get('/openmrs/ws/rest/v1/patient/' + patient.uuid + '/identifier', {
                 params: { v: 'full' }
             }).then(function (response) {

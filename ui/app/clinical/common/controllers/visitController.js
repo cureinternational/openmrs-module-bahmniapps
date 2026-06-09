@@ -189,7 +189,7 @@ angular.module('bahmni.clinical')
                     });
                     promises.push(allergyPromise);
 
-                    var primaryIdentifierTypeUuid = '8d79403a-c2cc-11de-8d13-0010c6dffd0f';
+                    var primaryIdentifierTypeUuid = appService.getAppDescriptor().getConfigValue('primaryIdentifierTypeUuid');
                     Promise.all(promises)
                     .then(function () {
                         return $http.get('/openmrs/ws/rest/v1/patient/' + $scope.patient.uuid + '/identifier', {

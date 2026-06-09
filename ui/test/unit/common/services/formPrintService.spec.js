@@ -1,7 +1,7 @@
 'use strict';
 
 describe('FormPrintService', function () {
-    var formPrintService, scope, q, printer, diagnosisService, observationsService, encounterService, visitService, allergyService;
+    var formPrintService, scope, q, printer, diagnosisService, observationsService, encounterService, visitService, allergyService, httpBackend;
 
     beforeEach(function () {
         module('bahmni.common.util');
@@ -12,16 +12,23 @@ describe('FormPrintService', function () {
             encounterService = jasmine.createSpyObj('encounterService', ['findByEncounterUuid']);
             visitService = jasmine.createSpyObj('visitService', ['getVisitSummary']);
             allergyService = jasmine.createSpyObj('allergyService', ['getAllergyForPatient']);
+            var mockAppDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+            mockAppDescriptor.getConfigValue.and.returnValue(undefined);
+            var mockAppService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
+            mockAppService.getAppDescriptor.and.returnValue(mockAppDescriptor);
             $provide.value('printer', printer);
             $provide.value('diagnosisService', diagnosisService);
             $provide.value('observationsService', observationsService);
             $provide.value('encounterService', encounterService);
             $provide.value('visitService', visitService);
             $provide.value('allergyService', allergyService);
+            $provide.value('appService', mockAppService);
         });
 
-        inject(['formPrintService', function (formPrintServiceInjected) {
+        inject(['formPrintService', '$httpBackend', function (formPrintServiceInjected, $httpBackend) {
             formPrintService = formPrintServiceInjected;
+            httpBackend = $httpBackend;
+            httpBackend.whenGET(/\/openmrs\/ws\/rest\/v1\/patient\/.*\/identifier/).respond(200, { results: [] });
         }]);
     });
 

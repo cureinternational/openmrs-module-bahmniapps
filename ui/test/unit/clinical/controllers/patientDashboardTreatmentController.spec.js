@@ -3,6 +3,14 @@
 describe("PatientDashboardTreatmentController", function () {
     beforeEach(module('bahmni.clinical'));
 
+    beforeEach(module(function ($provide) {
+        var mockAppDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue']);
+        mockAppDescriptor.getConfigValue.and.returnValue(undefined);
+        var mockAppService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
+        mockAppService.getAppDescriptor.and.returnValue(mockAppDescriptor);
+        $provide.value('appService', mockAppService);
+    }));
+
     var scope, ngDialog, treatmentService;
 
     var treatmentConfigParams = {

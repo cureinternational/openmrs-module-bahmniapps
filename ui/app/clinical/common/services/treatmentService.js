@@ -220,7 +220,7 @@ angular.module('bahmni.clinical')
                     allergies: allergiesData,
                     visitDate: visitDate
                 };
-                var primaryIdentifierTypeUuid = '8d79403a-c2cc-11de-8d13-0010c6dffd0f';
+                var primaryIdentifierTypeUuid = appService.getAppDescriptor().getConfigValue('primaryIdentifierTypeUuid');
                 $http.get('/openmrs/ws/rest/v1/patient/' + patient.uuid + '/identifier', {
                     params: { v: 'full' }
                 }).then(function (identifierResponse) {
