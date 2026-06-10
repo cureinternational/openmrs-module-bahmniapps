@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.common.util')
-    .factory('formPrintService', ['$http', '$q', 'printer', 'diagnosisService', 'observationsService', 'encounterService', 'visitService', 'allergyService',
-        function ($http, $q, printer, diagnosisService, observationsService, encounterService, visitService, allergyService) {
+    .factory('formPrintService', ['$http', '$q', 'printer', 'diagnosisService', 'observationsService', 'encounterService', 'visitService', 'allergyService', 'appService',
+        function ($http, $q, printer, diagnosisService, observationsService, encounterService, visitService, allergyService, appService) {
             var printForm = function (printData, encounterUuid, location) {
                 var templateUrl = printData.printConfig.templateUrl;
                 if (templateUrl) {
@@ -66,6 +66,31 @@ angular.module('bahmni.common.util')
                         visitSummary = response ? response.data : undefined;
                     })
                     .then(function () {
+                        return $http.get('/openmrs/ws/rest/v1/patient/' + printData.patient.uuid + '/identifier', {
+                            params: { v: 'full' }
+                        });
+                    })
+                    .then(function (identifierResponse) {
+                        var primaryIdentifierTypeUuid = appService.getAppDescriptor().getConfigValue('primaryIdentifierTypeUuid');
+                        printData.patient.extraIdentifiers = (identifierResponse.data.results || [])
+                            .filter(function (id) { return !id.voided; })
+                            .map(function (id) {
+                                return {
+                                    identifier: id.identifier,
+                                    preferred: id.preferred,
+                                    voided: id.voided,
+                                    identifierType: {
+                                        uuid: id.identifierType.uuid,
+                                        name: id.identifierType.display || id.identifierType.name,
+                                        display: id.identifierType.display || id.identifierType.name
+                                    }
+                                };
+                            })
+                            .filter(function (id) {
+                                return id.identifierType.uuid !== primaryIdentifierTypeUuid;
+                            });
+                    })
+                    .then(function () {
                         printData.additionalInfo = {};
                         printData.additionalInfo.visitType = visitSummary ? visitSummary.visitType : null;
                         printData.additionalInfo.currentDate = new Date();
@@ -81,7 +106,29 @@ angular.module('bahmni.common.util')
                         console.error("Error fetching details for print: ", error);
                     });
                 } else {
-                    printer.print("../clinical/common/views/formPrint.html", printData);
+                    var primaryIdentifierTypeUuid = appService.getAppDescriptor().getConfigValue('primaryIdentifierTypeUuid');
+                    $http.get('/openmrs/ws/rest/v1/patient/' + printData.patient.uuid + '/identifier', {
+                        params: { v: 'full' }
+                    }).then(function (identifierResponse) {
+                        printData.patient.extraIdentifiers = (identifierResponse.data.results || [])
+                            .filter(function (id) { return !id.voided; })
+                            .map(function (id) {
+                                return {
+                                    identifier: id.identifier,
+                                    preferred: id.preferred,
+                                    voided: id.voided,
+                                    identifierType: {
+                                        uuid: id.identifierType.uuid,
+                                        name: id.identifierType.display || id.identifierType.name,
+                                        display: id.identifierType.display || id.identifierType.name
+                                    }
+                                };
+                            })
+                            .filter(function (id) {
+                                return id.identifierType.uuid !== primaryIdentifierTypeUuid;
+                            });
+                        printer.print("../clinical/common/views/formPrint.html", printData);
+                    });
                 }
             };
 

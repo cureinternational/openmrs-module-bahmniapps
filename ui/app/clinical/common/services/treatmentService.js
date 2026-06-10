@@ -220,7 +220,29 @@ angular.module('bahmni.clinical')
                     allergies: allergiesData,
                     visitDate: visitDate
                 };
-                printer.print(templateUrl, printData, fileName);
+                var primaryIdentifierTypeUuid = appService.getAppDescriptor().getConfigValue('primaryIdentifierTypeUuid');
+                $http.get('/openmrs/ws/rest/v1/patient/' + patient.uuid + '/identifier', {
+                    params: { v: 'full' }
+                }).then(function (identifierResponse) {
+                    patient.extraIdentifiers = (identifierResponse.data.results || [])
+                        .filter(function (id) { return !id.voided; })
+                        .map(function (id) {
+                            return {
+                                identifier: id.identifier,
+                                preferred: id.preferred,
+                                voided: id.voided,
+                                identifierType: {
+                                    uuid: id.identifierType.uuid,
+                                    name: id.identifierType.display || id.identifierType.name,
+                                    display: id.identifierType.display || id.identifierType.name
+                                }
+                            };
+                        })
+                        .filter(function (id) {
+                            return id.identifierType.uuid !== primaryIdentifierTypeUuid;
+                        });
+                    printer.print(templateUrl, printData, fileName);
+                });
             }
         };
 
