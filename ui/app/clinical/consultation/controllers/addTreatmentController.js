@@ -455,7 +455,7 @@ angular.module('bahmni.clinical')
                 return cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient);
             };
 
-            var buildVdpProxyOrders = function (variableDoseTreatments) {
+            var buildVdpOrdersForConflictCheck = function (variableDoseTreatments) {
                 return (variableDoseTreatments || []).map(function (vdp) {
                     var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
                     var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
@@ -486,7 +486,7 @@ angular.module('bahmni.clinical')
                 }
                 existingDrugOrders = existingDrugOrders.concat(unsavedNotBeingEditedOrders);
 
-                existingDrugOrders = existingDrugOrders.concat(buildVdpProxyOrders($scope.consultation.variableDoseTreatments));
+                existingDrugOrders = existingDrugOrders.concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments));
 
                 var potentiallyOverlappingOrders = existingDrugOrders.filter(function (drugOrder) {
                     return (drugOrder.getDisplayName() === newDrugOrder.getDisplayName() && drugOrder.overlappingScheduledWith(newDrugOrder) && newDrugOrder.careSetting === drugOrder.careSetting);
@@ -1036,7 +1036,7 @@ angular.module('bahmni.clinical')
                                 effectiveStopDate: newVdpTotalDays > 0 ? new Date(newVdpStart.getTime() + newVdpTotalDays * 86400000) : null
                             };
                             var conflictingActiveOrder = _.find(
-                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(buildVdpProxyOrders($scope.consultation.variableDoseTreatments)),
+                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments)),
                                 function (order) {
                                     return order.getDisplayName && order.getDisplayName() === vdpDrugName &&
                                            order.careSetting === vdpCareSetting &&
