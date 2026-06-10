@@ -3,6 +3,7 @@
 angular.module('bahmni.clinical')
     .factory('lmpWarningHelper', ['patientService', 'clinicalAppConfigService', function (patientService, clinicalAppConfigService) {
         var lmpDataCache = {}; // Cache: { patientUuid: lmpData }
+        var currentPatientUuid = null;
 
         var updateBanner = function (scope, lmpData, config) {
             scope.showLmpWarning = lmpData && lmpData.daysSinceLmp > config.thresholdDays;
@@ -24,6 +25,8 @@ angular.module('bahmni.clinical')
                     return;
                 }
 
+                currentPatientUuid = patient.uuid;
+
                 var config = clinicalAppConfigService.getLmpWarningConfig();
                 if (!config.conceptName || !config.thresholdDays) {
                     scope.showLmpWarning = false;
@@ -43,6 +46,14 @@ angular.module('bahmni.clinical')
                     updateBanner(scope, lmpData, config);
                 }).catch(function () {
                     scope.showLmpWarning = false;
+                });
+            },
+
+            listenForSaveEvents: function (scope) {
+                scope.$parent.$on('event:changes-saved', function () {
+                    if (currentPatientUuid) {
+                        delete lmpDataCache[currentPatientUuid];
+                    }
                 });
             },
 

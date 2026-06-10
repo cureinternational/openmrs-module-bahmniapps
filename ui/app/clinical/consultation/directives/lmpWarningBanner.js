@@ -8,6 +8,7 @@ angular.module('bahmni.clinical')
             templateUrl: 'consultation/views/lmpWarningBanner.html',
             controller: ['$scope', function ($scope) {
                 lmpWarningHelper.initializeLmpWarning($scope);
+                lmpWarningHelper.listenForSaveEvents($scope);
                 $scope.dismissLmpWarning = function () {
                     lmpWarningHelper.dismissLmpWarning($scope);
                 };
