@@ -69,7 +69,7 @@ angular.module('bahmni.common.patient')
             if (!patientUuid || !angular.isString(patientUuid) || !conceptName) {
                 return $q.when(null);
             }
-            var url = Bahmni.Common.Constants.openmrsObsUrl + "?patient=" + patientUuid + "&concept=" + encodeURIComponent(conceptName) + "&limit=1";
+            var url = Bahmni.Common.Constants.openmrsObsUrl + "?patient=" + patientUuid + "&concept=" + encodeURIComponent(conceptName) + "&v=custom:(uuid,value,display,auditInfo:(dateCreated))";
 
             return $http.get(url, {
                 withCredentials: true
@@ -78,7 +78,11 @@ angular.module('bahmni.common.patient')
                     return null;
                 }
 
-                var obs = response.data.results[0];
+                var sortedObs = response.data.results.sort(function (a, b) {
+                    return new Date(b.auditInfo.dateCreated) - new Date(a.auditInfo.dateCreated);
+                });
+
+                var obs = sortedObs[0];
                 var lmpDateStr = obs.value || (obs.display && obs.display.match(/(\d{4}-\d{2}-\d{2})/) || [])[1];
 
                 if (!lmpDateStr) {

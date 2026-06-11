@@ -38,16 +38,17 @@ describe('patientService', function () {
     });
 
     describe('getPatientLmpData', function () {
-        it('should fetch and return LMP data successfully', function () {
+        it('should fetch and return LMP data for single obs', function () {
             var patientUuid = 'patient-uuid-123';
             var conceptName = 'LMP Date';
             var lmpResponse = {
                 results: [{
-                    value: '2026-04-10'
+                    value: '2026-04-10',
+                    auditInfo: { dateCreated: '2026-04-10T10:00:00.000+0000' }
                 }]
             };
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-123&concept=LMP%20Date&limit=1/).respond(lmpResponse);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-123&concept=LMP%20Date/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data).toBeTruthy();
@@ -58,12 +59,42 @@ describe('patientService', function () {
             mockBackend.flush();
         });
 
+        it('should return the most recently created obs when multiple obs exist', function () {
+            var patientUuid = 'patient-uuid-multi';
+            var conceptName = 'LMP Date';
+            var lmpResponse = {
+                results: [
+                    {
+                        value: '2026-02-01',
+                        auditInfo: { dateCreated: '2026-06-11T09:23:25.000+0000' }
+                    },
+                    {
+                        value: '2026-05-06',
+                        auditInfo: { dateCreated: '2026-06-11T09:52:20.000+0000' }
+                    },
+                    {
+                        value: '2026-05-01',
+                        auditInfo: { dateCreated: '2026-06-11T09:28:45.000+0000' }
+                    }
+                ]
+            };
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-multi&concept=LMP%20Date/).respond(lmpResponse);
+
+            patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
+                expect(data).toBeTruthy();
+                expect(data.lmpDate).toBe('2026-05-06');
+            });
+
+            mockBackend.flush();
+        });
+
         it('should return null when no observations found', function () {
             var patientUuid = 'patient-uuid-456';
             var conceptName = 'LMP Date';
             var emptyResponse = {results: []};
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-456&concept=LMP%20Date&limit=1/).respond(emptyResponse);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-456&concept=LMP%20Date/).respond(emptyResponse);
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data).toBeNull();
@@ -94,11 +125,37 @@ describe('patientService', function () {
             var conceptName = 'LMP Date';
             var responseWithoutValue = {
                 results: [{
-                    value: null
+                    value: null,
+                    auditInfo: { dateCreated: '2026-06-11T09:00:00.000+0000' }
                 }]
             };
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-789&concept=LMP%20Date&limit=1/).respond(responseWithoutValue);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-789&concept=LMP%20Date/).respond(responseWithoutValue);
+
+            patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
+                expect(data).toBeNull();
+            });
+
+            mockBackend.flush();
+        });
+
+        it('should return null when LMP date is in the future', function () {
+            var patientUuid = 'patient-uuid-future';
+            var conceptName = 'LMP Date';
+            var futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + 5);
+            var futureDateStr = futureDate.getFullYear() + '-' +
+                String(futureDate.getMonth() + 1).padStart(2, '0') + '-' +
+                String(futureDate.getDate()).padStart(2, '0');
+
+            var lmpResponse = {
+                results: [{
+                    value: futureDateStr,
+                    auditInfo: { dateCreated: '2026-06-11T09:00:00.000+0000' }
+                }]
+            };
+
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-future&concept=LMP%20Date/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data).toBeNull();
@@ -111,7 +168,7 @@ describe('patientService', function () {
             var patientUuid = 'patient-uuid-error';
             var conceptName = 'LMP Date';
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-error&concept=LMP%20Date&limit=1/).respond(500, 'Server Error');
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-error&concept=LMP%20Date/).respond(500, 'Server Error');
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data).toBeNull();
@@ -120,7 +177,7 @@ describe('patientService', function () {
             mockBackend.flush();
         });
 
-        it('should include daysSinceLmp in returned data', function () {
+        it('should include correct daysSinceLmp in returned data', function () {
             var patientUuid = 'patient-uuid-with-days';
             var conceptName = 'LMP Date';
             var thirtyDaysAgo = new Date();
@@ -131,11 +188,12 @@ describe('patientService', function () {
 
             var lmpResponse = {
                 results: [{
-                    value: lmpDateStr
+                    value: lmpDateStr,
+                    auditInfo: { dateCreated: '2026-06-11T09:00:00.000+0000' }
                 }]
             };
 
-            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs\?patient=patient-uuid-with-days&concept=LMP%20Date&limit=1/).respond(lmpResponse);
+            mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-with-days&concept=LMP%20Date/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data.lmpDate).toBe(lmpDateStr);
