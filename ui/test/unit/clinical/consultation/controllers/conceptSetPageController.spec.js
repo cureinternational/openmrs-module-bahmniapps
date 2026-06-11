@@ -2449,7 +2449,7 @@ describe('ConceptSetPageController', function () {
                 timeoutMock.cancel = jasmine.createSpy('cancel');
             });
 
-            it('should set isDraftIndicator on a template when its observations change', function () {
+            it('should set hasUnsavedFormObservations on a template when its observations change', function () {
                 var conceptUuid = 'concept-uuid-indicator';
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'Test Form'}, uuid: conceptUuid}]}]});
                 mockformService({});
@@ -2464,14 +2464,14 @@ describe('ConceptSetPageController', function () {
                 };
 
                 scope.$digest();
-                expect(template.isDraftIndicator).toBeFalsy();
+                expect(template.hasUnsavedFormObservations).toBeFalsy();
 
                 observationValue = 'some-value';
                 scope.$digest();
-                expect(template.isDraftIndicator).toBe(true);
+                expect(template.hasUnsavedFormObservations).toBe(true);
             });
 
-            it('should not set isDraftIndicator on templates that have not changed', function () {
+            it('should not set hasUnsavedFormObservations on templates that have not changed', function () {
                 mockConceptSetService({results: [{setMembers: [
                     {name: {name: 'Form A'}, uuid: 'uuid-a'},
                     {name: {name: 'Form B'}, uuid: 'uuid-b'}
@@ -2491,11 +2491,11 @@ describe('ConceptSetPageController', function () {
                 formAValue = 'changed';
                 scope.$digest();
 
-                expect(templateA.isDraftIndicator).toBe(true);
-                expect(templateB.isDraftIndicator).toBeFalsy();
+                expect(templateA.hasUnsavedFormObservations).toBe(true);
+                expect(templateB.hasUnsavedFormObservations).toBeFalsy();
             });
 
-            it('should set isDraftIndicator on concept-set template when draft is resumed on direct navigation', function () {
+            it('should set hasUnsavedFormObservations on concept-set template when draft is resumed on direct navigation', function () {
                 var conceptUuid = 'concept-uuid-resume';
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'Resume Form'}, uuid: conceptUuid}]}]});
                 mockformService({});
@@ -2519,10 +2519,10 @@ describe('ConceptSetPageController', function () {
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
                 var template = _.find(scope.allTemplates, function (t) { return t.uuid === conceptUuid; });
-                expect(template.isDraftIndicator).toBe(true);
+                expect(template.hasUnsavedFormObservations).toBe(true);
             });
 
-            it('should set isDraftIndicator on Form2 template when draft is resumed', function () {
+            it('should set hasUnsavedFormObservations on Form2 template when draft is resumed', function () {
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'Obs Form'}, uuid: 'obs-uuid'}]}]});
                 var form2Data = [{
                     name: 'Fall Risk Assessment', uuid: 'fall-risk-uuid', version: '1',
@@ -2553,40 +2553,40 @@ describe('ConceptSetPageController', function () {
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
                 var obsForm = scope.consultation.observationForms[0];
-                expect(obsForm.isDraftIndicator).toBe(true);
+                expect(obsForm.hasUnsavedFormObservations).toBe(true);
             });
 
-            it('should clear isDraftIndicator on all templates when encounter is saved', function () {
+            it('should clear hasUnsavedFormObservations on all templates when encounter is saved', function () {
                 var conceptUuid = 'concept-uuid-save';
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'Save Form'}, uuid: conceptUuid}]}]});
                 mockformService({});
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                scope.consultation.selectedObsTemplate = [{uuid: conceptUuid, observations: [], isDraftIndicator: true}];
+                scope.consultation.selectedObsTemplate = [{uuid: conceptUuid, observations: [], hasUnsavedFormObservations: true}];
                 scope.allTemplates = scope.consultation.selectedObsTemplate;
 
                 rootScope.$broadcast('event:save-successful');
 
-                expect(scope.consultation.selectedObsTemplate[0].isDraftIndicator).toBe(false);
+                expect(scope.consultation.selectedObsTemplate[0].hasUnsavedFormObservations).toBe(false);
             });
 
-            it('should clear isDraftIndicator on all templates when post-save handler fires', function () {
+            it('should clear hasUnsavedFormObservations on all templates when post-save handler fires', function () {
                 var conceptUuid = 'concept-uuid-postsave';
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'PostSave Form'}, uuid: conceptUuid}]}]});
                 mockformService({});
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                scope.consultation.selectedObsTemplate = [{uuid: conceptUuid, observations: [], isDraftIndicator: true}];
+                scope.consultation.selectedObsTemplate = [{uuid: conceptUuid, observations: [], hasUnsavedFormObservations: true}];
                 scope.allTemplates = scope.consultation.selectedObsTemplate;
 
                 scope.consultation.postSaveHandler.fire();
 
-                expect(scope.consultation.selectedObsTemplate[0].isDraftIndicator).toBe(false);
+                expect(scope.consultation.selectedObsTemplate[0].hasUnsavedFormObservations).toBe(false);
             });
 
-            it('should keep isDraftIndicator after save as draft', function () {
+            it('should keep hasUnsavedFormObservations after save as draft', function () {
                 var conceptUuid = 'concept-uuid-draft-save';
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'Draft Form'}, uuid: conceptUuid}]}]});
                 mockformService({});
@@ -2603,11 +2603,11 @@ describe('ConceptSetPageController', function () {
                 createControllerWithTimeoutAndFilter(timeoutMock, filterMock);
 
                 scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
-                scope.consultation.selectedObsTemplate = [{uuid: conceptUuid, observations: [], isDraftIndicator: true}];
+                scope.consultation.selectedObsTemplate = [{uuid: conceptUuid, observations: [], hasUnsavedFormObservations: true}];
 
                 scope.saveAsDraft();
 
-                expect(scope.consultation.selectedObsTemplate[0].isDraftIndicator).toBe(true);
+                expect(scope.consultation.selectedObsTemplate[0].hasUnsavedFormObservations).toBe(true);
             });
         });
     });

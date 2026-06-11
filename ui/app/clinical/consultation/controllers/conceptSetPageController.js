@@ -113,7 +113,7 @@ angular.module('bahmni.clinical')
                         });
                         if (matchingTemplate && (!matchingTemplate.observations || matchingTemplate.observations.length === 0)) {
                             matchingTemplate.observations = [stripObservationFlags(draftObs)];
-                            matchingTemplate.isDraftIndicator = true;
+                            matchingTemplate.hasUnsavedFormObservations = true;
                         }
                     });
                     var form2DraftObs = _.filter(parsedDraftObs, function (draftObs) {
@@ -129,7 +129,7 @@ angular.module('bahmni.clinical')
                                     obsForm.observations.push(obs);
                                 });
                                 obsForm.isOpen = true;
-                                obsForm.isDraftIndicator = true;
+                                obsForm.hasUnsavedFormObservations = true;
                             }
                         });
                     }
@@ -417,20 +417,20 @@ angular.module('bahmni.clinical')
 
             var updateTemplateDirtyIndicators = function () {
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
-                    if (template.isDraftIndicator) { return; }
+                    if (template.hasUnsavedFormObservations) { return; }
                     var currentVal = formDirtyStateService.getObsValuesForTemplate(template);
                     if (!dirtyTrackingState.templateCleanStates.has(template)) {
                         dirtyTrackingState.templateCleanStates.set(template, currentVal);
                     }
                     if (currentVal !== dirtyTrackingState.templateCleanStates.get(template)) {
-                        template.isDraftIndicator = true;
+                        template.hasUnsavedFormObservations = true;
                     }
                 });
             };
 
             var clearAllDraftIndicators = function () {
                 _.each($scope.allTemplates, function (template) {
-                    template.isDraftIndicator = false;
+                    template.hasUnsavedFormObservations = false;
                 });
             };
 
@@ -674,7 +674,7 @@ angular.module('bahmni.clinical')
                 } else {
                     $scope.formDraft.isDraftResumed = true;
                     _.each(result.updatedTemplates, function (template) {
-                        template.isDraftIndicator = true;
+                        template.hasUnsavedFormObservations = true;
                     });
                 }
             };
