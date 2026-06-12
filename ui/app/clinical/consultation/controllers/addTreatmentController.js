@@ -459,25 +459,26 @@ angular.module('bahmni.clinical')
             };
 
             var buildVdpOrdersForConflictCheck = function (variableDoseTreatments, excludeIndex) {
-                return (variableDoseTreatments || []).map(function (vdp, index) {
-                    if (excludeIndex !== undefined && index === excludeIndex) {
-                        return null;
-                    }
-                    var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
-                    var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
-                    return {
-                        getDisplayName: function () { return vdp.drugName; },
-                        effectiveStartDate: start,
-                        effectiveStopDate: stop,
-                        careSetting: vdp.careSetting,
-                        overlappingScheduledWith: function (other) {
-                            if (!other.effectiveStopDate && !stop) { return true; }
-                            if (!other.effectiveStopDate) { return DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1; }
-                            if (!stop) { return DateUtil.diffInSeconds(start, other.effectiveStartDate) > -1 && DateUtil.diffInSeconds(start, other.effectiveStopDate) < 1; }
-                            return DateUtil.diffInSeconds(start, other.effectiveStopDate) <= 0 && DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1;
-                        }
-                    };
-                }).filter(Boolean);
+                return (variableDoseTreatments || [])
+                    .filter(function (vdp, index) {
+                        return excludeIndex === undefined || index !== excludeIndex;
+                    })
+                    .map(function (vdp) {
+                        var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
+                        var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
+                        return {
+                            getDisplayName: function () { return vdp.drugName; },
+                            effectiveStartDate: start,
+                            effectiveStopDate: stop,
+                            careSetting: vdp.careSetting,
+                            overlappingScheduledWith: function (other) {
+                                if (!other.effectiveStopDate && !stop) { return true; }
+                                if (!other.effectiveStopDate) { return DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1; }
+                                if (!stop) { return DateUtil.diffInSeconds(start, other.effectiveStartDate) > -1 && DateUtil.diffInSeconds(start, other.effectiveStopDate) < 1; }
+                                return DateUtil.diffInSeconds(start, other.effectiveStopDate) <= 0 && DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1;
+                            }
+                        };
+                    });
             };
 
             var getConflictingDrugOrder = function (newDrugOrder) {

@@ -614,3 +614,71 @@ describe("Edit Mode (initialValues pre-population)", () => {
         });
     });
 });
+
+describe("Drug Field Disable in Edit Mode", () => {
+    it("should disable drug field when editMode=true (unsaved edit)", async () => {
+        const mockDrug = { name: "Aspirin", uuid: "drug-1" };
+        const mockHostApi = {
+            onClose: jest.fn(),
+            onSave: jest.fn(),
+            searchDrugs: jest.fn().mockResolvedValue([]),
+        };
+
+        const editHostData = {
+            ...defaultHostData,
+            editMode: true,
+            initialValues: {
+                drug: mockDrug,
+                units: "mg",
+                route: "Oral",
+                stages: [validStage()],
+            },
+        };
+
+        const { container } = render(
+            <I18nProvider>
+                <VariableDoseProtocolModal hostData={editHostData} hostApi={mockHostApi} />
+            </I18nProvider>
+        );
+
+        await waitFor(() => {
+            const drugInput = container.querySelector("#variable-dose-drug-name");
+            expect(drugInput).toBeTruthy();
+            // Drug field should be disabled
+            expect(drugInput.disabled).toBe(true);
+        });
+    });
+
+    it("should disable drug field when editMode=true (saved order revision)", async () => {
+        const mockDrug = { name: "Morphine", uuid: "drug-morphine" };
+        const mockHostApi = {
+            onClose: jest.fn(),
+            onSave: jest.fn(),
+            searchDrugs: jest.fn().mockResolvedValue([]),
+        };
+
+        const reviseHostData = {
+            ...defaultHostData,
+            editMode: true,
+            initialValues: {
+                drug: mockDrug,
+                units: "mg",
+                route: "IV",
+                isSavedOrder: true,
+                stages: [validStage()],
+            },
+        };
+
+        const { container } = render(
+            <I18nProvider>
+                <VariableDoseProtocolModal hostData={reviseHostData} hostApi={mockHostApi} />
+            </I18nProvider>
+        );
+
+        await waitFor(() => {
+            const drugInput = container.querySelector("#variable-dose-drug-name");
+            expect(drugInput).toBeTruthy();
+            expect(drugInput.disabled).toBe(true); // Should be disabled for saved order revision too
+        });
+    });
+});

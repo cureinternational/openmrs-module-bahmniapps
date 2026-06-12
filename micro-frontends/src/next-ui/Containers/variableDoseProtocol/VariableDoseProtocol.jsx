@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import PropTypes from "prop-types";
 import { Button } from "carbon-components-react";
 import { Add16 } from "@carbon/icons-react";
@@ -37,10 +37,11 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
         }
     };
 
-    // Expose openModal on the hostApi reference so AngularJS can call it directly.
-    if (hostApi) {
-        hostApi.openModal = augmentedHostApi.openModal;
-    }
+    useLayoutEffect(() => {
+        if (hostApi) {
+            hostApi.openModal = augmentedHostApi.openModal;
+        }
+    }, []);
 
     return (
         <>
