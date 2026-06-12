@@ -414,25 +414,3 @@
   white-space: nowrap;
 }
 
-// Disabled field styling
-.variable-dose-modal {
-  // ComboBox disabled: Carbon adds .bx--list-box--disabled on the wrapper
-  // and the input gets the `disabled` HTML attribute. Also override
-  // -webkit-text-fill-color which Carbon/Safari uses to paint disabled text.
-  .bx--list-box--disabled .bx--text-input,
-  .bx--combo-box--disabled .bx--text-input,
-  .bx--text-input--disabled,
-  .bx--text-input[disabled],
-  .bx--text-area--disabled,
-  .bx--text-area[disabled],
-  input[disabled],
-  textarea[disabled] {
-    color: #6F6F6F !important;
-    -webkit-text-fill-color: #6F6F6F !important;
-  }
-
-  // Disabled dropdown (ListBox) label text
-  .bx--list-box--disabled .bx--list-box__label {
-    color: #6F6F6F !important;
-  }
-}

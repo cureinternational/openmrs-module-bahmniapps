@@ -458,8 +458,11 @@ angular.module('bahmni.clinical')
                 return cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient);
             };
 
-            var buildVdpOrdersForConflictCheck = function (variableDoseTreatments) {
-                return (variableDoseTreatments || []).map(function (vdp) {
+            var buildVdpOrdersForConflictCheck = function (variableDoseTreatments, excludeIndex) {
+                return (variableDoseTreatments || []).map(function (vdp, index) {
+                    if (excludeIndex !== undefined && index === excludeIndex) {
+                        return null;
+                    }
                     var start = vdp.startDate ? new Date(vdp.startDate) : new Date();
                     var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
                     return {
@@ -474,7 +477,7 @@ angular.module('bahmni.clinical')
                             return DateUtil.diffInSeconds(start, other.effectiveStopDate) <= 0 && DateUtil.diffInSeconds(stop, other.effectiveStartDate) > -1;
                         }
                     };
-                });
+                }).filter(Boolean);
             };
 
             var getConflictingDrugOrder = function (newDrugOrder) {
@@ -1065,7 +1068,7 @@ angular.module('bahmni.clinical')
                             // Placeholder: React will overwrite this reference once mounted.
                             // Calling before React mounts is a no-op.
                         },
-                        onSave: function (data) {
+                        onSave: function (data, isSavedOrder) {
                             if (($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration') &&
                                     ($scope.obs.length === 0 ||
                                      (($scope.currentEpoch - $scope.obs[0].observationDateTime) / 1000 > $scope.addTreatmentWithPatientWeight.duration))) ||
@@ -1086,7 +1089,7 @@ angular.module('bahmni.clinical')
                                 effectiveStopDate: newVdpTotalDays > 0 ? new Date(newVdpStart.getTime() + newVdpTotalDays * 86400000) : null
                             };
                             var conflictingActiveOrder = _.find(
-                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments)),
+                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments, editingVariableDoseIndex >= 0 ? editingVariableDoseIndex : undefined)),
                                 function (order) {
                                     return order.getDisplayName && order.getDisplayName() === vdpDrugName &&
                                            order.careSetting === vdpCareSetting &&
@@ -1215,15 +1218,18 @@ angular.module('bahmni.clinical')
                                     };
                                     $scope.consultation.variableDoseTreatments = $scope.consultation.variableDoseTreatments || [];
                                     if (editingVariableDoseIndex >= 0) {
+                                        // Editing unsaved VDP entry
                                         $scope.consultation.variableDoseTreatments.splice(editingVariableDoseIndex, 1, entry);
                                         editingVariableDoseIndex = -1;
-                                    } else if (revisingVariableDoseDrugOrder) {
+                                    } else if (isSavedOrder) {
+                                        // Editing saved VDP order - add REVISE action
                                         entry.previousOrderUuid = revisingVariableDoseDrugOrder.uuid;
                                         entry.action = Bahmni.Clinical.Constants.orderActions.revise;
                                         revisingVariableDoseDrugOrder.isBeingEdited = false;
                                         revisingVariableDoseDrugOrder = null;
                                         $scope.consultation.variableDoseTreatments.push(entry);
                                     } else {
+                                        // New VDP order
                                         $scope.consultation.variableDoseTreatments.push(entry);
                                     }
                                     $scope.variableDoseHostData = buildVariableDoseHostData();

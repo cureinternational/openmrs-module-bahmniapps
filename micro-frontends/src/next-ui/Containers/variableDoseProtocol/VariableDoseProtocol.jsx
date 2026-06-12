@@ -10,17 +10,19 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
     const [isOpen, setIsOpen] = useState(false);
     const [editInitialValues, setEditInitialValues] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [isSavedOrder, setIsSavedOrder] = useState(false);
 
     const handleClose = () => {
         setIsOpen(false);
         setEditInitialValues(null);
         setIsEditMode(false);
+        setIsSavedOrder(false);
         hostApi?.onClose?.();
     };
 
     const handleSave = (data) => {
         setIsOpen(false);
-        hostApi?.onSave?.(data);
+        hostApi?.onSave?.(data, isSavedOrder);
     };
 
     const augmentedHostApi = {
@@ -30,6 +32,7 @@ function VariableDoseProtocolInner({ hostData, hostApi }) {
         openModal: (initialValues, isSavedOrder, editMode) => {
             setEditInitialValues(initialValues || null);
             setIsEditMode(editMode || false);
+            setIsSavedOrder(isSavedOrder || false);
             setIsOpen(true);
         }
     };
