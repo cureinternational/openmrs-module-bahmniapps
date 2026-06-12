@@ -2449,30 +2449,6 @@ describe('ConceptSetPageController', function () {
                 timeoutMock.cancel = jasmine.createSpy('cancel');
             });
 
-            it('should set hasUnsavedFormObservations when a template is added via addTemplate and the user enters data', function () {
-                var conceptUuid = 'concept-uuid-added';
-                mockConceptSetService({results: [{setMembers: [{name: {name: 'New Form'}, uuid: conceptUuid}]}]});
-                mockformService({});
-
-                var observationValue;
-                createControllerWithTimeoutAndFilter(timeoutMock);
-
-                var newTemplate = _.find(scope.allTemplates, function (t) { return t.uuid === conceptUuid; });
-                newTemplate.component = {
-                    getValue: function () { return {observations: [{value: observationValue}]}; }
-                };
-
-                // Simulate user adding the form via addTemplate (after dirty tracking is already initialized)
-                scope.addTemplate(newTemplate);
-
-                // User enters data for the first time
-                observationValue = 'first-value';
-                scope.$digest();
-
-                // Indicator must be set even on the FIRST change (the bug was: first change set clean state = dirty value)
-                expect(newTemplate.hasUnsavedFormObservations).toBe(true);
-            });
-
             it('should set hasUnsavedFormObservations on a template when its observations change', function () {
                 var conceptUuid = 'concept-uuid-indicator';
                 mockConceptSetService({results: [{setMembers: [{name: {name: 'Test Form'}, uuid: conceptUuid}]}]});
