@@ -1064,10 +1064,6 @@ angular.module('bahmni.clinical')
                                 revisingVariableDoseDrugOrder = null;
                             }
                         },
-                        openModal: function (initialValues) {
-                            // Placeholder: React will overwrite this reference once mounted.
-                            // Calling before React mounts is a no-op.
-                        },
                         onSave: function (data, isSavedOrder) {
                             if (($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration') &&
                                     ($scope.obs.length === 0 ||
@@ -1218,18 +1214,15 @@ angular.module('bahmni.clinical')
                                     };
                                     $scope.consultation.variableDoseTreatments = $scope.consultation.variableDoseTreatments || [];
                                     if (editingVariableDoseIndex >= 0) {
-                                        // Editing unsaved VDP entry
                                         $scope.consultation.variableDoseTreatments.splice(editingVariableDoseIndex, 1, entry);
                                         editingVariableDoseIndex = -1;
                                     } else if (isSavedOrder) {
-                                        // Editing saved VDP order - add REVISE action
                                         entry.previousOrderUuid = revisingVariableDoseDrugOrder.uuid;
                                         entry.action = Bahmni.Clinical.Constants.orderActions.revise;
                                         revisingVariableDoseDrugOrder.isBeingEdited = false;
                                         revisingVariableDoseDrugOrder = null;
                                         $scope.consultation.variableDoseTreatments.push(entry);
                                     } else {
-                                        // New VDP order
                                         $scope.consultation.variableDoseTreatments.push(entry);
                                     }
                                     $scope.variableDoseHostData = buildVariableDoseHostData();
