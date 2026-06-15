@@ -102,6 +102,9 @@
             </div>
             <div class="button-group-wrapper">
                 <div class="button-group">
+                    <button ng-click="editVariableDose($index)">
+                        <i class="fa fa-edit"></i>
+                    </button>
                     <button ng-confirm-click="removeVariableDose($index)"
                             confirm-message="{{ 'REMOVE_CONFIRMATION_KEY' | translate }}">
                         <i class="fa fa-remove"></i>
