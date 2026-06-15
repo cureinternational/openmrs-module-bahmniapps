@@ -2749,6 +2749,28 @@ describe('ConceptSetPageController', function () {
             expect(scope.formDraft.hasDrafts).toBeFalsy();
             expect(rootScope.draftData).toBeNull();
         });
+
+        it('should clear stale hasUnsavedFormObservations in concatObservationForms when isDraftResumeValid is false and activeVisit is present', function () {
+            rootScope.resumeDraftOnLoad = false;
+            rootScope.draftData = null;
+            scope.visitHistory = {activeVisit: {uuid: 'active-visit-uuid'}};
+            // Pre-populate selectedObsTemplate so initializeDefaultTemplates is skipped,
+            // and set a stale unsaved form obs on observationForms to exercise the stale-obs guard
+            scope.consultation.selectedObsTemplate = [{uuid: 'tmpl-1', label: 'Template 1'}];
+            scope.consultation.observationForms = [{
+                formName: 'Form1',
+                hasUnsavedFormObservations: true,
+                observations: [{value: 'stale-form-val'}],
+                privileges: [],
+                isDefault: function () { return false; }
+            }];
+
+            createController();
+
+            var hasAnyFormUnsaved = _.some(scope.consultation.observationForms, function (f) { return f.hasUnsavedFormObservations; });
+            expect(hasAnyFormUnsaved).toBe(false);
+            expect(scope.consultation.observationForms[0].observations.length).toBe(0);
+        });
     });
 });
 

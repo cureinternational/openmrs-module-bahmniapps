@@ -51,10 +51,7 @@ angular.module('bahmni.clinical')
                     }));
                 }
             };
-            var clearDraftObsFromTemplates = function () {
-                $rootScope.draftData = null;
-                $rootScope.resumeDraftOnLoad = false;
-                $rootScope.resumeDraftPatientUuid = null;
+            var clearStaleObsFromTemplates = function () {
                 $scope.consultation.selectedObsTemplate = [];
                 _.each($scope.consultation.observationForms, function (form) {
                     if (form.hasUnsavedFormObservations) {
@@ -64,13 +61,20 @@ angular.module('bahmni.clinical')
                 });
             };
 
+            var clearDraftObsFromTemplates = function () {
+                $rootScope.draftData = null;
+                $rootScope.resumeDraftOnLoad = false;
+                $rootScope.resumeDraftPatientUuid = null;
+                clearStaleObsFromTemplates();
+            };
+
             var loadDraftThenConcat = function () {
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var providerUuid = $rootScope.currentProvider ? $rootScope.currentProvider.uuid : null;
                 if ($scope.enableFormDraftFeature && !$rootScope.resumeDraftOnLoad && patientUuid && providerUuid && $scope.visitHistory && $scope.visitHistory.activeVisit) {
                     var promise = formDraftService.getDraft(patientUuid, providerUuid);
                     promise.then(function (response) {
-                        var visitClosed = $scope.visitHistory && !$scope.visitHistory.activeVisit;
+                        var visitClosed = !($scope.visitHistory && $scope.visitHistory.activeVisit);
                         if (!visitClosed && response && response.data && response.data.uuid && !response.data.markedAsSaved) {
                             $rootScope.draftData = response.data;
                         } else if (visitClosed) {
@@ -113,13 +117,7 @@ angular.module('bahmni.clinical')
                         return f.hasUnsavedFormObservations;
                     });
                     if (hasStaleUnsavedObs) {
-                        $scope.consultation.selectedObsTemplate = [];
-                        _.each($scope.consultation.observationForms, function (form) {
-                            if (form.hasUnsavedFormObservations) {
-                                form.observations = [];
-                                form.hasUnsavedFormObservations = false;
-                            }
-                        });
+                        clearStaleObsFromTemplates();
                     }
                 }
 
