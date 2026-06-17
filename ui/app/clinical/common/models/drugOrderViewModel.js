@@ -195,7 +195,7 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
         var baseDoseStr = morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
             morphToMixedFraction(variableDosingType.afternoonDose || 0) +
             "-" + morphToMixedFraction(variableDosingType.eveningDose || 0);
-        if (variableDosingType.nightDose !== undefined) {
+        if (variableDosingType.nightDose != null) {
             baseDoseStr += "-" + morphToMixedFraction(variableDosingType.nightDose || 0);
         }
         var variableDosingString = addDelimiter(baseDoseStr, " ");
@@ -691,7 +691,7 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
         var varDoseStr = morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
             morphToMixedFraction(variableDosingType.afternoonDose || 0) + "-" +
             morphToMixedFraction(variableDosingType.eveningDose || 0);
-        if (variableDosingType.nightDose !== undefined) {
+        if (variableDosingType.nightDose != null) {
             varDoseStr += "-" + morphToMixedFraction(variableDosingType.nightDose || 0);
         }
         var variableDosingString = addDelimiter(varDoseStr, " ");

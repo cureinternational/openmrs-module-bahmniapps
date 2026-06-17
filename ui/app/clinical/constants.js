@@ -59,6 +59,7 @@ Bahmni.Clinical.Constants = (function () {
         reviseAction: 'REVISE',
         asDirectedInstruction: 'As directed',
         dosingTypes: dosingTypes,
+        minRequiredDoseBoxes: 2,
         orderActions: orderActions,
         errorMessages: errorMessages,
         caseIntakeConceptClass: 'Case Intake',

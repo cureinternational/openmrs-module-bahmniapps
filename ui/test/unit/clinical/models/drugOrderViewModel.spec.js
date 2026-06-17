@@ -260,6 +260,21 @@ describe("drugOrderViewModel", function () {
         expect(treatment.getDescription()).toBe("1-1-1, Before Meals, Orally - 10 Days");
     });
 
+    it("should display 3-box format when nightDose is null (API returns null for legacy orders)", function () {
+        var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+        treatment.frequencyType = "variable";
+        treatment.route = "Orally";
+        treatment.durationUnit = "Days";
+        treatment.variableDosingType = {
+            morningDose: 1,
+            afternoonDose: 1,
+            eveningDose: 1,
+            nightDose: null
+        };
+
+        expect(treatment.getDescription()).toBe("1-1-1, Before Meals, Orally - 10 Days");
+    });
+
     it("should include nightDose 0 in display when nightDose is explicitly 0", function () {
         var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
         treatment.frequencyType = "variable";

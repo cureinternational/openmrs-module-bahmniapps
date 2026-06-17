@@ -626,7 +626,7 @@ angular.module('bahmni.clinical')
                     variableDosingType.eveningDose,
                     variableDosingType.nightDose
                 ].filter(function (dose) { return dose > 0; }).length;
-                return nonZeroCount >= 2;
+                return nonZeroCount >= Bahmni.Clinical.Constants.minRequiredDoseBoxes;
             };
             $scope.unaddedDrugOrders = function () {
                 return $scope.addForm.$valid;
