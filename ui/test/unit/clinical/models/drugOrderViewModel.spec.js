@@ -171,7 +171,7 @@ describe("drugOrderViewModel", function () {
             eveningDose: 3.75
         };
 
-        expect(treatment.getDescription()).toBe("1½-2¼-3¾, Before Meals, Orally - 10 Days")
+        expect(treatment.getDescription()).toBe("1½-2¼-3¾, Before Meals, Orally - 10 Days");
     });
 
     it("should not display mixed fraction variable dosages if doseFractions is absent", function () {
@@ -185,7 +185,7 @@ describe("drugOrderViewModel", function () {
             eveningDose: 3.75
         };
 
-        expect(treatment.getDescription()).toBe("1.5-2.25-3.75, Before Meals, Orally - 10 Days")
+        expect(treatment.getDescription()).toBe("1.5-2.25-3.75, Before Meals, Orally - 10 Days");
     });
 
     it("should display mixed fraction variable dosages if doseFractions is present and in the list", function () {
@@ -199,7 +199,7 @@ describe("drugOrderViewModel", function () {
             eveningDose: 3.47
         };
 
-        expect(treatment.getDescription()).toBe("1½-2-3.47, Before Meals, Orally - 10 Days")
+        expect(treatment.getDescription()).toBe("1½-2-3.47, Before Meals, Orally - 10 Days");
     });
 
     it("should get the text to be displayed in the treatment list with dosage instructions", function () {
@@ -229,6 +229,50 @@ describe("drugOrderViewModel", function () {
         };
 
         expect(treatment.getDescription()).toBe("1-1-1, Orally - 10 Days")
+    });
+
+    it("should display 4-box intraday dose M-A-E-N when nightDose is defined", function () {
+        var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+        treatment.frequencyType = "variable";
+        treatment.route = "Orally";
+        treatment.durationUnit = "Days";
+        treatment.variableDosingType = {
+            morningDose: 1,
+            afternoonDose: 0,
+            eveningDose: 2,
+            nightDose: 1
+        };
+
+        expect(treatment.getDescription()).toBe("1-0-2-1, Before Meals, Orally - 10 Days");
+    });
+
+    it("should display 3-box intraday dose M-A-E when nightDose is absent (backward compat)", function () {
+        var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+        treatment.frequencyType = "variable";
+        treatment.route = "Orally";
+        treatment.durationUnit = "Days";
+        treatment.variableDosingType = {
+            morningDose: 1,
+            afternoonDose: 1,
+            eveningDose: 1
+        };
+
+        expect(treatment.getDescription()).toBe("1-1-1, Before Meals, Orally - 10 Days");
+    });
+
+    it("should include nightDose 0 in display when nightDose is explicitly 0", function () {
+        var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+        treatment.frequencyType = "variable";
+        treatment.route = "Orally";
+        treatment.durationUnit = "Days";
+        treatment.variableDosingType = {
+            morningDose: 2,
+            afternoonDose: 2,
+            eveningDose: 2,
+            nightDose: 0
+        };
+
+        expect(treatment.getDescription()).toBe("2-2-2-0, Before Meals, Orally - 10 Days");
     });
 
     it("should get the text to be displayed in the treatment list without route", function () {
@@ -454,6 +498,21 @@ describe("drugOrderViewModel", function () {
             treatment.calculateQuantityAndUnit();
             expect(treatment.quantity).toBe(18);
         });
+
+        it("should calculate quantity for 4-box intraday dose including nightDose", function () {
+            var treatment = sampleTreatmentWithVariableDosing(1, 0, 2, "Capsule", 4, "Day(s)");
+            treatment.variableDosingType.nightDose = 1;
+            treatment.calculateQuantityAndUnit();
+            expect(treatment.quantity).toBe(16);
+        });
+
+        it("should calculate quantity for 4-box intraday dose with decimal nightDose", function () {
+            var treatment = sampleTreatmentWithVariableDosing(1, 0.5, 1, "Capsule", 2, "Day(s)");
+            treatment.variableDosingType.nightDose = 0.5;
+            treatment.calculateQuantityAndUnit();
+            expect(treatment.quantity).toBe(6);
+        });
+
 
         it("should result in 0 for uniform dose when dose is not available", function () {
             var treatment = sampleTreatmentWithUniformDosing(null, "Capsule", "Twice a Day", 5, "Day(s)");

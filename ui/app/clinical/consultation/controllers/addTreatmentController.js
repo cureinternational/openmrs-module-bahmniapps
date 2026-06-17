@@ -376,12 +376,32 @@ angular.module('bahmni.clinical')
                 if (treatment.dosingRule != null || treatment.dosingRule != undefined) {
                     var visitUuid = treatmentConfig.orderSet.calculateDoseOnlyOnCurrentVisitValues ? $scope.activeVisit.uuid : undefined;
                     var drugName = treatment.drug ? treatment.drug.name : treatment.drugNonCoded;
-                    var calculatedDose = orderSetService.getCalculatedDose($scope.patient.uuid, drugName, treatment.uniformDosingType.dose, treatment.uniformDosingType.doseUnits, '', treatment.dosingRule, visitUuid);
-                    calculatedDose.then(function (calculatedDosage) {
-                        treatment.uniformDosingType.dose = calculatedDosage.dose;
-                        treatment.calculateQuantityAndUnit();
-                        return treatment;
-                    });
+                    if (treatment.frequencyType === Bahmni.Clinical.Constants.dosingTypes.variable) {
+                        var vdt = treatment.variableDosingType;
+                        var doseFields = ['morningDose', 'afternoonDose', 'eveningDose', 'nightDose'];
+                        var promises = doseFields.map(function (field) {
+                            var baseDose = vdt[field];
+                            if (!baseDose) {
+                                return $q.resolve({ dose: baseDose, field: field });
+                            }
+                            return orderSetService.getCalculatedDose(
+                                $scope.patient.uuid, drugName, baseDose, vdt.doseUnits, '', treatment.dosingRule, visitUuid
+                            ).then(function (result) {
+                                return { dose: result.dose, field: field };
+                            });
+                        });
+                        $q.all(promises).then(function (results) {
+                            results.forEach(function (r) { vdt[r.field] = r.dose; });
+                            treatment.calculateQuantityAndUnit();
+                        });
+                    } else {
+                        var calculatedDose = orderSetService.getCalculatedDose($scope.patient.uuid, drugName, treatment.uniformDosingType.dose, treatment.uniformDosingType.doseUnits, '', treatment.dosingRule, visitUuid);
+                        calculatedDose.then(function (calculatedDosage) {
+                            treatment.uniformDosingType.dose = calculatedDosage.dose;
+                            treatment.calculateQuantityAndUnit();
+                            return treatment;
+                        });
+                    }
                     return treatment;
                 }
             };
@@ -594,8 +614,19 @@ angular.module('bahmni.clinical')
                 var anyValuesFilled = $scope.treatment.drug || $scope.treatment.uniformDosingType.dose ||
                     $scope.treatment.uniformDosingType.frequency || $scope.treatment.variableDosingType.morningDose ||
                     $scope.treatment.variableDosingType.afternoonDose || $scope.treatment.variableDosingType.eveningDose ||
+                    $scope.treatment.variableDosingType.nightDose ||
                     $scope.treatment.duration || $scope.treatment.quantity || $scope.treatment.isNonCodedDrug || $scope.treatment.drugNameDisplay;
                 return (anyValuesFilled && $scope.addForm.$invalid);
+            };
+
+            $scope.isVariableDoseValid = function (variableDosingType) {
+                var nonZeroCount = [
+                    variableDosingType.morningDose,
+                    variableDosingType.afternoonDose,
+                    variableDosingType.eveningDose,
+                    variableDosingType.nightDose
+                ].filter(function (dose) { return dose > 0; }).length;
+                return nonZeroCount >= 2;
             };
             $scope.unaddedDrugOrders = function () {
                 return $scope.addForm.$valid;
