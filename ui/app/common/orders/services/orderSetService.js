@@ -45,7 +45,7 @@ angular.module('bahmni.common.orders')
         var round = function (value) {
             var leastRoundableDose = 0.49;
             var leastPrescribableDose = 0.1;
-            value = value <= leastRoundableDose ? value : _.round(value);
+            value = value <= leastRoundableDose ? value : _.round(value, 2);
             return (value < leastPrescribableDose) ? leastPrescribableDose : value;
         };
     }]);

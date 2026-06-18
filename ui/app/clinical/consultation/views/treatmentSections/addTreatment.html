@@ -54,14 +54,13 @@
                         </div>
                         <div class="field-value">
                             <select id="dosingrule" class="form-field frequency" ng-model="treatment.dosingRule"
-                                    ng-options="item as item for item in treatmentConfig.dosingRules"
-                                    ng-disabled="!treatment.isUniformFrequency">
+                                    ng-options="item as item for item in treatmentConfig.dosingRules">
                                 <option value="">{{ ::'MEDICATION_CHOOSE_RULE' | translate }}</option>
                             </select>
                         </div>
                     </article>
                     <button ng-if="!treatmentConfig.isHiddenField('dosingTypeToggle')" type="button" class="icon-button exchange-btn fl"
-                            tabindex="-1" ng-click="treatment.toggleFrequency()" ng-disabled="isRuleMode(treatment)">
+                            tabindex="-1" ng-click="treatment.toggleFrequency()">
                         <i class="fa fa-exchange"></i>
                     </button>
                     <div class="frequency-widget uniform-frequency" ng-show="treatment.isUniformFrequency">
@@ -149,6 +148,9 @@
                                            required="required" placeholder="&mdash;"/>
                                     <input id="evening-dose" type="number" min="0" step="any"
                                            ng-model="treatment.variableDosingType.eveningDose"
+                                           required="required" placeholder="&mdash;"/>
+                                    <input id="night-dose" type="number" min="0" step="any"
+                                           ng-model="treatment.variableDosingType.nightDose"
                                            required="required" placeholder="&mdash;"/>
                                 </div>
                             </div>
@@ -303,7 +305,7 @@
 
                 <div class="operations fr clearfix">
                     <button class="add-drug-btn secondary-button fl" type="submit" accesskey="{{ ::treatmentConfig.translate('addAccessKey', 'MEDICATION_ADD_ACCESS_KEY') }}" show-if-privilege="{{prescribeMedicationPrivilege}}"
-                            ng-disabled="!treatment.drug.uuid && !treatment.concept.uuid && treatment.drugNameDisplay && !treatment.isNonCodedDrug"
+                            ng-disabled="(!treatment.drug.uuid && !treatment.concept.uuid && treatment.drugNameDisplay && !treatment.isNonCodedDrug) || (!treatment.isUniformFrequency && !isVariableDoseValid(treatment.variableDosingType))"
                             ng-click="verifyAdd(treatment)">
                              <span ng-bind-html="::treatmentConfig.translate('add', 'MEDICATION_ADD_BUTTON_LABEL')">
                         </span>

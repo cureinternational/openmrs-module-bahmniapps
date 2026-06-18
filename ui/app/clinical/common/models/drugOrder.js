@@ -19,12 +19,12 @@ Bahmni.Clinical.DrugOrder = (function () {
             dosingInstructions.additionalInstructions = drugOrderData.additionalInstructions;
             dosingInstructions.rate = drugOrderData.rate || null;
             dosingInstructions.additives = drugOrderData.additives || null;
-            dosingInstructions.isLoadingDose = drugOrderData.isLoadingDose || false;
             dosingInstructions.isDischargeMedication = drugOrderData.isDischargeMedication || false;
             if (drugOrderData.frequencyType === Bahmni.Clinical.Constants.dosingTypes.variable) {
                 dosingInstructions.morningDose = drugOrderData.variableDosingType.morningDose;
                 dosingInstructions.afternoonDose = drugOrderData.variableDosingType.afternoonDose;
                 dosingInstructions.eveningDose = drugOrderData.variableDosingType.eveningDose;
+                dosingInstructions.nightDose = drugOrderData.variableDosingType.nightDose;
             }
             return JSON.stringify(dosingInstructions);
         };

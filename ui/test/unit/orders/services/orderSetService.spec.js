@@ -38,7 +38,7 @@ describe('Order Set Service', function () {
     done();
   });
 
-  it('getCalculatedDose should round off the dose for special dose unit', function (done) {
+  it('getCalculatedDose should preserve up to 2 decimal places for calculated dose', function (done) {
     var data = {
       value: 12.23,
       doseUnit: 'mg'
@@ -46,7 +46,7 @@ describe('Order Set Service', function () {
     mockHttp.get.and.returnValue(specUtil.createFakePromise(data));
 
     orderSetService.getCalculatedDose('somePatientUuid','drugName', 1, 'mg/m2','orderset','mg/m2').then(function (response) {
-      expect(response.data).toEqual({ dose: 12, doseUnit: 'mg' });
+      expect(response.data).toEqual({ dose: 12.23, doseUnit: 'mg' });
     });
     expect(mockHttp.get).toHaveBeenCalled();
     done();

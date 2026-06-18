@@ -192,9 +192,13 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
 
     var numberBasedDoseAndFrequency = function () {
         var variableDosingType = self.variableDosingType;
-        var variableDosingString = addDelimiter(morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
+        var baseDoseStr = morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
             morphToMixedFraction(variableDosingType.afternoonDose || 0) +
-            "-" + morphToMixedFraction(variableDosingType.eveningDose || 0), " ");
+            "-" + morphToMixedFraction(variableDosingType.eveningDose || 0);
+        if (variableDosingType.nightDose != null) {
+            baseDoseStr += "-" + morphToMixedFraction(variableDosingType.nightDose || 0);
+        }
+        var variableDosingString = addDelimiter(baseDoseStr, " ");
 
         if (!self.isVariableDoseEmpty(variableDosingType)) {
             return addDelimiter((variableDosingString + blankIfFalsy(self.doseUnits)).trim(), ", ");
@@ -202,7 +206,7 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
     };
 
     this.isVariableDoseEmpty = function (variableDosingType) {
-        return (!variableDosingType.morningDose && !variableDosingType.afternoonDose && !variableDosingType.eveningDose);
+        return (!variableDosingType.morningDose && !variableDosingType.afternoonDose && !variableDosingType.eveningDose && !variableDosingType.nightDose);
     };
 
     this.getAsNeededText = function (asNeeded) {
@@ -460,7 +464,7 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
                 self.quantity = (dose + mantissa) * (self.uniformDosingType.frequency ? getFrequencyPerDay() : 0) * self.durationInDays;
             } else if (self.frequencyType === Bahmni.Clinical.Constants.dosingTypes.variable) {
                 var dose = self.variableDosingType;
-                self.quantity = (dose.morningDose + dose.afternoonDose + dose.eveningDose) * self.durationInDays;
+                self.quantity = ((dose.morningDose || 0) + (dose.afternoonDose || 0) + (dose.eveningDose || 0) + (dose.nightDose || 0)) * self.durationInDays;
             }
 
             var epsilon = 0.001;
@@ -614,7 +618,8 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
             } else {
                 return (self.variableDosingType.morningDose ||
                     self.variableDosingType.afternoonDose ||
-                    self.variableDosingType.eveningDose
+                    self.variableDosingType.eveningDose ||
+                    self.variableDosingType.nightDose
                 );
             }
         }
@@ -683,7 +688,13 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
             }
             return "";
         }
-        var variableDosingString = addDelimiter(morphToMixedFraction(variableDosingType.morningDose || 0) + "-" + morphToMixedFraction(variableDosingType.afternoonDose || 0) + "-" + morphToMixedFraction(variableDosingType.eveningDose || 0), " ");
+        var varDoseStr = morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
+            morphToMixedFraction(variableDosingType.afternoonDose || 0) + "-" +
+            morphToMixedFraction(variableDosingType.eveningDose || 0);
+        if (variableDosingType.nightDose != null) {
+            varDoseStr += "-" + morphToMixedFraction(variableDosingType.nightDose || 0);
+        }
+        var variableDosingString = addDelimiter(varDoseStr, " ");
 
         if (self.frequencyType === Bahmni.Clinical.Constants.dosingTypes.uniform) {
             var value = morphToMixedFraction(calculateUniformDose());
@@ -805,12 +816,13 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
             doseUnits: drugOrderResponse.dosingInstructions.doseUnits,
             frequency: drugOrderResponse.dosingInstructions.frequency
         };
-    } else if (administrationInstructions.morningDose || administrationInstructions.afternoonDose || administrationInstructions.eveningDose) {
+    } else if (administrationInstructions.morningDose || administrationInstructions.afternoonDose || administrationInstructions.eveningDose || administrationInstructions.nightDose) {
         viewModel.frequencyType = Bahmni.Clinical.Constants.dosingTypes.variable;
         viewModel.variableDosingType = {
             morningDose: administrationInstructions.morningDose,
             afternoonDose: administrationInstructions.afternoonDose,
             eveningDose: administrationInstructions.eveningDose,
+            nightDose: administrationInstructions.nightDose,
             doseUnits: drugOrderResponse.dosingInstructions.doseUnits
         };
     } else {
