@@ -60,6 +60,7 @@ Bahmni.Clinical.Constants = (function () {
         asDirectedInstruction: 'As directed',
         dosingTypes: dosingTypes,
         minRequiredDoseBoxes: 2,
+        intradayDoseFields: ['morningDose', 'afternoonDose', 'eveningDose', 'nightDose'],
         orderActions: orderActions,
         errorMessages: errorMessages,
         caseIntakeConceptClass: 'Case Intake',

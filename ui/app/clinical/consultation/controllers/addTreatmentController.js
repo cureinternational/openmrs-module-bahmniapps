@@ -378,7 +378,7 @@ angular.module('bahmni.clinical')
                     var drugName = treatment.drug ? treatment.drug.name : treatment.drugNonCoded;
                     if (treatment.frequencyType === Bahmni.Clinical.Constants.dosingTypes.variable) {
                         var vdt = treatment.variableDosingType;
-                        var doseFields = ['morningDose', 'afternoonDose', 'eveningDose', 'nightDose'];
+                        var doseFields = Bahmni.Clinical.Constants.intradayDoseFields;
                         var promises = doseFields.map(function (field) {
                             var baseDose = vdt[field];
                             if (!baseDose) {
