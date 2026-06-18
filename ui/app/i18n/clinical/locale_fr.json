@@ -440,5 +440,6 @@
     "FORMS_DRAFT_BANNER_SUBTITLE": "Vos entrées ont été enregistrées comme brouillon le {{ draftDate }} à {{ draftTime }}. Cliquez sur Reprendre pour continuer là où vous vous étiez arrêté ou sur Abandonner pour recommencer.",
 
     "LMP_WARNING_CONSULTATION_LABEL": "Jours depuis FUM - ",
-    "LMP_WARNING_DAYS_UNIT": "jours"
+    "LMP_WARNING_DAYS_UNIT": "jours",
+    "ADDITIONAL_INSTRUCTIONS": "Instructions supplémentaires"
 }
