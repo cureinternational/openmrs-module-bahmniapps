@@ -441,5 +441,7 @@
 
     "LMP_WARNING_CONSULTATION_LABEL": "Jours depuis FUM - ",
     "LMP_WARNING_DAYS_UNIT": "jours",
-    "ADDITIONAL_INSTRUCTIONS": "Instructions supplémentaires"
+    "ADDITIONAL_INSTRUCTIONS": "Instructions supplémentaires",
+
+    "VARIABLE_DOSAGE_HEADER": "Dosage Variable"
 }

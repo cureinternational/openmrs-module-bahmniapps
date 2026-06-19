@@ -453,5 +453,7 @@
   "FORMS_DRAFT_BANNER_SUBTITLE": "Your inputs were saved as a draft on {{ draftDate }} at {{ draftTime }}. Click Resume to continue where you left off or Discard Draft to start over.",
 
   "LMP_WARNING_CONSULTATION_LABEL": "Days since LMP - ",
-  "LMP_WARNING_DAYS_UNIT": "days"
+  "LMP_WARNING_DAYS_UNIT": "days",
+
+  "VARIABLE_DOSAGE_HEADER": "Variable Dosage"
 }
