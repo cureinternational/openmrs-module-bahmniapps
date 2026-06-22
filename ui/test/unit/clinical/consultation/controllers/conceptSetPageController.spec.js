@@ -901,6 +901,23 @@ describe('ConceptSetPageController', function () {
             expect(broadcastSpy).toHaveBeenCalledWith('draft:saved', {draftDate: '08 Apr 2026', draftTime: '10:30 AM'});
         });
 
+        it('should update $rootScope.draftData after successful save so formsTable watch fires', function () {
+            var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter();
+            scope.saveAsDraft();
+
+            var savedDraftData = {timestamp: Date.now(), uuid: 'draft-uuid', formData: '[]', markedAsSaved: false};
+            saveDraftPromise.callThenCallBack({data: savedDraftData});
+
+            expect(rootScope.draftData).toBe(savedDraftData);
+        });
+
         it('should not save draft when there is no active visit', function () {
             var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
             mockConceptSetService(conceptResponseData);
@@ -1636,6 +1653,32 @@ describe('ConceptSetPageController', function () {
 
                 var conceptSetTemplate = _.find(scope.allTemplates, function (t) { return t.uuid === conceptUuid; });
                 expect(conceptSetTemplate.observations.length).toBe(1);
+            });
+
+            it('should merge draft values into existing saved observations for a previously saved form', function () {
+                var conceptUuid = 'concept-uuid-saved-form';
+                var fieldUuid = 'field-concept-uuid';
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'Saved Form'}, uuid: conceptUuid}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+                enableDraftFeature();
+
+                scope.patient = {uuid: 'test-patient-uuid'};
+                rootScope.currentProvider = {uuid: 'test-provider-uuid'};
+                rootScope.resumeDraftOnLoad = false;
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+
+                var savedObs = {concept: {uuid: conceptUuid}, groupMembers: [{concept: {uuid: fieldUuid}, value: 'savedValue'}]};
+                scope.consultation.observations = [savedObs];
+
+                var draftObs = [{concept: {uuid: conceptUuid}, groupMembers: [{concept: {uuid: fieldUuid}, value: 'draftValue'}]}];
+                mockDraftSuccess({uuid: 'draft-uuid', markedAsSaved: false, formData: angular.toJson(draftObs)});
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                var conceptSetTemplate = _.find(scope.allTemplates, function (t) { return t.uuid === conceptUuid; });
+                expect(conceptSetTemplate.hasUnsavedFormObservations).toBe(true);
+                expect(conceptSetTemplate.observations[0].groupMembers[0].value).toBe('draftValue');
             });
 
             it('should auto-populate Form2 forms when unsaved draft is found on direct navigation', function () {

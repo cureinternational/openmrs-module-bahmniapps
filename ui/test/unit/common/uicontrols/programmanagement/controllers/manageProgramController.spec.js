@@ -77,6 +77,7 @@ describe("ManageProgramController", function () {
         $provide.value('retrospectiveEntryService', retrospectiveEntryService);
         $provide.value('$stateParams', { configName: "default" });
         $provide.value('$translate', translate);
+        $provide.value('formDraftService', {getFormNamesFromDraft: function () { return []; }});
     }));
 
     beforeEach(inject(function ($controller, $rootScope, $q) {

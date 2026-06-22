@@ -2,9 +2,9 @@
 
 angular.module('bahmni.common.uicontrols.programmanagment')
     .controller('ManageProgramController', ['$scope', 'retrospectiveEntryService', '$window', 'programService', '$translate',
-        'spinner', 'messagingService', '$stateParams', '$q', 'confirmBox', '$state', '$rootScope',
+        'spinner', 'messagingService', '$stateParams', '$q', 'confirmBox', '$state', '$rootScope', 'formDraftService',
         function ($scope, retrospectiveEntryService, $window, programService, $translate,
-            spinner, messagingService, $stateParams, $q, confirmBox, $state, $rootScope) {
+            spinner, messagingService, $stateParams, $q, confirmBox, $state, $rootScope, formDraftService) {
             var DateUtil = Bahmni.Common.Util.DateUtil;
             $scope.programSelected = {};
             $scope.workflowStateSelected = {};
@@ -30,8 +30,18 @@ angular.module('bahmni.common.uicontrols.programmanagment')
                 hasNoHierarchy: $scope.hasNoHierarchy,
                 patient: $scope.patient,
                 currentUser: $rootScope.currentUser,
-                currentProvider: $rootScope.currentProvider
+                currentProvider: $rootScope.currentProvider,
+                draftFormNames: formDraftService.getFormNamesFromDraft($rootScope.draftData)
             };
+
+            var cleanUpDraftWatch = $rootScope.$watch('draftData', function (newVal, oldVal) {
+                if (newVal === oldVal) { return; }
+                $scope.observationFormData.draftFormNames = formDraftService.getFormNamesFromDraft(newVal);
+            });
+
+            $scope.$on('$destroy', function () {
+                cleanUpDraftWatch();
+            });
 
             var updateActiveProgramsList = function () {
                 spinner.forPromise(programService.getPatientPrograms($scope.patient.uuid).then(function (programs) {
