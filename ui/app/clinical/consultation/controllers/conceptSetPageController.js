@@ -753,6 +753,7 @@ angular.module('bahmni.clinical')
                 $scope.formDraft.hasDrafts = false;
                 dirtyTrackingState.postSaveRefreshPending = true;
                 $scope.formDraft.showSpinner = false;
+                $rootScope.draftData = null;
                 clearDraftStatus(true);
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);

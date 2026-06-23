@@ -23,12 +23,12 @@ describe("Forms Table display control", function () {
         });
         formDraftService = {
             getDraft: getDraftSpy,
-            parseDraftObs: function (draftData) {
+            parseDraftObs: jasmine.createSpy('parseDraftObs').and.callFake(function (draftData) {
                 if (draftData && draftData.uuid && !draftData.markedAsSaved && draftData.formData) {
                     try { return angular.fromJson(draftData.formData); } catch (e) {}
                 }
                 return [];
-            }
+            })
         };
         spinner = jasmine.createSpyObj('spinner', ['forPromise']);
         ngDialog = jasmine.createSpyObj('ngDialog', ['open']);
@@ -561,6 +561,19 @@ describe("Forms Table display control", function () {
             expect(compiledElementScope.hasFormDraft(observation)).toBe(false);
         });
 
+        it("should return false when data has no concept", function () {
+            mockConceptSetService(allObsTemplateData);
+            mockVisitFormService(formDataObj);
+
+            var simpleHtml = '<forms-table section="section" patient="patient" is-on-dashboard="false"></forms-table>';
+            var element = $compile(simpleHtml)(scope);
+            scope.$digest();
+            var compiledElementScope = element.isolateScope();
+            scope.$digest();
+
+            expect(compiledElementScope.hasFormDraft({uuid: "obs-without-concept"})).toBe(false);
+        });
+
         it("should return true when draft exists for the same form concept", function () {
             var draftFormData = angular.toJson([{concept: {uuid: "form-concept-uuid-1"}}]);
             rootScope.draftData = {uuid: "draft-uuid", markedAsSaved: false, formData: draftFormData};
@@ -607,7 +620,7 @@ describe("Forms Table display control", function () {
             expect(compiledElementScope.hasFormDraft(observation)).toBe(false);
         });
 
-        it("should re-enable edit when draftData is cleared after save", function () {
+        it("should re-enable edit when draft is marked as saved (consultation submitted)", function () {
             rootScope.draftData = {uuid: "draft-uuid", markedAsSaved: false, formData: angular.toJson([{concept: {uuid: "form-concept-uuid-1"}}])};
 
             mockConceptSetService(allObsTemplateData);
@@ -621,7 +634,7 @@ describe("Forms Table display control", function () {
 
             expect(compiledElementScope.hasFormDraft(observation)).toBe(true);
 
-            rootScope.draftData = null;
+            rootScope.draftData = {uuid: "draft-uuid", markedAsSaved: true, formData: angular.toJson([{concept: {uuid: "form-concept-uuid-1"}}])};
             scope.$digest();
 
             expect(compiledElementScope.hasFormDraft(observation)).toBe(false);

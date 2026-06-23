@@ -1115,6 +1115,7 @@ describe('ConceptSetPageController', function () {
             scope.formDraft.statusError = true;
             scope.formDraft.showSpinner = true;
 
+            rootScope.draftData = {uuid: 'draft-uuid', markedAsSaved: false, formData: '[]'};
             rootScope.$broadcast('event:save-successful');
 
             expect(scope.formDraft.isDirty).toBe(false);
@@ -1125,6 +1126,7 @@ describe('ConceptSetPageController', function () {
             expect(scope.formDraft.statusMessage).toBeNull();
             expect(scope.formDraft.statusParams).toEqual({});
             expect(scope.formDraft.statusError).toBe(false);
+            expect(rootScope.draftData).toBeNull();
         });
 
         it('should ignore drafts that are already marked as saved when checking existing drafts', function () {

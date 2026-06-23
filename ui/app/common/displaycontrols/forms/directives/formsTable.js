@@ -79,6 +79,7 @@ angular.module('bahmni.common.displaycontrol.forms')
                 };
 
                 $scope.hasFormDraft = function (data) {
+                    if (!data || !data.concept) { return false; }
                     return $scope.draftFormConceptUuids.indexOf(data.concept.uuid) !== -1;
                 };
 
