@@ -1,7 +1,7 @@
 'use strict';
 
 describe("Form Controls", function () {
-    var element, scope, $compile, spinner, provide, formService, renderHelper, translate, $state;
+    var element, scope, $compile, spinner, provide, formService, renderHelper, translate, $state, appService;
 
     beforeEach(
         function () {
@@ -14,6 +14,15 @@ describe("Form Controls", function () {
                     patientUuid: 'patientUuid',
                     dirtyConsultationForm: false
                 };
+                appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
+                appService.getAppDescriptor.and.returnValue({
+                    getConfigValue: function (key) {
+                        if (key === 'security') {
+                            return { hyperlinkAllowedDomains: [] };
+                        }
+                        return null;
+                    }
+                });
                 provide.value('formService', formService);
                 translate = {
                     use: function(){ return 'en' }
@@ -21,6 +30,7 @@ describe("Form Controls", function () {
                 provide.value('spinner', spinner);
                 provide.value('$translate', translate);
                 provide.value('$state', $state);
+                provide.value('appService', appService);
             });
 
             inject(function (_$compile_, $rootScope, _$state_) {
@@ -94,6 +104,25 @@ describe("Form Controls", function () {
 
         scope.$broadcast("$event:changes-saved");
         expect($state.dirtyForm).toBeFalsy();
+    });
+
+    it('should pass allowedDomains from security config to renderWithControls', function () {
+        var capturedAllowedDomains;
+        window.renderWithControls = function () {
+            capturedAllowedDomains = arguments[8];
+            renderHelper.renderWithControlsCalledTimes += 1;
+        };
+        appService.getAppDescriptor.and.returnValue({
+            getConfigValue: function (key) {
+                if (key === 'security') {
+                    return { hyperlinkAllowedDomains: ['*.example.com'] };
+                }
+                return null;
+            }
+        });
+        mockObservationService({ resources: [{ value: '{"name":"Vitals", "controls": [{"type":"obsControl", "controls":[]}] }' }] });
+        createElement();
+        expect(capturedAllowedDomains).toEqual(['*.example.com']);
     });
 
     var createElement = function () {
