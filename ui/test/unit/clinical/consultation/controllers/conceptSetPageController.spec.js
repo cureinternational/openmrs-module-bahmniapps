@@ -2155,41 +2155,7 @@ describe('ConceptSetPageController', function () {
                 timeoutMock.cancel = jasmine.createSpy('cancel');
             });
 
-            it('should add Form2 draft form to selectedObsTemplate even when selectedObsTemplate is pre-populated', function () {
-                var conceptResponseData = {results: [{setMembers: [{name: {name: 'Vitals'}, uuid: 'vitals-uuid'}]}]};
-                mockConceptSetService(conceptResponseData);
-
-                var form2Data = [{
-                    name: 'Fall Risk Assessment and Reassessment', uuid: 'fall-risk-form-uuid', version: '3',
-                    published: true, id: null, resources: null, nameTranslation: null, privileges: []
-                }];
-                mockformService(form2Data);
-                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
-
-                var vitalsTemplate = {
-                    uuid: 'vitals-uuid', conceptName: 'Vitals', label: 'Vitals',
-                    observations: [], hasUnsavedFormObservations: false,
-                    isDefault: function () { return true; }, alwaysShow: false,
-                    isAvailable: function () { return true; }
-                };
-                scope.consultation.selectedObsTemplate = [vitalsTemplate];
-
-                var form2DraftObs = [{
-                    concept: {uuid: 'age-uuid'}, value: 'val',
-                    formNamespace: 'Bahmni', formFieldPath: 'Fall Risk Assessment and Reassessment.3/10-0'
-                }];
-                rootScope.resumeDraftOnLoad = true;
-                rootScope.draftData = {formData: angular.toJson(form2DraftObs)};
-
-                createControllerWithTimeoutAndFilter(timeoutMock);
-
-                var draftForm = _.find(scope.consultation.selectedObsTemplate, function (t) {
-                    return t.formName === 'Fall Risk Assessment and Reassessment';
-                });
-                expect(draftForm).toBeDefined();
-            });
-
-            it('should set hasUnsavedFormObservations on draft Form2 form when selectedObsTemplate is pre-populated', function () {
+            it('should add Form2 draft form to selectedObsTemplate with orange indicator when selectedObsTemplate is pre-populated', function () {
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'Vitals'}, uuid: 'vitals-uuid'}]}]};
                 mockConceptSetService(conceptResponseData);
 
@@ -2224,7 +2190,7 @@ describe('ConceptSetPageController', function () {
                 expect(draftForm.hasUnsavedFormObservations).toBe(true);
             });
 
-            it('should not duplicate Form2 draft form if already in selectedObsTemplate', function () {
+            it('should not duplicate Form2 draft form when selectedObsTemplate is pre-populated', function () {
                 var conceptResponseData = {results: [{setMembers: [{name: {name: 'Vitals'}, uuid: 'vitals-uuid'}]}]};
                 mockConceptSetService(conceptResponseData);
 
@@ -2235,14 +2201,20 @@ describe('ConceptSetPageController', function () {
                 mockformService(form2Data);
                 rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
 
+                var vitalsTemplate = {
+                    uuid: 'vitals-uuid', conceptName: 'Vitals', label: 'Vitals',
+                    observations: [], hasUnsavedFormObservations: false,
+                    isDefault: function () { return true; }, alwaysShow: false,
+                    isAvailable: function () { return true; }
+                };
+                scope.consultation.selectedObsTemplate = [vitalsTemplate];
+
                 var form2DraftObs = [{
                     concept: {uuid: 'age-uuid'}, value: 'val',
                     formNamespace: 'Bahmni', formFieldPath: 'Fall Risk Assessment and Reassessment.3/10-0'
                 }];
                 rootScope.resumeDraftOnLoad = true;
                 rootScope.draftData = {formData: angular.toJson(form2DraftObs)};
-
-                scope.consultation.selectedObsTemplate = [];
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
@@ -2284,6 +2256,35 @@ describe('ConceptSetPageController', function () {
                     return t.alwaysShow === true;
                 });
                 expect(vitalsForms.length).toBe(1);
+            });
+
+            it('should add Form2 draft form via observations.length when selectedObsTemplate is empty (fresh load path)', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 'concept-uuid-1'}]}]};
+                mockConceptSetService(conceptResponseData);
+
+                var form2Data = [{
+                    name: 'Fall Risk Assessment and Reassessment', uuid: 'fall-risk-form-uuid', version: '3',
+                    published: true, id: null, resources: null, nameTranslation: null, privileges: []
+                }];
+                mockformService(form2Data);
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+
+                var form2DraftObs = [{
+                    concept: {uuid: 'age-uuid'}, value: 'val',
+                    formNamespace: 'Bahmni', formFieldPath: 'Fall Risk Assessment and Reassessment.3/10-0'
+                }];
+                rootScope.resumeDraftOnLoad = true;
+                rootScope.draftData = {formData: angular.toJson(form2DraftObs)};
+
+                scope.consultation.selectedObsTemplate = [];
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+
+                var draftForm = _.find(scope.consultation.selectedObsTemplate, function (t) {
+                    return t.formName === 'Fall Risk Assessment and Reassessment';
+                });
+                expect(draftForm).toBeDefined();
+                expect(draftForm.hasUnsavedFormObservations).toBe(true);
             });
         });
 

@@ -482,11 +482,11 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                         if (value && value.errors) {
                             messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");
                             valid = false;
-                            observationForm._draftValidationPassed = false;
+                            observationForm.draftValidationPassed = false;
                         } else {
-                            observationForm._draftValidationPassed = true;
+                            observationForm.draftValidationPassed = true;
                         }
-                    } else if (observationForm.hasUnsavedFormObservations && !observationForm._draftValidationPassed) {
+                    } else if (observationForm.hasUnsavedFormObservations && !observationForm.draftValidationPassed) {
                         messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");
                         valid = false;
                     }

@@ -57,6 +57,7 @@ angular.module('bahmni.clinical')
                     if (form.hasUnsavedFormObservations) {
                         form.observations = [];
                         form.hasUnsavedFormObservations = false;
+                        form.draftValidationPassed = undefined;
                     }
                 });
             };
@@ -478,6 +479,7 @@ angular.module('bahmni.clinical')
             var clearAllDraftIndicators = function () {
                 _.each($scope.allTemplates, function (template) {
                     template.hasUnsavedFormObservations = false;
+                    template.draftValidationPassed = undefined;
                 });
             };
 
