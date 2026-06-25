@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.common.displaycontrol.dashboard')
-    .directive('dashboard', ['appService', '$stateParams', '$bahmniCookieStore', 'configurations', 'encounterService', 'spinner', 'auditLogService', 'messagingService', '$state', '$translate', 'formPrintService', function (appService, $stateParams, $bahmniCookieStore, configurations, encounterService, spinner, auditLogService, messagingService, $state, $translate, formPrintService) {
+    .directive('dashboard', ['appService', '$stateParams', '$bahmniCookieStore', 'configurations', 'encounterService', 'spinner', 'auditLogService', 'messagingService', '$state', '$translate', 'formPrintService', 'formDraftService', function (appService, $stateParams, $bahmniCookieStore, configurations, encounterService, spinner, auditLogService, messagingService, $state, $translate, formPrintService, formDraftService) {
         var controller = function ($scope, $filter, $rootScope) {
             var dashboardConfig = null;
 
@@ -37,7 +37,8 @@ angular.module('bahmni.common.displaycontrol.dashboard')
                     configurations.consultationNoteConcept(), configurations.labOrderNotesConcept()),
                     editErrorMessage: $translate.instant('CLINICAL_FORM_ERRORS_MESSAGE_KEY'),
                     showPrintOption: (dashboardConfig && dashboardConfig.printing) ? true : false,
-                    currentProvider: $rootScope.currentProvider
+                    currentProvider: $rootScope.currentProvider,
+                    draftFormNames: formDraftService.getFormNamesFromDraft($rootScope.draftData)
                 };
                 $scope.formApi = {
                     handleEditSave: function (encounter) {
@@ -84,6 +85,19 @@ angular.module('bahmni.common.displaycontrol.dashboard')
             }
 
             var sectionFormDataCache = new WeakMap();
+
+            var cleanUpDraftWatch = $rootScope.$watch('draftData', function (newVal, oldVal) {
+                if (newVal === oldVal) { return; }
+                if ($scope.formData) {
+                    $scope.formData.draftFormNames = formDraftService.getFormNamesFromDraft(newVal);
+                    sectionFormDataCache = new WeakMap();
+                }
+            });
+
+            $scope.$on('$destroy', function () {
+                cleanUpDraftWatch();
+            });
+
             $scope.getSectionFormData = function (section) {
                 if (!section) return $scope.formData;
                 if (!sectionFormDataCache.has(section)) {
