@@ -476,12 +476,19 @@ angular.module('bahmni.clinical').controller('ConsultationController',
             var isObservationFormValid = function () {
                 var valid = true;
                 _.each($scope.consultation.observationForms, function (observationForm) {
-                    if (valid && observationForm.component) {
+                    if (!valid) { return; }
+                    if (observationForm.component) {
                         var value = observationForm.component.getValue();
-                        if (value.errors) {
+                        if (value && value.errors) {
                             messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");
                             valid = false;
+                            observationForm._draftValidationPassed = false;
+                        } else {
+                            observationForm._draftValidationPassed = true;
                         }
+                    } else if (observationForm.hasUnsavedFormObservations && !observationForm._draftValidationPassed) {
+                        messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");
+                        valid = false;
                     }
                 });
                 return valid;
