@@ -29,7 +29,7 @@ angular.module('bahmni.clinical')
                 [Bahmni.Common.Constants.weightConceptName],
                 'latest',
                 null,
-                null, null, null, null
+                null, null, false, null
             ).then(function (response) {
                 if (response.data && response.data.length > 0) {
                     enhancedPatient.weight = response.data[0].value;
