@@ -161,7 +161,7 @@
                             </div>
                             <div class="field-value">
                                 <select id="variable-dose-unit" class=" freq-dose-units" ng-model="treatment.variableDosingType.doseUnits"
-                                        ng-options="item.name as item.name for item in treatmentConfig.getDoseUnits()"
+                                        ng-options="item.name as item.name for item in getFinalDosingUnits(treatment)"
                                         ng-disabled="isRuleMode(treatment)"
                                         required="required">
                                     <option value="">{{ ::treatmentConfig.translate('doseUnitsPlaceHolder', 'MEDICATION_DOSE_UNIT_PLACEHOLDER') }} </option>
