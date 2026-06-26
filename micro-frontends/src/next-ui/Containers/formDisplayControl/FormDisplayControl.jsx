@@ -351,16 +351,22 @@ export function FormDisplayControl(props) {
                                   {comments.has(entry.encounterUuid) && <Chat />}
                                   {checkForPrivileges(entry, "edit") &&
                                     showEdit(entry.encounterUuid) && (
-                                      <i
-                                        className="fa fa-pencil"
-                                        onClick={() => {
-                                          openEditObservationForm(
-                                            key,
-                                            entry.encounterUuid,
-                                            entry.formNameTranslations
-                                          );
-                                        }}
-                                      ></i>
+                                      props?.hostData?.draftFormNames?.includes(key) ? (
+                                        <i
+                                          className="fa fa-pencil pencil-disabled"
+                                        ></i>
+                                      ) : (
+                                        <i
+                                          className="fa fa-pencil"
+                                          onClick={() => {
+                                            openEditObservationForm(
+                                              key,
+                                              entry.encounterUuid,
+                                              entry.formNameTranslations
+                                            );
+                                          }}
+                                        ></i>
+                                      )
                                     )}
                                 </div>
                                 <span className={"form-provider-text"}>

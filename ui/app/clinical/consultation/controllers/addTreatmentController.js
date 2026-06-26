@@ -998,7 +998,7 @@ angular.module('bahmni.clinical')
                 var diagnosisPromise = $q.resolve();
 
                 if ($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
-                    patientWeightPromise = observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, null, null).then(function (response) {
+                    patientWeightPromise = observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, false, null).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
                         $scope.obs = response.data;
 
