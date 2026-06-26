@@ -132,7 +132,7 @@ describe("PatientDashboardLabOrdersController", function () {
                 [Bahmni.Common.Constants.weightConceptName],
                 'latest',
                 null,
-                null, null, null, null
+                null, null, false, null
             );
         });
 
