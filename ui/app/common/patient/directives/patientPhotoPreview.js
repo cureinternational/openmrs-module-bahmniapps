@@ -3,8 +3,8 @@
 angular.module('bahmni.common.patient')
     .directive('patientImage', ['$document', function ($document) {
         var BLANK_USER_RE = /blank-user/;
-        var STYLE_ID     = 'patient-photo-modal-style';
-        var MODAL_ID     = 'patient-photo-modal-overlay';
+        var STYLE_ID = 'patient-photo-modal-style';
+        var MODAL_ID = 'patient-photo-modal-overlay';
 
         // -- one-time setup (styles + modal + delegated listener) --
         var _initialized = false;
@@ -66,7 +66,7 @@ angular.module('bahmni.common.patient')
         }
 
         function setupGlobal (doc) {
-            var overlay  = buildModal(doc);
+            var overlay = buildModal(doc);
             var modalImg = overlay.querySelector('.patient-photo-modal-image');
             var backdrop = overlay.querySelector('.patient-photo-modal-backdrop');
             var closeBtn = overlay.querySelector('.patient-photo-modal-close');
