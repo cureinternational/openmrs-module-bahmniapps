@@ -57,6 +57,9 @@
         this.viewName = getViewUrl(this);
         this.hideEmptyDisplayControl = section.hideEmptyDisplayControl != undefined ? section.hideEmptyDisplayControl : false;
         this.isDataAvailable = true;
+        if (this.dashboardConfig && this.dashboardConfig.filterObsWithOrders === undefined) {
+            this.dashboardConfig = angular.extend({filterObsWithOrders: false}, this.dashboardConfig);
+        }
 
         this.id = getId(this, $filter);
     };
