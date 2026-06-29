@@ -57,6 +57,7 @@ angular.module('bahmni.clinical')
                     if (form.hasUnsavedFormObservations) {
                         form.observations = [];
                         form.hasUnsavedFormObservations = false;
+                        form.draftValidationPassed = undefined;
                     }
                 });
             };
@@ -191,6 +192,13 @@ angular.module('bahmni.clinical')
                     if (templateToBeOpened) {
                         openTemplate(templateToBeOpened);
                     }
+                } else if (draftFormData) {
+                    _.each($scope.allTemplates, function (template) {
+                        if (template.hasUnsavedFormObservations &&
+                            !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
+                            insertTemplate(template);
+                        }
+                    });
                 }
                 if (draftFormData) {
                     populateFormWithDraftData(draftFormData);
@@ -471,6 +479,7 @@ angular.module('bahmni.clinical')
             var clearAllDraftIndicators = function () {
                 _.each($scope.allTemplates, function (template) {
                     template.hasUnsavedFormObservations = false;
+                    template.draftValidationPassed = undefined;
                 });
             };
 
