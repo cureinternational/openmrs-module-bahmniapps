@@ -17,6 +17,7 @@ describe("PatientDashboardTreatmentController", function () {
         title: "Treatments",
         type: "treatment",
         dashboardConfig: {
+            filterObsWithOrders: false,
             title: null,
             showChart: false,
             showTable: true,
