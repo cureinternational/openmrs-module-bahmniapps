@@ -26,8 +26,7 @@ describe('Dashboard', function () {
         $provide.value('messagingService', {});
         $provide.value('$state', {});
         $provide.value('$translate', {});
-        $provide.value('formPrintService', formPrintService);
-        $provide.value('formDraftService', {getFormNamesFromDraft: function () { return []; }});
+        $provide.value('formPrintService',formPrintService);
         $provide.value('configurations', {
             dosageFrequencyConfig: function () {
                 return {
