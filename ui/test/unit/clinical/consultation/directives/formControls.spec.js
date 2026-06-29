@@ -1,7 +1,7 @@
 'use strict';
 
 describe("Form Controls", function () {
-    var element, scope, $compile, spinner, provide, formService, renderHelper, translate, $state, appService;
+    var element, scope, $compile, spinner, provide, formService, appService, renderHelper, translate, $state;
 
     beforeEach(
         function () {
@@ -10,27 +10,27 @@ describe("Form Controls", function () {
                 provide = $provide;
                 formService = jasmine.createSpyObj('formService', ['getFormDetail', 'getFormTranslations']);
                 spinner = jasmine.createSpyObj('spinner', ['forPromise']);
-                $state = {
-                    patientUuid: 'patientUuid',
-                    dirtyConsultationForm: false
-                };
                 appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
                 appService.getAppDescriptor.and.returnValue({
                     getConfigValue: function (key) {
-                        if (key === 'security') {
-                            return { hyperlinkAllowedDomains: [] };
+                        if (key === 'hyperlinkAllowedDomains') {
+                            return [];
                         }
                         return null;
                     }
                 });
+                $state = {
+                    patientUuid: 'patientUuid',
+                    dirtyConsultationForm: false
+                };
                 provide.value('formService', formService);
+                provide.value('appService', appService);
                 translate = {
                     use: function(){ return 'en' }
                 };
                 provide.value('spinner', spinner);
                 provide.value('$translate', translate);
                 provide.value('$state', $state);
-                provide.value('appService', appService);
             });
 
             inject(function (_$compile_, $rootScope, _$state_) {
@@ -87,7 +87,6 @@ describe("Form Controls", function () {
                 }
             }
         });
-
         formService.getFormTranslations.and.callFake(function () {
             return {
                 then: function (successCallback, errorCallback) {
@@ -124,23 +123,7 @@ describe("Form Controls", function () {
         expect($state.dirtyForm).toBeFalsy();
     });
 
-    it('should pass empty allowedDomains when security config is absent (backward compat)', function () {
-        var capturedAllowedDomains;
-        window.renderWithControls = function () {
-            capturedAllowedDomains = arguments[8];
-            renderHelper.renderWithControlsCalledTimes += 1;
-        };
-        appService.getAppDescriptor.and.returnValue({
-            getConfigValue: function () {
-                return null;
-            }
-        });
-        mockObservationService({ resources: [{ value: '{"name":"Vitals", "controls": [{"type":"obsControl", "controls":[]}] }' }] });
-        createElement();
-        expect(capturedAllowedDomains).toEqual([]);
-    });
-
-    it('should pass allowedDomains from security config to renderWithControls', function () {
+    it('should pass hyperlinkAllowedDomains config to renderWithControls', function () {
         var capturedAllowedDomains;
         window.renderWithControls = function () {
             capturedAllowedDomains = arguments[8];
@@ -148,8 +131,8 @@ describe("Form Controls", function () {
         };
         appService.getAppDescriptor.and.returnValue({
             getConfigValue: function (key) {
-                if (key === 'security') {
-                    return { hyperlinkAllowedDomains: ['*.example.com'] };
+                if (key === 'hyperlinkAllowedDomains') {
+                    return ['*.example.com'];
                 }
                 return null;
             }
@@ -157,6 +140,20 @@ describe("Form Controls", function () {
         mockObservationService({ resources: [{ value: '{"name":"Vitals", "controls": [{"type":"obsControl", "controls":[]}] }' }] });
         createElement();
         expect(capturedAllowedDomains).toEqual(['*.example.com']);
+    });
+
+    it('should pass empty allowedDomains when hyperlinkAllowedDomains config is absent', function () {
+        var capturedAllowedDomains;
+        window.renderWithControls = function () {
+            capturedAllowedDomains = arguments[8];
+            renderHelper.renderWithControlsCalledTimes += 1;
+        };
+        appService.getAppDescriptor.and.returnValue({
+            getConfigValue: function () { return null; }
+        });
+        mockObservationService({ resources: [{ value: '{"name":"Vitals", "controls": [{"type":"obsControl", "controls":[]}] }' }] });
+        createElement();
+        expect(capturedAllowedDomains).toEqual([]);
     });
 
     it('should pass allowedDomains to renderWithControls even when translation fetch fails', function () {
@@ -167,8 +164,8 @@ describe("Form Controls", function () {
         };
         appService.getAppDescriptor.and.returnValue({
             getConfigValue: function (key) {
-                if (key === 'security') {
-                    return { hyperlinkAllowedDomains: ['*.example.com'] };
+                if (key === 'hyperlinkAllowedDomains') {
+                    return ['*.example.com'];
                 }
                 return null;
             }
