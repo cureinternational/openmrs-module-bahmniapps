@@ -337,9 +337,6 @@ angular.module('bahmni.clinical')
             };
 
             $scope.shouldBeDisabled = function (drugOrder, orderAttribute) {
-                if ($scope.showPharmacistReviewBanner()) {
-                    return true;
-                }
                 if (drugOrder.isBeingEdited) {
                     return true;
                 }
