@@ -3,8 +3,8 @@
 angular.module('bahmni.common.patient')
     .directive('patientImage', ['$document', '$injector', function ($document, $injector) {
         var BLANK_USER_RE = /blank-user/;
-        var STYLE_ID      = 'patient-photo-preview-styles';
-        var INIT_MARKER   = 'patient-photo-preview-init';
+        var STYLE_ID = 'patient-photo-preview-styles';
+        var INIT_MARKER = 'patient-photo-preview-init';
 
         function getDoc () {
             return ($document && $document[0]) || document;
