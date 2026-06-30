@@ -14,7 +14,7 @@ describe('patientPhotoPreview directive', function () {
         scope    = $rootScope.$new();
         $compile = _$compile_;
 
-        // Remove ALL init markers accumulated by other spec files
+        // Remove stale init markers left by previous tests
         var stale = document.querySelectorAll('#patient-photo-preview-init');
         Array.prototype.forEach.call(stale, function (el) { el.parentNode && el.parentNode.removeChild(el); });
         var staleStyle = document.getElementById('patient-photo-preview-styles');
@@ -23,8 +23,8 @@ describe('patientPhotoPreview directive', function () {
 
     afterEach(function () {
         if (element) { element.remove(); }
-        var stale = document.querySelectorAll('#patient-photo-preview-init');
-        Array.prototype.forEach.call(stale, function (el) { el.parentNode && el.parentNode.removeChild(el); });
+        // Destroying scope triggers the registered cleanup (removes listener + marker)
+        scope.$destroy();
     });
 
     function compileElement (src) {
@@ -86,5 +86,33 @@ describe('patientPhotoPreview directive', function () {
             closeByEscape: true,
             showClose: false
         }));
+    });
+
+    it('should include ARIA attributes in the modal template', function () {
+        var img = compileElement('patient.jpg');
+        clickNative(img[0]);
+        var template = ngDialogSpy.open.calls.mostRecent().args[0].template;
+        expect(template).toContain('role="dialog"');
+        expect(template).toContain('aria-modal="true"');
+        expect(template).toContain('aria-label="Enlarged patient photo"');
+    });
+
+    it('should remove click listener and init marker when scope is destroyed', function () {
+        compileElement('patient.jpg');
+        expect(document.getElementById('patient-photo-preview-init')).not.toBeNull();
+
+        scope.$destroy();
+
+        expect(document.getElementById('patient-photo-preview-init')).toBeNull();
+
+        // Clicks should no longer open the dialog after cleanup
+        ngDialogSpy.open.calls.reset();
+        var orphan = document.createElement('img');
+        orphan.className = 'patient-image';
+        orphan.setAttribute('src', 'orphan.jpg');
+        document.body.appendChild(orphan);
+        clickNative(orphan);
+        expect(ngDialogSpy.open).not.toHaveBeenCalled();
+        document.body.removeChild(orphan);
     });
 });
