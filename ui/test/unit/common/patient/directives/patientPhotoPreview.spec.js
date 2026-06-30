@@ -1,24 +1,29 @@
 'use strict';
 
 describe('patientPhotoPreview directive', function () {
-    var scope, $compile, element;
+    var scope, $compile, element, ngDialogSpy;
 
     beforeEach(module('bahmni.common.patient'));
+
+    beforeEach(module(function ($provide) {
+        ngDialogSpy = jasmine.createSpyObj('ngDialog', ['open']);
+        $provide.value('ngDialog', ngDialogSpy);
+    }));
 
     beforeEach(inject(function (_$compile_, $rootScope) {
         scope    = $rootScope.$new();
         $compile = _$compile_;
 
-        // Remove ALL modals accumulated by other spec files, so each test gets a fresh init
-        var stale = document.querySelectorAll('#patient-photo-modal-overlay');
+        // Remove ALL init markers accumulated by other spec files
+        var stale = document.querySelectorAll('#patient-photo-preview-init');
         Array.prototype.forEach.call(stale, function (el) { el.parentNode && el.parentNode.removeChild(el); });
-        var staleStyle = document.getElementById('patient-photo-modal-style');
+        var staleStyle = document.getElementById('patient-photo-preview-styles');
         if (staleStyle) { staleStyle.parentNode.removeChild(staleStyle); }
     }));
 
     afterEach(function () {
         if (element) { element.remove(); }
-        var stale = document.querySelectorAll('#patient-photo-modal-overlay');
+        var stale = document.querySelectorAll('#patient-photo-preview-init');
         Array.prototype.forEach.call(stale, function (el) { el.parentNode && el.parentNode.removeChild(el); });
     });
 
@@ -35,78 +40,51 @@ describe('patientPhotoPreview directive', function () {
         node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     }
 
-    function getOverlay () {
-        return document.getElementById('patient-photo-modal-overlay');
-    }
-
-    it('should append the shared modal overlay to the document body', function () {
+    it('should inject styles into document head', function () {
         compileElement('patient.jpg');
-        expect(document.querySelectorAll('#patient-photo-modal-overlay').length).toBe(1);
+        expect(document.getElementById('patient-photo-preview-styles')).not.toBeNull();
     });
 
-    it('should open the modal and set image src when a real photo is clicked', function () {
+    it('should open ngDialog when a real photo is clicked', function () {
         var img = compileElement('patient.jpg');
-
         clickNative(img[0]);
-
-        var overlay = getOverlay();
-        expect(overlay.classList.contains('is-open')).toBe(true);
-        expect(overlay.querySelector('.patient-photo-modal-image').getAttribute('src')).toBe('patient.jpg');
+        expect(ngDialogSpy.open).toHaveBeenCalledWith(jasmine.objectContaining({
+            data: { src: 'patient.jpg' },
+            className: 'ngdialog-theme-default patient-photo-dialog'
+        }));
     });
 
-    it('should not open the modal when blank-user placeholder is clicked', function () {
+    it('should not open ngDialog when blank-user placeholder is clicked', function () {
         var img = compileElement('../images/blank-user.gif');
         clickNative(img[0]);
-        expect(getOverlay().classList.contains('is-open')).toBe(false);
+        expect(ngDialogSpy.open).not.toHaveBeenCalled();
     });
 
-    it('should not open the modal when src is empty', function () {
+    it('should not open ngDialog when src is empty', function () {
         var img = compileElement('');
         clickNative(img[0]);
-        expect(getOverlay().classList.contains('is-open')).toBe(false);
+        expect(ngDialogSpy.open).not.toHaveBeenCalled();
     });
 
-    it('should close the modal when backdrop is clicked', function () {
-        var img = compileElement('patient.jpg');
-        clickNative(img[0]);
-
-        var overlay = getOverlay();
-        expect(overlay.classList.contains('is-open')).toBe(true);
-
-        clickNative(overlay.querySelector('.patient-photo-modal-backdrop'));
-        expect(overlay.classList.contains('is-open')).toBe(false);
-    });
-
-    it('should close the modal when the close button is clicked', function () {
-        var img = compileElement('patient.jpg');
-        clickNative(img[0]);
-
-        var overlay = getOverlay();
-        expect(overlay.classList.contains('is-open')).toBe(true);
-
-        clickNative(overlay.querySelector('.patient-photo-modal-close'));
-        expect(overlay.classList.contains('is-open')).toBe(false);
-    });
-
-    it('should close the modal when Esc key is pressed', function () {
-        var img = compileElement('patient.jpg');
-        clickNative(img[0]);
-
-        var overlay = getOverlay();
-        expect(overlay.classList.contains('is-open')).toBe(true);
-
-        document.dispatchEvent(new KeyboardEvent('keydown', { keyCode: 27, bubbles: true }));
-        expect(overlay.classList.contains('is-open')).toBe(false);
-    });
-
-    it('should not create duplicate modals when multiple patient-image elements exist', function () {
+    it('should not create duplicate listeners when multiple patient-image elements exist', function () {
         compileElement('patient1.jpg');
-        var secondEl = $compile(angular.element('<img class="patient-image" />'))(scope);
-        secondEl[0].setAttribute('src', 'patient2.jpg');
-        angular.element(document.body).append(secondEl);
+        var second = $compile(angular.element('<img class="patient-image" />'))(scope);
+        second[0].setAttribute('src', 'patient2.jpg');
+        angular.element(document.body).append(second);
         scope.$digest();
-        secondEl.remove();
 
-        expect(document.querySelectorAll('#patient-photo-modal-overlay').length).toBe(1);
+        clickNative(second[0]);
+        expect(ngDialogSpy.open.calls.count()).toBe(1);
+        second.remove();
+    });
+
+    it('should use closeByDocument and closeByEscape in ngDialog options', function () {
+        var img = compileElement('patient.jpg');
+        clickNative(img[0]);
+        expect(ngDialogSpy.open).toHaveBeenCalledWith(jasmine.objectContaining({
+            closeByDocument: true,
+            closeByEscape: true,
+            showClose: false
+        }));
     });
 });
