@@ -1733,6 +1733,67 @@ describe("AddTreatmentController", function () {
         });
     });
 
+    describe("Refill All excludes variable-dose orders", function () {
+        beforeEach(function () {
+            scope.treatments = [];
+        });
+
+        it("should refill a regular drug order when it has an effectiveStopDate", function () {
+            var refillCalled = false;
+            var regularOrder = {
+                effectiveStopDate: new Date('2026-06-01'),
+                isVariableDoseOrder: false,
+                concept: null,
+                isNonCodedDrug: false,
+                refill: function () {
+                    refillCalled = true;
+                    return { drug: { name: 'Aspirin' } };
+                }
+            };
+            rootScope.$broadcast("event:refillDrugOrders", [regularOrder]);
+            expect(refillCalled).toBe(true);
+            expect(scope.treatments.length).toBe(1);
+        });
+
+        it("should NOT refill a variable-dose order even when it has an effectiveStopDate", function () {
+            var refillCalled = false;
+            var variableDoseOrder = {
+                effectiveStopDate: new Date('2026-06-01'),
+                isVariableDoseOrder: true,
+                concept: null,
+                isNonCodedDrug: false,
+                refill: function () {
+                    refillCalled = true;
+                    return { drug: { name: 'Prednisolone' } };
+                }
+            };
+            rootScope.$broadcast("event:refillDrugOrders", [variableDoseOrder]);
+            expect(refillCalled).toBe(false);
+            expect(scope.treatments.length).toBe(0);
+        });
+
+        it("should refill regular orders but skip variable-dose orders in a mixed list", function () {
+            var refillCount = 0;
+            var regularOrder = {
+                effectiveStopDate: new Date('2026-06-01'),
+                isVariableDoseOrder: false,
+                concept: null,
+                isNonCodedDrug: false,
+                refill: function () { refillCount++; return { drug: { name: 'Aspirin' } }; }
+            };
+            var variableDoseOrder = {
+                effectiveStopDate: new Date('2026-06-01'),
+                isVariableDoseOrder: true,
+                concept: null,
+                isNonCodedDrug: false,
+                refill: function () { refillCount++; return { drug: { name: 'Prednisolone' } }; }
+            };
+            rootScope.$broadcast("event:refillDrugOrders", [regularOrder, variableDoseOrder]);
+            expect(refillCount).toBe(1);
+            expect(scope.treatments.length).toBe(1);
+        });
+    });
+
     describe("VDP conflict detection when adding a regular drug order", function () {
         var encounterDate;
         beforeEach(function () {
@@ -2451,6 +2512,161 @@ describe("AddTreatmentController", function () {
             scope.treatment = treatment;
             scope.add();
             expect(scope.treatments[0].careSetting).toBe(Bahmni.Clinical.Constants.careSetting.outPatient);
+        });
+    });
+
+    describe("VDP non-coded drug entry in variableDoseHostApi.onSave", function () {
+        var $timeout;
+        var vdpTreatmentConfig;
+
+        var initControllerWithVDP = function () {
+            inject(function ($controller, $rootScope, _$q_, _$timeout_) {
+                $q = _$q_;
+                $timeout = _$timeout_;
+                scope = $rootScope.$new();
+                rootScope = $rootScope;
+                encounterDateTime = moment("2026-01-01").toDate();
+                scope.consultation = { preSaveHandler: new Bahmni.Clinical.Notifier(), encounterDateTime: encounterDateTime };
+                scope.currentBoard = { extension: {}, extensionParams: {} };
+                scope.addForm = { $invalid: false, $valid: true };
+                ngDialog = jasmine.createSpyObj('ngDialog', ['open', 'close']);
+
+                appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigForPage', 'getConfigValue']);
+                appDescriptor.getConfigForPage.and.returnValue(medicationConfig);
+                appDescriptor.getConfigValue.and.callFake(function (key) {
+                    if (key === 'enableVariableDoseProtocol') { return true; }
+                    return null;
+                });
+                appService = jasmine.createSpyObj('appService', ['getAppDescriptor']);
+                appService.getAppDescriptor.and.returnValue(appDescriptor);
+
+                orderSetService = jasmine.createSpyObj('orderSetService', ['getCalculatedDose', 'getOrderSetsByQuery']);
+                orderSetService.getCalculatedDose.and.returnValue($q.resolve({ dose: 5, doseUnit: 'mg' }));
+                var fakePromise = {
+                    response: { data: { results: [] } },
+                    then: function (cb) { cb(this.response); }
+                };
+                orderSetService.getOrderSetsByQuery.and.returnValue(fakePromise);
+
+                visitService = jasmine.createSpyObj('visitService', ['search']);
+                visitService.search.and.returnValue(specUtil.respondWithPromise($q, {
+                    data: { results: [{ visitType: { display: 'OPD' }, uuid: 'visit-uuid' }] }
+                }));
+
+                drugService = jasmine.createSpyObj('drugService', ['getSetMembersOfConcept', 'sendDiagnosisDrugBundle', 'getCdssEnabled', 'cdssAudit', 'getDrugConceptSourceMapping', 'search']);
+                drugService.getSetMembersOfConcept.and.returnValue(specUtil.respondWith([]));
+                drugService.sendDiagnosisDrugBundle.and.returnValue(specUtil.respondWith([]));
+                drugService.getCdssEnabled.and.returnValue(specUtil.respondWith(false));
+                drugService.cdssAudit.and.returnValue(specUtil.respondWith(true));
+                drugService.getDrugConceptSourceMapping.and.returnValue(specUtil.respondWithPromise($q, { entry: [] }));
+                drugService.search.and.returnValue(specUtil.respondWithPromise($q, []));
+
+                cdssService = jasmine.createSpyObj('cdssService', ['createFhirBundle', 'sendDiagnosisDrugBundle', 'createParams', 'addNewAlerts', 'sortInteractionsByStatus', 'getAlerts']);
+                cdssService.getAlerts.and.returnValue(specUtil.respondWith([]));
+                cdssService.sortInteractionsByStatus.and.returnValue(specUtil.respondWith([]));
+                diagnosisService = jasmine.createSpyObj('diagnosisService', ['getPatientDiagnosis']);
+                diagnosisService.getPatientDiagnosis.and.returnValue([]);
+                locationService = jasmine.createSpyObj('locationService', ['getLoggedInLocation']);
+                scope.patient = { uuid: "patient.uuid" };
+                contextChangeHandler = jasmine.createSpyObj('contextChangeHandler', ['add']);
+                observationsService = jasmine.createSpyObj('observationsService', ['getByEncounterAndConcept']);
+
+                // Extended treatmentConfig with VDP-required methods
+                vdpTreatmentConfig = angular.extend({}, treatmentConfig, {
+                    getDoseUnits: function () { return [{ name: 'mg' }]; },
+                    getRoutes: function () { return [{ name: 'Oral' }]; },
+                    getDosingInstructions: function () { return []; },
+                    getFrequencies: function () { return [{ name: 'Twice a day', frequencyPerDay: 2 }]; },
+                    getDurationUnits: function () { return [{ name: 'Day(s)' }]; },
+                    nonCodedDrugconcept: null
+                });
+
+                $controller('AddTreatmentController', {
+                    $scope: scope,
+                    $stateParams: stateParams,
+                    $rootScope: rootScope,
+                    treatmentService: null,
+                    activeDrugOrders: [],
+                    contextChangeHandler: contextChangeHandler,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    ngDialog: ngDialog,
+                    appService: appService,
+                    appDescriptor: appDescriptor,
+                    locationService: locationService,
+                    drugService: drugService,
+                    treatmentConfig: vdpTreatmentConfig,
+                    orderSetService: orderSetService,
+                    $state: $state,
+                    cdssService: cdssService,
+                    diagnosisService: diagnosisService,
+                    visitService: visitService,
+                    observationsService: observationsService
+                });
+                scope.treatments = [];
+                scope.orderSetTreatments = [];
+                scope.newOrderSet = {};
+                scope.consultation.variableDoseTreatments = [];
+                rootScope.$apply();
+            });
+        };
+
+        beforeEach(initControllerWithVDP);
+
+        it("should carry drugNonCoded and concept in the entry when data.isNonCodedDrug is true", function () {
+            var nonCodedConcept = { uuid: 'noncoded-uuid', name: 'Non-coded Drug Concept' };
+            vdpTreatmentConfig.nonCodedDrugconcept = nonCodedConcept;
+
+            var saveData = {
+                drug: null,
+                isNonCodedDrug: true,
+                drugNonCoded: 'Herbal Mixture 500mg',
+                units: 'mg',
+                route: 'Oral',
+                startDate: new Date('2026-01-01'),
+                dosingRule: '',
+                loadingDose: null,
+                stages: [
+                    { stageName: 'Stage 1', sequence: 1, isLoadingDose: false, dose: '5', unit: 'mg', frequency: 'Twice a day', frequencyPerDay: 2, duration: '3', durationUnit: 'Day(s)', instructions: '', rate: '', additives: '', additionalInstructions: '', startDate: new Date('2026-01-01') }
+                ]
+            };
+
+            scope.variableDoseHostApi.onSave(saveData, false);
+            $timeout.flush();
+            rootScope.$apply();
+
+            expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+            var entry = scope.consultation.variableDoseTreatments[0];
+            expect(entry.drugNonCoded).toBe('Herbal Mixture 500mg');
+            expect(entry.concept).toEqual(nonCodedConcept);
+            expect(entry.drug).toBeNull();
+            expect(entry.drugName).toBe('Herbal Mixture 500mg');
+        });
+
+        it("should use drug name and null drugNonCoded for coded drugs", function () {
+            var saveData = {
+                drug: { uuid: 'drug-uuid', name: 'Prednisolone', dosageForm: { display: 'Tablet' } },
+                isNonCodedDrug: false,
+                drugNonCoded: null,
+                units: 'mg',
+                route: 'Oral',
+                startDate: new Date('2026-01-01'),
+                dosingRule: '',
+                loadingDose: null,
+                stages: [
+                    { stageName: 'Stage 1', sequence: 1, isLoadingDose: false, dose: '5', unit: 'mg', frequency: 'Twice a day', frequencyPerDay: 2, duration: '3', durationUnit: 'Day(s)', instructions: '', rate: '', additives: '', additionalInstructions: '', startDate: new Date('2026-01-01') }
+                ]
+            };
+
+            scope.variableDoseHostApi.onSave(saveData, false);
+            $timeout.flush();
+            rootScope.$apply();
+
+            expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+            var entry = scope.consultation.variableDoseTreatments[0];
+            expect(entry.drug).toEqual(saveData.drug);
+            expect(entry.drugNonCoded).toBeNull();
+            expect(entry.concept).toBeNull();
+            expect(entry.drugName).toBe('Prednisolone');
         });
     });
 });
