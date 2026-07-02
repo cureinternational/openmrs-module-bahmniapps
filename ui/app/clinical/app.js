@@ -173,6 +173,9 @@ angular.module('consultation')
                     }
                 }
             })
+            .state('patient.dashboard.show.observations.form', {
+                url: '/form/:formUuid'
+            })
             .state('patient.dashboard.show.diagnosis', {
                 url: '/diagnosis',
                 params: {

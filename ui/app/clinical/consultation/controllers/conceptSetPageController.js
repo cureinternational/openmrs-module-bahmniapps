@@ -213,6 +213,22 @@ angular.module('bahmni.clinical')
                     $rootScope.resumeDraftPatientUuid = null;
                 }
                 $timeout(setupDirtyTracking, 0);
+
+                var formUuidParam = $stateParams.formUuid;
+                if (formUuidParam) {
+                    var targetForm = _.find($scope.allTemplates, function (t) {
+                        return t.formUuid === formUuidParam;
+                    });
+                    if (targetForm) {
+                        if (!_.find($scope.consultation.selectedObsTemplate, function (t) { return t === targetForm; })) {
+                            targetForm.isAdded = true;
+                            $scope.consultation.selectedObsTemplate.push(targetForm);
+                        }
+                        $timeout(function () {
+                            $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
+                        }, 0);
+                    }
+                }
             };
 
             var addTemplatesInSavedOrder = function () {
