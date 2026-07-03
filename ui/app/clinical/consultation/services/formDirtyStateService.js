@@ -27,11 +27,15 @@ angular.module('bahmni.clinical')
                 return;
             }
             if (obs.value !== null && obs.value !== undefined) {
-                var val = obs.value;
-                if (val && typeof val === 'object' && val.uuid) {
-                    values.push(val.uuid);
+                if (obs.voided) {
+                    values.push(null);
                 } else {
-                    values.push(val);
+                    var val = obs.value;
+                    if (val && typeof val === 'object' && val.uuid) {
+                        values.push(val.uuid);
+                    } else {
+                        values.push(val);
+                    }
                 }
             }
         };
@@ -178,7 +182,14 @@ angular.module('bahmni.clinical')
                                templateMember.concept.uuid === draftMember.concept.uuid;
                     });
                     if (matchedMember) {
-                        populateObservationValues(matchedMember, draftMember);
+                        if (draftMember.voided) {
+                            var memberIndex = templateObs.groupMembers.indexOf(matchedMember);
+                            if (memberIndex > -1) {
+                                templateObs.groupMembers.splice(memberIndex, 1);
+                            }
+                        } else {
+                            populateObservationValues(matchedMember, draftMember);
+                        }
                     }
                 });
             }
