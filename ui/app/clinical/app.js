@@ -164,7 +164,8 @@ angular.module('consultation')
                 url: '/concept-set-group/:conceptSetGroupName',
                 params: {
                     cachebuster: null,
-                    lastOpenedTemplate: null
+                    lastOpenedTemplate: null,
+                    formUuid: null
                 },
                 views: {
                     'consultation-content': {

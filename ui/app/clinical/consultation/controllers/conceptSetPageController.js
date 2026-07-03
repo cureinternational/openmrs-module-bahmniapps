@@ -193,7 +193,7 @@ angular.module('bahmni.clinical')
                     var templateToBeOpened = getLastVisitedTemplate() ||
                         _.first($scope.consultation.selectedObsTemplate);
 
-                    if (templateToBeOpened) {
+                    if (templateToBeOpened && !$stateParams.formUuid) {
                         openTemplate(templateToBeOpened);
                     }
                 } else if (draftFormData) {
