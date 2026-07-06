@@ -182,14 +182,7 @@ angular.module('bahmni.clinical')
                                templateMember.concept.uuid === draftMember.concept.uuid;
                     });
                     if (matchedMember) {
-                        if (draftMember.voided) {
-                            var memberIndex = templateObs.groupMembers.indexOf(matchedMember);
-                            if (memberIndex > -1) {
-                                templateObs.groupMembers.splice(memberIndex, 1);
-                            }
-                        } else {
-                            populateObservationValues(matchedMember, draftMember);
-                        }
+                        populateObservationValues(matchedMember, draftMember);
                     }
                 });
             }
