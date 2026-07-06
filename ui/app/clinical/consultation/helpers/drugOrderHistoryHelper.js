@@ -24,13 +24,20 @@ angular.module('bahmni.clinical')
             var drugOrderUtil = Bahmni.Clinical.DrugOrder.Util;
             var now = new Date();
             var partitionedDrugOrders = _.groupBy(activeAndScheduledDrugOrders, function (drugOrder) {
-                return (drugOrder.effectiveStartDate > now) ? "scheduled" : "active";
+                if (drugOrder.effectiveStartDate > now) {
+                    return "scheduled";
+                }
+                if (drugOrder.effectiveEndDate && drugOrder.effectiveEndDate <= now) {
+                    return "completed";
+                }
+                return "active";
             });
             var sortedDrugOrders = [];
 
             sortedDrugOrders.push(drugOrderUtil.sortDrugOrders(partitionedDrugOrders.scheduled));
             sortedDrugOrders.push(drugOrderUtil.sortDrugOrders(partitionedDrugOrders.active));
             if (!showOnlyActive) {
+                sortedDrugOrders.push(drugOrderUtil.sortDrugOrders(partitionedDrugOrders.completed));
                 sortedDrugOrders.push(drugOrderUtil.sortDrugOrders(this.getInactiveDrugsFromPastVisit(activeAndScheduledDrugOrders, previousVisitDrugOrders)));
             }
             return _.flatten(sortedDrugOrders);
