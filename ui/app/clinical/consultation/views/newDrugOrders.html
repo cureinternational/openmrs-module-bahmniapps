@@ -49,7 +49,7 @@
             </div>
             <div class="button-group-wrapper">
                 <div class="button-group">
-                    <button class="disch-btn" ng-show="currentVisitType === 'IPD'" ng-click="toggleDischargeMedication(newTreatment)">
+                    <button class="disch-btn" ng-show="currentVisitType === 'IPD' && enableDischargeTag" ng-click="toggleDischargeMedication(newTreatment)">
                         <i class="fa fa-check" ng-show="newTreatment.isDischargeMedication"></i>
                         {{ ::'DISCH_BUTTON' | translate }}
                     </button>

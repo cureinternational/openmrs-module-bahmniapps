@@ -110,7 +110,8 @@ angular.module('bahmni.clinical')
                 treatments: "=",
                 treatmentConfig: "=",
                 variableDoseTreatments: "=",
-                currentVisitType: "@"
+                currentVisitType: "@",
+                enableDischargeTag: "="
             },
             controller: controller
         };

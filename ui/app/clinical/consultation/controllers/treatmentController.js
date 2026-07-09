@@ -4,6 +4,7 @@ angular.module('bahmni.clinical')
     .controller('TreatmentController', ['$scope', 'clinicalAppConfigService', 'treatmentConfig', '$stateParams', '$rootScope', 'cdssService', 'appService', '$filter',
         function ($scope, clinicalAppConfigService, treatmentConfig, $stateParams, $rootScope, cdssService, appService, $filter) {
             $scope.pharmacistBannerEnabled = !!appService.getAppDescriptor().getConfigValue('enablePharmacistReviewBanner');
+            $scope.enableDischargeTag = appService.getAppDescriptor().getConfigValue('enableDischargeTag') !== false;
 
             if ($scope.pharmacistBannerEnabled) {
                 $scope.dispensePrivilege = Bahmni.Clinical.Constants.dispensePrivilege;
