@@ -233,7 +233,7 @@ angular.module('bahmni.clinical')
                         $scope.sectionGroups = dashboardModel.getSections($scope.diseaseTemplates);
                     });
                 $scope.currentDashboardTemplateUrl = $state.current.views && $state.current.views['dashboard-content'] ?
-                    $state.current.views['dashboard-content'].templateUrl : ($state.current.views ? $state.current.views['dashboard-content'] : null);
+                    $state.current.views['dashboard-content'].templateUrl : $scope.currentDashboardTemplateUrl;
             };
 
             $scope.init(getCurrentTab());

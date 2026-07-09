@@ -169,16 +169,21 @@ angular.module('bahmni.common.conceptSet')
                 $scope.leftPanelConceptSet.atLeastOneValueIsSet = selectedConceptSet.hasSomeValue();
                 $scope.leftPanelConceptSet.isAdded = true;
                 $scope.consultation.lastvisited = selectedConceptSet.id || selectedConceptSet.formUuid;
+                var currentFormUuid = $state.params.formUuid;
                 if (selectedConceptSet.formUuid) {
-                    $state.go('patient.dashboard.show.observations.form',
-                        { formUuid: selectedConceptSet.formUuid },
-                        { notify: false, location: 'replace' }
-                    );
+                    if (currentFormUuid !== selectedConceptSet.formUuid) {
+                        $state.go('patient.dashboard.show.observations.form',
+                            { formUuid: selectedConceptSet.formUuid },
+                            { notify: false, location: 'replace' }
+                        );
+                    }
                 } else {
-                    $state.go('patient.dashboard.show.observations',
-                        {},
-                        { notify: false, location: 'replace' }
-                    );
+                    if (currentFormUuid) {
+                        $state.go('patient.dashboard.show.observations',
+                            {},
+                            { notify: false, location: 'replace' }
+                        );
+                    }
                 }
                 if ($rootScope.showLeftpanelToggle) {
                     $rootScope.showLeftpanelToggle = false;

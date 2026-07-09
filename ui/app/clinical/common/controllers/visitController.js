@@ -17,8 +17,10 @@ angular.module('bahmni.clinical')
             $scope.documentsPromise = encounterService.getEncountersForEncounterType($scope.patient.uuid, encounterTypeUuid).then(function (response) {
                 return new Bahmni.Clinical.PatientFileObservationsMapper().map(response.data.results);
             });
-            $scope.currentVisitUrl = $state.current.views['dashboard-content'].templateUrl ||
-                $state.current.views['print-content'].templateUrl;
+            $scope.currentVisitUrl = $state.current.views &&
+                ($state.current.views['dashboard-content'] || $state.current.views['print-content']) ?
+                    ($state.current.views['dashboard-content'] || $state.current.views['print-content']).templateUrl :
+                    ($scope.currentVisitUrl || null);
             var showProviderInfo = appService.getAppDescriptor().getConfigValue('showProviderInfoinVisits');
             $scope.showProviderInfo = showProviderInfo !== false ? true : showProviderInfo;
             var showPatientInfo = appService.getAppDescriptor().getConfigValue('showPatientInfoInVisits');

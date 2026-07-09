@@ -2865,99 +2865,7 @@ describe('ConceptSetPageController', function () {
     });
 
     describe('Form Navigation with formUuid', function () {
-        it('should delay setupDirtyTracking by 1000ms when formUuid is present in stateParams', function (done) {
-            var mockObsConcept = {
-                data: {
-                    results: [{
-                        setMembers: [
-                            {
-                                uuid: 'concept-uuid-1',
-                                name: {name: 'Template 1', display: 'Template 1'},
-                                set: true,
-                                setMembers: []
-                            }
-                        ]
-                    }]
-                }
-            };
-            var mockFormResponse = {
-                data: [
-                    {
-                        name: 'Form1',
-                        version: '1',
-                        uuid: 'form-uuid-1',
-                        resources: [{value: '{}'}]
-                    }
-                ]
-            };
-
-            conceptSetService.getConcept.and.returnValue({then: function (callback) {
-                callback(mockObsConcept);
-                return {then: function (next) { return {then: function () {}}; }};
-            }});
-            formService.getFormList.and.returnValue({then: function (callback) {
-                callback(mockFormResponse);
-                return {then: function () {}};
-            }});
-
-            stateParams.formUuid = 'form-uuid-1';
-            var setupDirtyTrackingCalled = false;
-            spyOn($timeout, 'cancel');
-
-            createController();
-
-            inject(function ($timeout) {
-                expect($timeout).toHaveBeenCalledWith(jasmine.any(Function), 1000);
-                done();
-            });
-        });
-
-        it('should call setupDirtyTracking immediately (0ms delay) when formUuid is not present', function (done) {
-            var mockObsConcept = {
-                data: {
-                    results: [{
-                        setMembers: [
-                            {
-                                uuid: 'concept-uuid-1',
-                                name: {name: 'Template 1', display: 'Template 1'},
-                                set: true,
-                                setMembers: []
-                            }
-                        ]
-                    }]
-                }
-            };
-            var mockFormResponse = {
-                data: [
-                    {
-                        name: 'Form1',
-                        version: '1',
-                        uuid: 'form-uuid-1',
-                        resources: [{value: '{}'}]
-                    }
-                ]
-            };
-
-            conceptSetService.getConcept.and.returnValue({then: function (callback) {
-                callback(mockObsConcept);
-                return {then: function (next) { return {then: function () {}}; }};
-            }});
-            formService.getFormList.and.returnValue({then: function (callback) {
-                callback(mockFormResponse);
-                return {then: function () {}};
-            }});
-
-            stateParams.formUuid = undefined;
-            
-            createController();
-
-            inject(function ($timeout) {
-                expect($timeout).toHaveBeenCalledWith(jasmine.any(Function), 0);
-                done();
-            });
-        });
-
-        it('should open the form template when formUuid is provided in stateParams', function () {
+        it('should add form to selectedObsTemplate when formUuid is provided in stateParams', function () {
             var mockObsConcept = {
                 data: {
                     results: [{
@@ -2968,12 +2876,6 @@ describe('ConceptSetPageController', function () {
                                 set: true,
                                 setMembers: [],
                                 formUuid: 'form-uuid-1'
-                            },
-                            {
-                                uuid: 'concept-uuid-2',
-                                name: {name: 'Template 2', display: 'Template 2'},
-                                set: true,
-                                setMembers: []
                             }
                         ]
                     }]
@@ -3007,8 +2909,11 @@ describe('ConceptSetPageController', function () {
                 return t.formUuid === 'form-uuid-1';
             });
             expect(formTemplate).toBeDefined();
-            expect(formTemplate.isOpen).toBe(true);
-            expect(formTemplate.isLoaded).toBe(true);
+            expect(formTemplate.isAdded).toBe(true);
+            var isInSelected = _.find(scope.consultation.selectedObsTemplate, function(t) {
+                return t.formUuid === 'form-uuid-1';
+            });
+            expect(isInSelected).toBeDefined();
         });
     });
 });
