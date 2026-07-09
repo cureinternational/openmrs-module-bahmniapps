@@ -125,4 +125,5 @@ CVE-2026-33671
 CVE-2026-44728
 CVE-2026-12143 
 CVE-2026-48779
-CVE-2026-4800 # lodash: transitive dep via bahmni-form-controls-cure; fixed version 4.18.0 does not exist on npm (scanner false positive) 
+CVE-2026-4800 # lodash: transitive dep via bahmni-form-controls-cure; fixed version 4.18.0 does not exist on npm (scanner false positive)
+CVE-2026-53486
