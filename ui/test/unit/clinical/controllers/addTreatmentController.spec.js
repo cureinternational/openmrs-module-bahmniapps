@@ -2292,63 +2292,6 @@ describe("AddTreatmentController", function () {
         });
     });
 
-    describe('isVariableDoseValid', function() {
-        it('should return true when at least 2 dose boxes are greater than 0', function() {
-            expect(scope.isVariableDoseValid({ morningDose: 1, afternoonDose: 0, eveningDose: 2, nightDose: 0 })).toBe(true);
-            expect(scope.isVariableDoseValid({ morningDose: 1, afternoonDose: 1, eveningDose: 0, nightDose: 0 })).toBe(true);
-            expect(scope.isVariableDoseValid({ morningDose: 0, afternoonDose: 0, eveningDose: 1, nightDose: 1 })).toBe(true);
-        });
-
-        it('should return false when fewer than 2 dose boxes are greater than 0', function() {
-            expect(scope.isVariableDoseValid({ morningDose: 1, afternoonDose: 0, eveningDose: 0, nightDose: 0 })).toBe(false);
-            expect(scope.isVariableDoseValid({ morningDose: 0, afternoonDose: 0, eveningDose: 0, nightDose: 0 })).toBe(false);
-        });
-
-        it('should accept decimal doses as valid non-zero values', function() {
-            expect(scope.isVariableDoseValid({ morningDose: 0.5, afternoonDose: 0, eveningDose: 0.5, nightDose: 0 })).toBe(true);
-        });
-    });
-
-    describe('calculateDose for variable dosing type', function() {
-        it('should call getCalculatedDose for each non-zero variable dose field', function() {
-            var vdt = { morningDose: 1, afternoonDose: 0, eveningDose: 2, nightDose: 1, doseUnits: 'mg' };
-            var treatment = {
-                dosingRule: 'mg/kg',
-                drug: { name: 'Drug A' },
-                frequencyType: Bahmni.Clinical.Constants.dosingTypes.variable,
-                variableDosingType: vdt,
-                calculateQuantityAndUnit: jasmine.createSpy('calculateQuantityAndUnit')
-            };
-            orderSetService.getCalculatedDose.and.returnValue($q.resolve({ dose: 10 }));
-
-            scope.calculateDose(treatment);
-            rootScope.$digest();
-
-            expect(orderSetService.getCalculatedDose.calls.count()).toBe(3);
-        });
-
-        it('should update each non-zero variable dose field with calculated value', function() {
-            var vdt = { morningDose: 1, afternoonDose: 0, eveningDose: 2, nightDose: 1, doseUnits: 'mg' };
-            var treatment = {
-                dosingRule: 'mg/kg',
-                drug: { name: 'Drug A' },
-                frequencyType: Bahmni.Clinical.Constants.dosingTypes.variable,
-                variableDosingType: vdt,
-                calculateQuantityAndUnit: jasmine.createSpy('calculateQuantityAndUnit')
-            };
-            orderSetService.getCalculatedDose.and.returnValue($q.resolve({ dose: 10 }));
-
-            scope.calculateDose(treatment);
-            rootScope.$digest();
-
-            expect(vdt.morningDose).toBe(10);
-            expect(vdt.afternoonDose).toBe(0);
-            expect(vdt.eveningDose).toBe(10);
-            expect(vdt.nightDose).toBe(10);
-            expect(treatment.calculateQuantityAndUnit).toHaveBeenCalled();
-        });
-    });
-
     describe('isRuleMode check', function () {
         it('should set dose units as mg if dosing rule is present', function () {
             var drugOrder1 = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);

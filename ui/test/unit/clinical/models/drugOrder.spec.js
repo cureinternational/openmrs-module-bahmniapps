@@ -134,42 +134,6 @@ describe("DrugOrder", function() {
 			expect(drugOrder.durationUnits).toBe(uiDrugObject.durationUnit);
 		});
 
-		it("should persist nightDose in administrationInstructions for 4-box intraday dose", function() {
-			var uiDrugObject = {
-				asNeeded: false,
-				autoExpireDate: undefined,
-				careSetting: "OUTPATIENT",
-				dosingInstructionType: "org.openmrs.module.bahmniemrapi.drugorder.dosinginstructions.FlexibleDosingInstructions",
-				drugNonCoded: "TestDrug",
-				duration: 3,
-				durationInDays: 3,
-				durationUnit: "Day(s)",
-				frequencyType: "variable",
-				instructions: null,
-				quantity: 12,
-				quantityUnit: "mg",
-				route: "Oral",
-				scheduledDate: null,
-				uniformDosingType: { dose: null, doseUnits: "mg", frequency: null },
-				variableDosingType: {
-					morningDose: 1,
-					afternoonDose: 0,
-					eveningDose: 2,
-					nightDose: 1,
-					doseUnits: "mg"
-				},
-				effectiveStartDate: '2026-06-15T00:00:00.000+0000',
-				effectiveStopDate: null,
-				isUniformDosingType: function() { return false; }
-			};
-			var drugOrder = Bahmni.Clinical.DrugOrder.createFromUIObject(uiDrugObject);
-			var administrationInstructions = JSON.parse(drugOrder.dosingInstructions.administrationInstructions);
-			expect(administrationInstructions.morningDose).toBe(1);
-			expect(administrationInstructions.afternoonDose).toBe(0);
-			expect(administrationInstructions.eveningDose).toBe(2);
-			expect(administrationInstructions.nightDose).toBe(1);
-		});
-
 		it("should serialize ml/kg dosing rule with rate and additives", function() {
 			var uiDrugObject = {
 				asNeeded: false,

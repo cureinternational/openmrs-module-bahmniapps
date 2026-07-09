@@ -498,25 +498,6 @@
                 .variable-frequency {
                     .dose-cell {
                         margin-left: 0px;
-                        display: flex;
-                        align-items: center;
-                    }
-                    .dose-cell .field-attribute,
-                    .dose-cell .field-value {
-                        float: none;
-                    }
-                    .dose-cell .field-value {
-                        display: flex;
-                        flex-wrap: nowrap;
-                        gap: 4px;
-                    }
-                    .dose-cell input[type="number"] {
-                        min-width: 43px;
-                        width: 43px;
-                        @media (max-width: 1024px) {
-                            min-width: 32px;
-                            width: 32px;
-                        }
                     }
                 }
 
