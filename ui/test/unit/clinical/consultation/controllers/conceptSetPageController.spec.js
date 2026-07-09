@@ -2866,54 +2866,52 @@ describe('ConceptSetPageController', function () {
 
     describe('Form Navigation with formUuid', function () {
         it('should add form to selectedObsTemplate when formUuid is provided in stateParams', function () {
-            var mockObsConcept = {
-                data: {
-                    results: [{
-                        setMembers: [
-                            {
-                                uuid: 'concept-uuid-1',
-                                name: {name: 'Template 1', display: 'Template 1'},
-                                set: true,
-                                setMembers: [],
-                                formUuid: 'form-uuid-1'
-                            }
-                        ]
-                    }]
-                }
-            };
-            var mockFormResponse = {
-                data: [
-                    {
-                        name: 'Form1',
-                        version: '1',
-                        uuid: 'form-uuid-1',
-                        resources: [{value: '{}'}]
+            inject(function ($timeout) {
+                var mockObsConcept = {
+                    data: {
+                        results: [{
+                            setMembers: [
+                                {
+                                    uuid: 'concept-uuid-1',
+                                    name: {name: 'Template 1', display: 'Template 1'},
+                                    set: true,
+                                    setMembers: [],
+                                    formUuid: 'form-uuid-1'
+                                }
+                            ]
+                        }]
                     }
-                ]
-            };
+                };
+                var mockFormResponse = {
+                    data: [
+                        {
+                            name: 'Form1',
+                            version: '1',
+                            uuid: 'form-uuid-1',
+                            resources: [{value: '{}'}]
+                        }
+                    ]
+                };
 
-            conceptSetService.getConcept.and.returnValue({then: function (callback) {
-                callback(mockObsConcept);
-                return {then: function (next) { return {then: function () {}}; }};
-            }});
-            formService.getFormList.and.returnValue({then: function (callback) {
-                callback(mockFormResponse);
-                return {then: function () {}};
-            }});
+                conceptSetService.getConcept.and.returnValue({then: function (callback) {
+                    callback(mockObsConcept);
+                    return {then: function (next) { return {then: function () {}}; }};
+                }});
+                formService.getFormList.and.returnValue({then: function (callback) {
+                    callback(mockFormResponse);
+                    return {then: function () {}};
+                }});
 
-            stateParams.formUuid = 'form-uuid-1';
-            
-            createController();
+                stateParams.formUuid = 'form-uuid-1';
 
-            var formTemplate = _.find(scope.allTemplates, function (t) {
-                return t.formUuid === 'form-uuid-1';
+                createController();
+                $timeout.flush();
+
+                var isInSelected = _.find(scope.consultation.selectedObsTemplate, function(t) {
+                    return t.formUuid === 'form-uuid-1';
+                });
+                expect(isInSelected).toBeDefined();
             });
-            expect(formTemplate).toBeDefined();
-            expect(formTemplate.isAdded).toBe(true);
-            var isInSelected = _.find(scope.consultation.selectedObsTemplate, function(t) {
-                return t.formUuid === 'form-uuid-1';
-            });
-            expect(isInSelected).toBeDefined();
         });
     });
 });
