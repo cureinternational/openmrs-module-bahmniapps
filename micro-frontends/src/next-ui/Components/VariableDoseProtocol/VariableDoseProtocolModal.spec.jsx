@@ -16,7 +16,7 @@ const defaultHostData = {
     drugFormDefaults: {},
     dosingInstructions: [{ name: "As directed" }, { name: "Before meals" }],
     frequencies: [{ name: "Once a day" }, { name: "Twice a day" }],
-    durationUnits: [{ name: "Days" }, { name: "Weeks" }],
+    durationUnits: [{ name: "Day(s)" }, { name: "Weeks" }],
 };
 
 const defaultHostApi = {
@@ -126,6 +126,33 @@ describe("VariableDoseProtocolModal", () => {
         await waitFor(() => {
             const nextButton = screen.getByText("Save").closest("button");
             expect(nextButton.disabled).toBe(true);
+        });
+    });
+
+    it("should default duration unit for new stages to Day(s)", async () => {
+        const drug = { uuid: "uuid-1", name: "Paracetamol", dosageForm: null };
+        mockSearchDrugs.mockResolvedValue([drug]);
+        const { container } = renderModal();
+
+        await waitFor(() => screen.getByText("Order Drug - Variable Dosage Protocol"));
+
+        const comboInput = screen.getByPlaceholderText("Type to Search a Drug");
+        fireEvent.change(comboInput, { target: { value: "Para" } });
+        await waitFor(() => expect(mockSearchDrugs).toHaveBeenCalled());
+
+        await act(async () => {
+            const option = await screen.findByText("Paracetamol");
+            fireEvent.click(option);
+        });
+
+        openBahmniDropdown(container, "variable-dose-units");
+        fireEvent.click(screen.getByText("mg"));
+
+        fireEvent.click(screen.getByText("Add Stage"));
+
+        await waitFor(() => {
+            const stageUnitInput = getDropdownInput(container, "stage-duration-unit-1");
+            expect(stageUnitInput.value).toBe("Day(s)");
         });
     });
 
