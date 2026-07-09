@@ -44,7 +44,7 @@
                                 </div>
 								<div class="button-group-wrapper">
                                     <div class="button-group">
-                                        <button type="button" class="disch-btn" ng-disabled="true">
+                                        <button type="button" class="disch-btn" ng-if="currentVisitType === 'IPD' && enableDischargeTag" ng-disabled="true">
                                             <i class="fa fa-check" ng-show="drugOrder.isDischargeMedication"></i>
                                             {{ ::'DISCH_BUTTON' | translate }}
                                         </button>
