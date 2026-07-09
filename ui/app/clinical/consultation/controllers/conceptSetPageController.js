@@ -212,9 +212,11 @@ angular.module('bahmni.clinical')
                     $rootScope.resumeDraftOnLoad = false;
                     $rootScope.resumeDraftPatientUuid = null;
                 }
-                $timeout(setupDirtyTracking, 0);
 
                 var formUuidParam = $stateParams.formUuid;
+
+                $timeout(setupDirtyTracking, formUuidParam ? 1000 : 0);
+
                 if (formUuidParam) {
                     var targetForm = _.find($scope.allTemplates, function (t) {
                         return t.formUuid === formUuidParam;
