@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('bahmni.home')
-    .factory('loginInitialization', ['$rootScope', '$q', 'locationService', 'spinner', 'messagingService',
-        function ($rootScope, $q, locationService, spinner, messagingService) {
+    .factory('loginInitialization', ['$rootScope', '$q', 'locationService', 'spinner', 'messagingService', 'loadConfigService',
+        function ($rootScope, $q, locationService, spinner, messagingService, loadConfigService) {
             var init = function () {
                 var deferrable = $q.defer();
                 locationService.getAllByTag("Login Location").then(
@@ -21,6 +21,16 @@ angular.module('bahmni.home')
                                 messagingService.showMessage('error', response);
                             }
                         }
+                    }
+                );
+
+                loadConfigService.loadConfig(Bahmni.Common.Constants.baseUrl + "home/app.json").then(
+                    function (response) {
+                        var config = response.data && response.data.config;
+                        localStorage.setItem('enableCommandPalette', config && config.enableCommandPalette === true ? 'true' : 'false');
+                    },
+                    function () {
+                        localStorage.setItem('enableCommandPalette', 'false');
                     }
                 );
 
