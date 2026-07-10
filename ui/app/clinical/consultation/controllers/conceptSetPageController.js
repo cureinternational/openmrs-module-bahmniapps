@@ -214,8 +214,9 @@ angular.module('bahmni.clinical')
                 }
 
                 var formUuidParam = $stateParams.formUuid;
+                var FORM_PRELOAD_DIRTY_TRACKING_DELAY_MS = 1000;
 
-                $timeout(setupDirtyTracking, formUuidParam ? 1000 : 0);
+                $timeout(setupDirtyTracking, formUuidParam ? FORM_PRELOAD_DIRTY_TRACKING_DELAY_MS : 0);
 
                 if (formUuidParam) {
                     var targetForm = _.find($scope.allTemplates, function (t) {
@@ -229,6 +230,8 @@ angular.module('bahmni.clinical')
                         $timeout(function () {
                             $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
                         }, 0);
+                    } else {
+                        messagingService.showMessage('error', 'Form not found. Please contact your administrator.');
                     }
                 }
             };
