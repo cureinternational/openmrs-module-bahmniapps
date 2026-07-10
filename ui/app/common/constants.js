@@ -67,6 +67,9 @@ Bahmni.Common = Bahmni.Common || {};
 
     Bahmni.Common.Constants = {
         hostURL: hostUrl,
+        // Static assets built by bahmni-apps-frontend's distro app (see distro/webpack.config.js
+        // publicPath and docker-compose's bahmni-new volume mount).
+        bahmniDistroUrl: hostUrl + "/bahmni-new",
         dateFormat: "dd/mm/yyyy",
         dateDisplayFormat: "DD-MMM-YYYY",
         timeDisplayFormat: "hh:mm",
