@@ -2,34 +2,33 @@
 
 angular.module('bahmni.clinical')
     .factory('formDirtyStateService', [function () {
-        /**
-         * Normalizes observation values so dirty-state comparisons are stable for
-         * primitives, object-like identifiers (provider/user/concept), and
-         * unrecognized objects.
-         */
-        var normalizeObsValue = function (val) {
-            if (val === null || val === undefined) {
-                return val;
+        var normalizeObsValue = function (value) {
+            if (value === null || value === undefined) {
+                return value;
             }
-            if (angular.isString(val) || angular.isNumber(val) || typeof val === 'boolean') {
-                return val;
+            if (typeof value === 'object') {
+                if (value.uuid) {
+                    return value.uuid;
+                }
+                if (value.id !== undefined && value.id !== null) {
+                    return String(value.id);
+                }
+                if (value.value !== undefined && value.value !== null) {
+                    return normalizeObsValue(value.value);
+                }
+                if (value.code !== undefined && value.code !== null) {
+                    return value.code;
+                }
+                try {
+                    return angular.toJson(value);
+                } catch (e) {
+                    return value;
+                }
             }
-            if (val && typeof val === 'object') {
-                if (val.uuid !== undefined && val.uuid !== null) {
-                    return val.uuid;
-                }
-                if (val.id !== undefined && val.id !== null) {
-                    return String(val.id);
-                }
-                if (val.value !== undefined && val.value !== null) {
-                    return normalizeObsValue(val.value);
-                }
-                if (val.code !== undefined && val.code !== null) {
-                    return val.code;
-                }
-                return angular.toJson(val);
+            if (angular.isNumber(value)) {
+                return String(value);
             }
-            return val;
+            return value;
         };
 
         /**
@@ -59,9 +58,9 @@ angular.module('bahmni.clinical')
             if (obs.value !== null && obs.value !== undefined) {
                 if (obs.voided) {
                     values.push(null);
-                } else {
-                    values.push(normalizeObsValue(obs.value));
+                    return;
                 }
+                values.push(normalizeObsValue(obs.value));
             }
         };
 
@@ -70,13 +69,21 @@ angular.module('bahmni.clinical')
          * Form2/React components (via getValue()) and traditional templates.
          */
         var getTemplateObservationsForDirtyTracking = function (template) {
+            var templateObs = template.observations || [];
+            if (templateObs.length > 0) {
+                return templateObs;
+            }
+
             if (template.component && angular.isFunction(template.component.getValue)) {
                 var formValue = template.component.getValue() || {};
-                if (formValue.observations && formValue.observations.length > 0) {
-                    return formValue.observations;
+                var componentObs = formValue.observations || [];
+                if (componentObs && componentObs.length > 0) {
+                    template.observations = componentObs;
+                    return componentObs;
                 }
             }
-            return template.observations || [];
+
+            return [];
         };
 
         var getObsValuesForTemplate = function (template) {
@@ -85,6 +92,7 @@ angular.module('bahmni.clinical')
             _.each(observations, function (obs) {
                 collectObsValues(obs, values);
             });
+            values = _.sortBy(values, function (v) { return String(v); });
             return angular.toJson(values);
         };
 
@@ -104,6 +112,7 @@ angular.module('bahmni.clinical')
                     }
                 });
             }
+            values = _.sortBy(values, function (v) { return String(v); });
             return angular.toJson(values);
         };
 

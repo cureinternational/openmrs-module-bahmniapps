@@ -464,10 +464,14 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                     });
                     _.each($scope.consultation.observationForms, function (observationForm) {
                         if (observationForm.component && observationForm.isAdded) {
-                            var formObservations = observationForm.component.getValue();
-                            _.each(formObservations.observations, function (obs) {
-                                tempConsultation.observations.push(obs);
-                            });
+                            try {
+                                var formObservations = observationForm.component.getValue();
+                                _.each(formObservations.observations, function (obs) {
+                                    tempConsultation.observations.push(obs);
+                                });
+                            } catch (e) {
+                                console.error('Error getting observations from form component', e);
+                            }
                         }
                     });
                 }
@@ -478,13 +482,23 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                 _.each($scope.consultation.observationForms, function (observationForm) {
                     if (!valid) { return; }
                     if (observationForm.component) {
-                        var value = observationForm.component.getValue();
-                        if (value && value.errors) {
-                            messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");
+                        try {
+                            var value = observationForm.component.getValue();
+                            if (value && value.errors) {
+                                messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");
+                                valid = false;
+                                observationForm.draftValidationPassed = false;
+                            } else if (observationForm.hasUnsavedFormObservations && value && value.observations && angular.isArray(value.observations) && value.observations.length === 0) {
+                                messagingService.showMessage('error', "{{'CLINICAL_FORM_REQUIRED_FIELDS_MESSAGE_KEY' | translate }}");
+                                valid = false;
+                                observationForm.draftValidationPassed = false;
+                            } else {
+                                observationForm.draftValidationPassed = true;
+                            }
+                        } catch (e) {
+                            console.error('Error calling getValue() on form component', e);
                             valid = false;
                             observationForm.draftValidationPassed = false;
-                        } else {
-                            observationForm.draftValidationPassed = true;
                         }
                     } else if (observationForm.hasUnsavedFormObservations && !observationForm.draftValidationPassed) {
                         messagingService.showMessage('error', "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}");

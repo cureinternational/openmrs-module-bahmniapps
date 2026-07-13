@@ -711,12 +711,17 @@ describe('ConceptSetPageController', function () {
                 },
                 observations: []
             }];
+            var template = {
+                observations: [{value: 'initial-value'}]
+            };
+            scope.consultation.selectedObsTemplate = [template];
 
-            scope.$digest();
+            scope.$apply();
             expect(scope.formDraft.isDirty).toBe(false);
 
-            observationValue = 'updated-value';
-            scope.$digest();
+            // Simulate form component value change
+            template.observations[0].value = 'updated-value';
+            scope.$apply();
             expect(scope.formDraft.isDirty).toBe(true);
         });
 
@@ -731,9 +736,8 @@ describe('ConceptSetPageController', function () {
             mockConceptSetService(conceptResponseData);
             mockformService({});
 
-            var observationValue;
             var timeoutMock = function (callback, delay) {
-                if (delay === 0) {
+                if (delay === 0 || delay === undefined) {
                     callback();
                 }
                 return { $$timeoutId: delay };
@@ -752,13 +756,18 @@ describe('ConceptSetPageController', function () {
                 },
                 observations: []
             }];
+            var template = {
+                observations: [{value: 'initial-value'}]
+            };
+            scope.consultation.selectedObsTemplate = [template];
 
-            scope.$digest();
+            scope.$apply();
             expect(scope.formDraft.isDirty).toBe(false);
             expect(state.dirtyConsultationForm).toBeFalsy();
 
-            observationValue = 'new-change-after-draft-resume';
-            scope.$digest();
+            // Simulate form component value change
+            template.observations[0].value = 'new-change-after-draft-resume';
+            scope.$apply();
             expect(scope.formDraft.isDirty).toBe(true);
             expect(state.dirtyConsultationForm).toBe(true);
         });
@@ -2572,19 +2581,19 @@ describe('ConceptSetPageController', function () {
                 mockConceptSetService({ results: [{ setMembers: [{ name: { name: 'Test Form' }, uuid: conceptUuid }] }] });
                 mockformService({});
 
-                var observationValue;
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                // Add component.getValue to the existing template object (same reference captured by WeakMap at init)
                 var template = _.find(scope.consultation.selectedObsTemplate, function (t) { return t.uuid === conceptUuid; });
                 template.component = {
                     getValue: function () { return { observations: [{ value: observationValue }] }; }
                 };
+                template.observations = [{value: 'initial-value'}];
 
                 scope.$digest();
                 expect(template.hasUnsavedFormObservations).toBeFalsy();
 
-                observationValue = 'some-value';
+                // Change observation value
+                template.observations[0].value = 'some-value';
                 scope.$digest();
                 expect(template.hasUnsavedFormObservations).toBe(true);
             });
@@ -2600,17 +2609,25 @@ describe('ConceptSetPageController', function () {
                 });
                 mockformService({});
 
-                var formAValue;
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                // Add component.getValue to existing template objects (same references captured by WeakMap at init)
                 var templateA = _.find(scope.consultation.selectedObsTemplate, function (t) { return t.uuid === 'uuid-a'; });
                 var templateB = _.find(scope.consultation.selectedObsTemplate, function (t) { return t.uuid === 'uuid-b'; });
                 templateA.component = { getValue: function () { return { observations: [{ value: formAValue }] }; } };
 
-                scope.$digest();
+                // Only initialize templateA with observations
+                templateA.observations = [{value: 'initial-a'}];
+                // TemplateB has no observations or empty observations
+                if (!templateB.observations) {
+                    templateB.observations = [];
+                }
 
-                formAValue = 'changed';
+                scope.$digest();
+                expect(templateA.hasUnsavedFormObservations).toBeFalsy();
+                expect(templateB.hasUnsavedFormObservations).toBeFalsy();
+
+                // Change only templateA
+                templateA.observations[0].value = 'changed';
                 scope.$digest();
 
                 expect(templateA.hasUnsavedFormObservations).toBe(true);
