@@ -299,7 +299,7 @@ angular.module('bahmni.clinical')
             var refillDrugOrders = function (drugOrders) {
                 drugOrders.forEach(function (drugOrder) {
                     setNonCodedDrugConcept(drugOrder);
-                    if (drugOrder.effectiveStopDate) {
+                    if (drugOrder.effectiveStopDate && !drugOrder.isVariableDoseOrder) {
                         var refill = drugOrder.refill();
                         $scope.treatments.push(refill);
                     }
@@ -1086,6 +1086,7 @@ angular.module('bahmni.clinical')
                         revisingVariableDoseDrugOrder = drugOrder;
                         var initialValues = Bahmni.Clinical.FhirDosingUtils.toVariableDoseModalInitialValues({
                             drug: drugOrder.drug,
+                            drugNonCoded: drugOrder.drugNonCoded || null,
                             units: (drugOrder.dosingInstructions && drugOrder.dosingInstructions.doseUnits) || drugOrder.quantityUnit || '',
                             route: (drugOrder.dosingInstructions && drugOrder.dosingInstructions.route) || drugOrder.route || '',
                             startDate: drugOrder.effectiveStartDate,
@@ -1113,7 +1114,7 @@ angular.module('bahmni.clinical')
                                 ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length === 0)) {
                                 return;
                             }
-                            var vdpDrugName = data.drug ? data.drug.name : '';
+                            var vdpDrugName = data.drugNonCoded ? data.drugNonCoded : (data.drug ? data.drug.name : '');
                             var vdpCareSetting = (currentVisitType === 'IPD')
                                 ? Bahmni.Clinical.Constants.careSetting.inPatient
                                 : Bahmni.Clinical.Constants.careSetting.outPatient;
@@ -1148,7 +1149,7 @@ angular.module('bahmni.clinical')
                                 var unit = data.units || '';
                                 var realStages = data.stages || [];
                                 var dosingRule = data.dosingRule || '';
-                                var drugName = data.drug ? data.drug.name : '';
+                                var drugName = data.drugNonCoded ? data.drugNonCoded : (data.drug ? data.drug.name : '');
                                 var careSetting = (currentVisitType === 'IPD' && !$scope.treatment.isDischargeMedication)
                                     ? Bahmni.Clinical.Constants.careSetting.inPatient
                                     : Bahmni.Clinical.Constants.careSetting.outPatient;
@@ -1239,9 +1240,11 @@ angular.module('bahmni.clinical')
                                     }
 
                                     var entry = {
-                                        drug: data.drug || null,
-                                        drugName: data.drug ? data.drug.name : '',
-                                        drugForm: data.drug && data.drug.dosageForm ? data.drug.dosageForm.display : '',
+                                        drug: data.isNonCodedDrug ? null : (data.drug || null),
+                                        drugNonCoded: data.isNonCodedDrug ? data.drugNonCoded : null,
+                                        concept: data.isNonCodedDrug ? treatmentConfig.nonCodedDrugconcept : null,
+                                        drugName: data.isNonCodedDrug ? data.drugNonCoded : (data.drug ? data.drug.name : ''),
+                                        drugForm: (!data.isNonCodedDrug && data.drug && data.drug.dosageForm) ? data.drug.dosageForm.display : '',
                                         units: unit,
                                         route: data.route || '',
                                         dosingRule: dosingRule,
