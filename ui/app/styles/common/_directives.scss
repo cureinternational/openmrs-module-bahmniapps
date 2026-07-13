@@ -57,3 +57,71 @@
     }
   }
 }
+
+img.patient-image {
+  cursor: pointer;
+}
+
+.patient-photo-dialog.ngdialog-theme-default {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .ngdialog-content {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    position: relative;
+    width: auto;
+  }
+
+  &__content {
+    position: relative;
+    display: inline-block;
+  }
+
+  &__image {
+    display: block;
+    max-width: 80vw;
+    max-height: 80vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    animation: ppm-in 0.2s ease;
+  }
+
+  @keyframes ppm-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+.ppd-close-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 26px;
+  text-align: center;
+  color: #333;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  padding: 0;
+  z-index: 1;
+  display: block;
+
+  &:hover {
+    background: #e0e0e0;
+  }
+}
