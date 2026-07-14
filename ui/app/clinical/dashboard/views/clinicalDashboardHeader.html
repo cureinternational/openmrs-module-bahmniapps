@@ -10,13 +10,15 @@
                 title="{{adtNavigationConfig.title}}">
                     <i class="fa fa-bed fa-white"></i>
                 </a>
-                <a class="back-btn-link" id="dashboard-link" accesskey="d" ng-click="gotoPatientDashboard()" title="Back to {{patient.name}} Dashboard">
-                    <img class="patient-image" ng-src="{{::patient.image}}" fallback-src="../images/blank-user.gif">
+                <div class="back-btn-link">
+                <img class="patient-image" ng-src="{{::patient.image}}" fallback-src="../images/blank-user.gif">    
+                <a id="dashboard-link" accesskey="d" ng-click="gotoPatientDashboard()" title="Back to {{patient.name}} Dashboard">
                 <span class="patient-info">
                     <span class="patient-name" >{{patient.name}} </span>
                     <span class="patient-id">{{patient.identifier}}</span>
                 </span>
                 </a>
+                </div>
             </div>
 
             <div class="header-scrollable-tabs header-tabs" ng-if="!stateChange()">
