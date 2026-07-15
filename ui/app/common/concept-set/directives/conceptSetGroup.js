@@ -5,8 +5,8 @@ angular.module('bahmni.common.conceptSet')
         'conceptSetService', '$rootScope', 'sessionService', 'encounterService', 'treatmentConfig',
         'retrospectiveEntryService', 'userService', 'conceptSetUiConfigService', '$timeout', 'clinicalAppConfigService', '$stateParams', '$translate', '$state',
         function ($scope, contextChangeHandler, spinner, messagingService, conceptSetService, $rootScope, sessionService,
-                  encounterService, treatmentConfig, retrospectiveEntryService, userService,
-                  conceptSetUiConfigService, $timeout, clinicalAppConfigService, $stateParams, $translate, $state) {
+            encounterService, treatmentConfig, retrospectiveEntryService, userService,
+            conceptSetUiConfigService, $timeout, clinicalAppConfigService, $stateParams, $translate, $state) {
             var conceptSetUIConfig = conceptSetUiConfigService.getConfig();
             var init = function () {
                 $scope.validationHandler = new Bahmni.ConceptSet.ConceptSetGroupPanelViewValidationHandler($scope.allTemplates);
@@ -52,7 +52,7 @@ angular.module('bahmni.common.conceptSet')
                 encounterData = encounterService.buildEncounter(encounterData);
                 encounterData.drugOrders = [];
 
-                var conceptSetData = {name: conceptSet.conceptName, uuid: conceptSet.uuid};
+                var conceptSetData = { name: conceptSet.conceptName, uuid: conceptSet.uuid };
                 var data = {
                     encounterModifierObservations: encounterData.observations,
                     drugOrders: encounterData.drugOrders,
@@ -85,12 +85,12 @@ angular.module('bahmni.common.conceptSet')
             $scope.clone = function (index) {
                 var clonedObj = $scope.allTemplates[index].clone();
                 $scope.allTemplates.splice(index + 1, 0, clonedObj);
-                $.scrollTo('#concept-set-' + (index + 1), 200, {offset: {top: -400}});
+                $.scrollTo('#concept-set-' + (index + 1), 200, { offset: { top: -400 } });
             };
 
             $scope.clonePanelConceptSet = function (conceptSet) {
                 var index = _.findIndex($scope.allTemplates, conceptSet);
-                messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_ADDED_SUCCESS_KEY", {label: $scope.allTemplates[index].label}));
+                messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_ADDED_SUCCESS_KEY", { label: $scope.allTemplates[index].label }));
                 $scope.clone(index);
                 $scope.showLeftPanelConceptSet($scope.allTemplates[index + 1]);
             };
@@ -113,26 +113,67 @@ angular.module('bahmni.common.conceptSet')
                 return false;
             };
 
+            var getTemplateId = function (template) {
+                return template.formUuid || template.id || template.uuid || template.label;
+            };
+            var clearTemplateState = function (template) {
+                template.isAdded = false;
+                template.hasUnsavedFormObservations = false;
+                template.draftValidationPassed = undefined;
+                template.isValid = undefined;
+                template.errorMessage = undefined;
+                template.isOpen = false;
+                template.klass = "";
+                template.isLoaded = false;
+            };
+            var removeFromSelectedObsTemplate = function (template) {
+                var idx = _.findIndex($scope.consultation.selectedObsTemplate, function (t) {
+                    return t === template;
+                });
+                if (idx > -1) {
+                    $scope.consultation.selectedObsTemplate.splice(idx, 1);
+                }
+            };
             $scope.remove = function (index) {
+                if (!$scope.allTemplates[index]) {
+                    return;
+                }
                 var label = $scope.allTemplates[index].label;
                 var currentTemplate = $scope.allTemplates[index];
+                if (currentTemplate.component) {
+                    currentTemplate.component = null;
+                }
                 var anotherTemplate = _.find($scope.allTemplates, function (template) {
                     return template.label == currentTemplate.label && template !== currentTemplate;
                 });
-                if (anotherTemplate) {
+                var isObservationForm = _.some($scope.consultation.observationForms, function (form) {
+                    return form === currentTemplate;
+                });
+                if (isObservationForm) {
+                    clearTemplateState(currentTemplate);
+                    if (!currentTemplate.alwaysShow) {
+                        removeFromSelectedObsTemplate(currentTemplate);
+                    }
+                }
+                else if (anotherTemplate) {
                     $scope.allTemplates.splice(index, 1);
+                    removeFromSelectedObsTemplate(currentTemplate);
                 }
                 else {
-                    $scope.allTemplates[index].isAdded = false;
                     var clonedObj = $scope.allTemplates[index].clone();
                     $scope.allTemplates[index] = clonedObj;
-                    $scope.allTemplates[index].isAdded = false;
-                    $scope.allTemplates[index].isOpen = false;
-                    $scope.allTemplates[index].klass = "";
-                    $scope.allTemplates[index].isLoaded = false;
+                    clearTemplateState($scope.allTemplates[index]);
+                    removeFromSelectedObsTemplate(currentTemplate);
+                }
+                var templateId = getTemplateId(currentTemplate);
+                if ($scope.consultation.lastvisited === templateId) {
+                    $scope.consultation.lastvisited = null;
+                }
+                if ($state.params && $state.params.formUuid && getTemplateId(currentTemplate) === $state.params.formUuid) {
+                    $state.go('patient.dashboard.show.observations', {}, { notify: false, location: 'replace' });
                 }
                 $scope.leftPanelConceptSet = "";
-                messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_REMOVED_SUCCESS_KEY", {label: label}));
+                messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_REMOVED_SUCCESS_KEY", { label: label }));
             };
 
             $scope.openActiveForm = function (conceptSet) {

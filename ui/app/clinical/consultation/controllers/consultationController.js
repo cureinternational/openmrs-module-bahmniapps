@@ -533,6 +533,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
             var copyConsultationToScope = function (consultationWithDiagnosis) {
                 consultationWithDiagnosis.preSaveHandler = $scope.consultation.preSaveHandler;
                 consultationWithDiagnosis.postSaveHandler = $scope.consultation.postSaveHandler;
+                consultationWithDiagnosis.selectedObsTemplate = $scope.consultation.selectedObsTemplate;
                 $scope.$parent.consultation = consultationWithDiagnosis;
                 $scope.$parent.consultation.postSaveHandler.fire();
                 $scope.dashboardDirty = true;

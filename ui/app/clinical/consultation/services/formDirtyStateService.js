@@ -3,6 +3,36 @@
 angular.module('bahmni.clinical')
     .factory('formDirtyStateService', [function () {
         /**
+         * Normalizes observation values so dirty-state comparisons are stable for
+         * primitives, object-like identifiers (provider/user/concept), and
+         * unrecognized objects.
+         */
+        var normalizeObsValue = function (val) {
+            if (val === null || val === undefined) {
+                return val;
+            }
+            if (angular.isString(val) || angular.isNumber(val) || typeof val === 'boolean') {
+                return val;
+            }
+            if (val && typeof val === 'object') {
+                if (val.uuid !== undefined && val.uuid !== null) {
+                    return val.uuid;
+                }
+                if (val.id !== undefined && val.id !== null) {
+                    return String(val.id);
+                }
+                if (val.value !== undefined && val.value !== null) {
+                    return normalizeObsValue(val.value);
+                }
+                if (val.code !== undefined && val.code !== null) {
+                    return val.code;
+                }
+                return angular.toJson(val);
+            }
+            return val;
+        };
+
+        /**
          * Recursively collects observation values from an obs tree.
          * Handles multiSelect fields, group members, and scalar values.
          * Ignores Angular $-prefixed keys.
@@ -30,12 +60,7 @@ angular.module('bahmni.clinical')
                 if (obs.voided) {
                     values.push(null);
                 } else {
-                    var val = obs.value;
-                    if (val && typeof val === 'object' && val.uuid) {
-                        values.push(val.uuid);
-                    } else {
-                        values.push(val);
-                    }
+                    values.push(normalizeObsValue(obs.value));
                 }
             }
         };
@@ -111,7 +136,7 @@ angular.module('bahmni.clinical')
             var form2SyncEvents = ['input', 'change', 'keyup', 'click'];
             var doc = window.document;
             if (!doc || !doc.addEventListener) {
-                return {listener: null, registered: false};
+                return { listener: null, registered: false };
             }
 
             var syncOnForm2Interaction = function () {
@@ -179,7 +204,7 @@ angular.module('bahmni.clinical')
                 _.each(draftObs.groupMembers, function (draftMember) {
                     var matchedMember = _.find(templateObs.groupMembers, function (templateMember) {
                         return templateMember.concept && draftMember.concept &&
-                               templateMember.concept.uuid === draftMember.concept.uuid;
+                            templateMember.concept.uuid === draftMember.concept.uuid;
                     });
                     if (matchedMember) {
                         populateObservationValues(matchedMember, draftMember);
@@ -197,7 +222,7 @@ angular.module('bahmni.clinical')
             try {
                 var draftData = angular.fromJson(draftFormData);
                 if (!selectedObsTemplates || !draftData) {
-                    return {success: false, error: 'Missing data'};
+                    return { success: false, error: 'Missing data' };
                 }
 
                 var updatedTemplates = [];
@@ -220,13 +245,14 @@ angular.module('bahmni.clinical')
                     });
                 });
 
-                return {success: true, updatedTemplates: updatedTemplates};
+                return { success: true, updatedTemplates: updatedTemplates };
             } catch (e) {
-                return {success: false, error: e.message};
+                return { success: false, error: e.message };
             }
         };
 
         return {
+            normalizeObsValue: normalizeObsValue,
             collectObsValues: collectObsValues,
             getObsValues: getObsValues,
             getObsValuesForTemplate: getObsValuesForTemplate,

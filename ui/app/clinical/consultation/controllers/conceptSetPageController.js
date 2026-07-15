@@ -220,17 +220,39 @@ angular.module('bahmni.clinical')
 
                 if (formUuidParam) {
                     var targetForm = _.find($scope.allTemplates, function (t) {
-                        return t.formUuid === formUuidParam;
+                        return t && (t.formUuid || t.uuid || t.id || t.formName) === formUuidParam;
                     });
                     if (targetForm) {
-                        if (!_.find($scope.consultation.selectedObsTemplate, function (t) { return t === targetForm; })) {
-                            targetForm.isAdded = true;
-                            $scope.consultation.selectedObsTemplate.push(targetForm);
+                        if (targetForm.isAdded === false) {
+                            $scope.consultation.lastvisited = null;
+                            if ($stateParams && $stateParams.formUuid) {
+                                $stateParams.formUuid = null;
+                            }
+                            if ($state && $state.params) {
+                                $state.params.formUuid = null;
+                            }
+                            $state.go('patient.dashboard.show.observations', {}, { notify: false, location: 'replace' });
+                        } else {
+                            var isAlreadySelected = _.find($scope.consultation.selectedObsTemplate, function (t) {
+                                return t && ((t.formUuid || t.uuid || t.id || t.formName) === formUuidParam || t === targetForm);
+                            });
+                            if (!isAlreadySelected) {
+                                targetForm.isAdded = true;
+                                $scope.consultation.selectedObsTemplate.push(targetForm);
+                            }
+                            $timeout(function () {
+                                $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
+                            }, 0);
                         }
-                        $timeout(function () {
-                            $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
-                        }, 0);
                     } else {
+                        $scope.consultation.lastvisited = null;
+                        if ($stateParams && $stateParams.formUuid) {
+                            $stateParams.formUuid = null;
+                        }
+                        if ($state && $state.params) {
+                            $state.params.formUuid = null;
+                        }
+                        $state.go('patient.dashboard.show.observations', {}, { notify: false, location: 'replace' });
                         messagingService.showMessage('error', 'Form not found. Please contact your administrator.');
                     }
                 }
@@ -287,9 +309,34 @@ angular.module('bahmni.clinical')
             };
 
             var getLastVisitedTemplate = function () {
-                return _.find($scope.consultation.selectedObsTemplate, function (template) {
-                    return template.id === $scope.consultation.lastvisited;
+                if (!$scope.consultation.lastvisited) {
+                    return null;
+                }
+                var matchingTemplate = _.find($scope.consultation.selectedObsTemplate, function (template) {
+                    if (!template) {
+                        return false;
+                    }
+                    if (template.id && template.id === $scope.consultation.lastvisited) {
+                        return true;
+                    }
+                    if (template.formUuid && template.formUuid === $scope.consultation.lastvisited) {
+                        return true;
+                    }
+                    if (template.uuid && template.uuid === $scope.consultation.lastvisited) {
+                        return true;
+                    }
+                    if (template.formName && template.formName === $scope.consultation.lastvisited) {
+                        return true;
+                    }
+                    return !!(template.label && template.label === $scope.consultation.lastvisited);
                 });
+                if (!matchingTemplate) {
+                    $scope.consultation.lastvisited = null;
+                    if ($state && $state.params) {
+                        $state.params.formUuid = null;
+                    }
+                }
+                return matchingTemplate;
             };
 
             var openTemplate = function (template) {
@@ -323,7 +370,7 @@ angular.module('bahmni.clinical')
                         });
 
                         _.map(data.results[0].mappings, function (template) {
-                            var matchedTemplate = _.find(allConceptSections, {uuid: template.uuid});
+                            var matchedTemplate = _.find(allConceptSections, { uuid: template.uuid });
                             if (matchedTemplate) {
                                 matchedTemplate.alwaysShow = true;
                             }
@@ -397,7 +444,7 @@ angular.module('bahmni.clinical')
                     }
                 }
                 $scope.consultation.searchParameter = "";
-                messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_ADDED_SUCCESS_KEY", {label: template.label}));
+                messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_ADDED_SUCCESS_KEY", { label: template.label }));
                 if (dirtyTrackingState.initialized) {
                     captureTemplateCleanStates();
                 }
@@ -430,7 +477,7 @@ angular.module('bahmni.clinical')
                     }
                     if ($scope.isFormEditableByTheUser(observationForm)) {
                         var newForm = new Bahmni.ObservationForm(formUuid, $rootScope.currentUser,
-                                                                   formName, formVersion, observations, label, extension);
+                            formName, formVersion, observations, label, extension);
                         newForm.privileges = privileges;
                         forms.push(newForm);
                     }
@@ -630,7 +677,7 @@ angular.module('bahmni.clinical')
 
                     $rootScope.draftData = response.data;
                     $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
-                    $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
+                    $scope.formDraft.statusParams = { draftDate: draftDate, draftTime: draftTime };
                     $scope.formDraft.draftDate = draftDate;
                     $scope.formDraft.draftTime = draftTime;
                     $scope.formDraft.isDirty = false;
@@ -650,7 +697,7 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.postSaveRefreshPending = false;
                         dirtyTrackingState.postSaveRefreshTimeout = null;
                     }, 0);
-                    $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
+                    $rootScope.$broadcast('draft:saved', { draftDate: draftDate, draftTime: draftTime });
                 }, function () {
                     $scope.formDraft.statusMessage = 'CHANGES_NOT_SAVED_KEY';
                     $scope.formDraft.statusError = true;
@@ -700,7 +747,7 @@ angular.module('bahmni.clinical')
                                 $scope.formDraft.draftDate = draftDate;
                                 $scope.formDraft.draftTime = draftTime;
                                 $scope.formDraft.statusMessage = 'SAVED_AS_DRAFT_KEY';
-                                $scope.formDraft.statusParams = {draftDate: draftDate, draftTime: draftTime};
+                                $scope.formDraft.statusParams = { draftDate: draftDate, draftTime: draftTime };
                             }
                         } else if (!$rootScope.resumeDraftOnLoad) {
                             $rootScope.draftData = null;
