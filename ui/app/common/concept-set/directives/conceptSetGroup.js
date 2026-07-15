@@ -116,17 +116,37 @@ angular.module('bahmni.common.conceptSet')
             $scope.remove = function (index) {
                 var label = $scope.allTemplates[index].label;
                 var currentTemplate = $scope.allTemplates[index];
+                if (currentTemplate.component) {
+                    currentTemplate.component = null;
+                }
                 var anotherTemplate = _.find($scope.allTemplates, function (template) {
                     return template.label == currentTemplate.label && template !== currentTemplate;
                 });
-                if (anotherTemplate) {
+                var isObservationForm = currentTemplate.formUuid;
+                if (isObservationForm) {
+                    var formIndex = _.findIndex($scope.consultation.observationForms, function (form) {
+                        return form === currentTemplate;
+                    });
+                    if (formIndex > -1) {
+                        $scope.consultation.observationForms.splice(formIndex, 1);
+                    }
                     $scope.allTemplates.splice(index, 1);
+                }
+                else if (anotherTemplate) {
+                    $scope.allTemplates.splice(index, 1);
+                    var selectedIndex = _.findIndex($scope.consultation.selectedObsTemplate, function (template) {
+                        return template === currentTemplate;
+                    });
+                    if (selectedIndex > -1) {
+                        $scope.consultation.selectedObsTemplate.splice(selectedIndex, 1);
+                    }
                 }
                 else {
                     $scope.allTemplates[index].isAdded = false;
                     var clonedObj = $scope.allTemplates[index].clone();
                     $scope.allTemplates[index] = clonedObj;
-                    $scope.allTemplates[index].isAdded = false;
+                    $scope.allTemplates[index].hasUnsavedFormObservations = false;
+                    $scope.allTemplates[index].draftValidationPassed = undefined;
                     $scope.allTemplates[index].isOpen = false;
                     $scope.allTemplates[index].klass = "";
                     $scope.allTemplates[index].isLoaded = false;

@@ -835,4 +835,3 @@ angular.module('bahmni.clinical')
                 registerDraftContextWatcher();
             }
         }]);
-        
