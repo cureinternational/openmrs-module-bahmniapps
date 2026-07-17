@@ -6,7 +6,7 @@ angular.module('bahmni.clinical')
         'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService', 'formDraftService', 'formDirtyStateService', 'autoSaveService',
         function ($scope, $rootScope, $stateParams, conceptSetService,
                   clinicalAppConfigService, messagingService, configurations, $state, spinner,
-              contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService, formDirtyStateService, autoSaveService) {
+            contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService, formDirtyStateService, autoSaveService) {
             $scope.consultation.selectedObsTemplate = $scope.consultation.selectedObsTemplate || [];
             $scope.allTemplates = $scope.allTemplates || [];
             $scope.scrollingEnabled = false;
@@ -122,15 +122,8 @@ angular.module('bahmni.clinical')
                     $rootScope.draftData &&
                     (!$rootScope.resumeDraftPatientUuid || $rootScope.resumeDraftPatientUuid === currentPatientUuid);
 
-                if (!isDraftResumeValid) {
-                    var hasStaleUnsavedObs = _.some($scope.consultation.selectedObsTemplate, function (t) {
-                        return t.hasUnsavedFormObservations;
-                    }) || _.some($scope.consultation.observationForms, function (f) {
-                        return f.hasUnsavedFormObservations;
-                    });
-                    if (hasStaleUnsavedObs) {
-                        clearStaleObsFromTemplates();
-                    }
+                if (!isDraftResumeValid && $scope.visitHistory && !$scope.visitHistory.activeVisit) {
+                    clearStaleObsFromTemplates();
                 }
 
                 var draftFormData = isDraftResumeValid && $rootScope.draftData.formData ? $rootScope.draftData.formData : null;
@@ -441,7 +434,7 @@ angular.module('bahmni.clinical')
                     }
                     if ($scope.isFormEditableByTheUser(observationForm)) {
                         var newForm = new Bahmni.ObservationForm(formUuid, $rootScope.currentUser,
-                                                                   formName, formVersion, observations, label, extension);
+                            formName, formVersion, observations, label, extension);
                         newForm.privileges = privileges;
                         forms.push(newForm);
                     }
