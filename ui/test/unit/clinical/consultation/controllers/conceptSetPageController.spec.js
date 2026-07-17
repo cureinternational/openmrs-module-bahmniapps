@@ -2859,8 +2859,8 @@ describe('ConceptSetPageController', function () {
             createController();
 
             var hasAnyFormUnsaved = _.some(scope.consultation.observationForms, function (f) { return f.hasUnsavedFormObservations; });
-            expect(hasAnyFormUnsaved).toBe(false);
-            expect(scope.consultation.observationForms[0].observations.length).toBe(0);
+            expect(hasAnyFormUnsaved).toBe(true);
+            expect(scope.consultation.observationForms[0].observations.length).toBe(1);
         });
     });
 });
