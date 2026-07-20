@@ -3,6 +3,7 @@
   "CONSULTATION_SHORTCUT_KEY": "c",
   "NO_ACTIVE_PASSIVE_PROGRAMS_MESSAGE": "No active/inactive programs for this patient.",
   "NO_TREATMENTS_MESSAGE": "No treatments for this patient.",
+  "NO_DISCHARGE_MEDICATIONS_MESSAGE": "No discharge medications prescribed for this visit.",
   "NO_ADMISSION_DETAILS_MESSAGE": "No Admission Details for this patient.",
   "NO_DOCUMENTS_MESSAGE": "No documents for this patient.",
   "NO_DISPOSTIONS_AVAILABLE_MESSAGE_KEY": "No dispositions available.",
