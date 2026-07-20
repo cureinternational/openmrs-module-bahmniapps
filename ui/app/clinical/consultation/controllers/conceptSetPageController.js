@@ -111,6 +111,9 @@ angular.module('bahmni.clinical')
                 $scope.allTemplates = getSelectedObsTemplate(allConceptSections);
                 $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
                 $scope.allTemplates = $scope.allTemplates.concat($scope.consultation.observationForms);
+                $scope.allTemplates = $scope.allTemplates = _.uniqBy($scope.allTemplates, function (t) {
+                    return t.formUuid || t.uuid || t.id;
+                });
 
                 var currentPatientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var isDraftResumeValid = $rootScope.resumeDraftOnLoad &&
@@ -221,7 +224,7 @@ angular.module('bahmni.clinical')
                     if (draftFormData) {
                         _.each($scope.allTemplates, function (template) {
                             if (template.observations && template.observations.length > 0 &&
-                                !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
+                                !_.find($scope.consultation.selectedObsTemplate, function (t) { return t.label === template.label; })) {
                                 insertTemplate(template);
                             }
                         });
@@ -235,7 +238,7 @@ angular.module('bahmni.clinical')
                 } else if (draftFormData) {
                     _.each($scope.allTemplates, function (template) {
                         if (template.hasUnsavedFormObservations &&
-                            !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
+                            !_.find($scope.consultation.selectedObsTemplate, function (t) { return t.label === template.label; })) {
                             insertTemplate(template);
                         }
                     });
