@@ -65,8 +65,8 @@
             </div>
             <div class="dosage-details">
                 <div>
-                    <span ng-if="newTreatment.asNeeded">{{newTreatment.getAsNeededText(newTreatment.asNeeded)}}, </span>
-                    <span ng-if="newTreatment.route">{{newTreatment.route}}, </span>
+                    <span ng-if="newTreatment.asNeeded">{{newTreatment.getAsNeededText(newTreatment.asNeeded)}}<span ng-if="newTreatment.route">, </span></span>
+                    <span ng-if="newTreatment.route">{{newTreatment.route}}<span ng-if="newTreatment.instructions">, </span></span>
                     {{newTreatment.instructions}}
                 </div>
                 <div ng-if="newTreatment.additionalInstructions">
