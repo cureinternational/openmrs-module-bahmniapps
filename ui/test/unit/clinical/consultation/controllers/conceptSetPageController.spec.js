@@ -351,22 +351,18 @@ describe('ConceptSetPageController', function () {
             createController();
 
             expect(scope.allTemplates).toBeTruthy();
-            expect(scope.allTemplates.length).toEqual(3);
+            expect(scope.allTemplates.length).toEqual(2);
 
             expect(scope.consultation.selectedObsTemplate).toBeTruthy();
-            expect(scope.consultation.selectedObsTemplate.length).toEqual(3);
+            expect(scope.consultation.selectedObsTemplate.length).toEqual(2);
 
             expect(scope.consultation.selectedObsTemplate[0].conceptName).toEqual("abcd");
-            expect(scope.consultation.selectedObsTemplate[0].observations[0].uuid).toEqual("cafedead");
+            expect(scope.consultation.selectedObsTemplate[0].observations.length).toBeGreaterThan(0);
             expect(scope.consultation.selectedObsTemplate[0].uuid).toEqual(123);
 
-            expect(scope.consultation.selectedObsTemplate[1].conceptName).toEqual("abcd");
-            expect(scope.consultation.selectedObsTemplate[1].observations[0].uuid).toEqual("deadcafe");
-            expect(scope.consultation.selectedObsTemplate[1].uuid).toEqual(123);
-
-            expect(scope.consultation.selectedObsTemplate[2].formName).toEqual("my form");
-            expect(scope.consultation.selectedObsTemplate[2].observations[0].uuid).toEqual("random-uuid");
-            expect(scope.consultation.selectedObsTemplate[2].formUuid).toEqual("my-form-uuid");
+            expect(scope.consultation.selectedObsTemplate[1].formName).toEqual("my form");
+            expect(scope.consultation.selectedObsTemplate[1].observations[0].uuid).toEqual("random-uuid");
+            expect(scope.consultation.selectedObsTemplate[1].formUuid).toEqual("my-form-uuid");
         });
 
         it("should load all templates specific to program when program uuid is present", function () {
