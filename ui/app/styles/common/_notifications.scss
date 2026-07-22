@@ -151,9 +151,9 @@ category: Components - Alerts
 }
 
 .lmp-warning-banner {
-	background-color: #FFF3CD;
-	border: 1px solid #FFEBAA;
-	border-left: 4px solid #FFC107;
+	background-color: #FFF1F1;
+	border: 1px solid #F4B2B5;
+	border-left:4px solid #DA1E28;
 	padding: 12px 15px;
 	margin-bottom: 15px;
 	border-radius: 2px;
@@ -177,14 +177,14 @@ category: Components - Alerts
 	}
 
 	.warning-icon-circle {
-		color: #FFC107;
+		color: #DA1E28;
 		font-size: 24px;
 		position: absolute;
 	}
 
 	.warning-icon-mark {
-		color: #555555;
-		font-size: 13px;
+		color: whitesmoke;
+		font-size: 10px;
 		font-weight: 100;
 		position: absolute;
 		left: 50%;
@@ -201,9 +201,8 @@ category: Components - Alerts
 		margin: 0 10px;
 
 		.warning-days {
-			color: #666666;
-			font-family: OpenSans;
-			font-weight: 400;
+			color: #161616;
+			font-weight: bold;
 		}
 	}
 
@@ -237,6 +236,22 @@ category: Components - Alerts
 			margin-top: 5px;
 		}
 	}
+}
+
+
+.lmp-warning-banner-yellow {
+		background-color: #FFF3CD;
+		border: 1px solid #FFEBAA;
+		border-left: 4px solid #FFC107;
+
+		.warning-icon-circle{
+			color: #FFC107;
+		}
+
+		.warning-icon-mark{
+			color: #555555;
+			font-size: 13px;
+		}
 }
 
 .clinical-observations {

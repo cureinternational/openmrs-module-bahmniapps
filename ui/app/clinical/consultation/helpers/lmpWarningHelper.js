@@ -6,7 +6,8 @@ angular.module('bahmni.clinical')
         var currentPatientUuid = null;
 
         var updateBanner = function (scope, lmpData, config) {
-            scope.showLmpWarning = lmpData && lmpData.daysSinceLmp > config.thresholdDays;
+            scope.showLmpWarning = lmpData;
+
             if (scope.showLmpWarning) {
                 scope.lmpWarning = { daysSinceLmp: lmpData.daysSinceLmp };
                 const lmpRecordedDate = new Intl.DateTimeFormat("en-GB", {
