@@ -46,11 +46,23 @@ angular.module('bahmni.clinical')
                         });
                         var treatmentSections = [];
 
+                        var filterDischargeMedications = function (drugOrders) {
+                            if ($scope.params.showOnlyDischargeMedication) {
+                                return _.filter(drugOrders, function (drugOrder) {
+                                    return drugOrder.isDischargeMedication === true;
+                                });
+                            }
+                            return drugOrders;
+                        };
+
                         for (var key in groupedByVisit) {
                             var values = Bahmni.Clinical.DrugOrder.Util.mergeContinuousTreatments(groupedByVisit[key]);
-                            treatmentSections.push({visitDate: key, drugOrders: values});
+                            var filteredValues = filterDischargeMedications(values);
+                            if (filteredValues.length > 0) {
+                                treatmentSections.push({visitDate: key, drugOrders: filteredValues});
+                            }
                         }
-                        if (!_.isEmpty(drugOrderResponse[Constants.otherActiveDrugOrders])) {
+                        if (!_.isEmpty(drugOrderResponse[Constants.otherActiveDrugOrders]) && !$scope.params.showOnlyDischargeMedication) {
                             var mergedOtherActiveDrugOrders = Bahmni.Clinical.DrugOrder.Util.mergeContinuousTreatments(drugOrderResponse[Constants.otherActiveDrugOrders]);
                             treatmentSections.push({
                                 visitDate: Constants.otherActiveDrugOrders,

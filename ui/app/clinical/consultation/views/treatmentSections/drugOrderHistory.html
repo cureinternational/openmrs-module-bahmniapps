@@ -80,8 +80,8 @@
                                 </div>
                                 <div class="dosage-details">
                                     <div>
-                                        <span ng-if="drugOrder.asNeeded">{{drugOrder.getAsNeededText(drugOrder.asNeeded)}}, </span>
-                                        <span nf-if="drugOrder.route"> {{drugOrder.route}}, </span>
+                                        <span ng-if="drugOrder.asNeeded">{{drugOrder.getAsNeededText(drugOrder.asNeeded)}}<span ng-if="drugOrder.route">, </span></span>
+                                        <span ng-if="drugOrder.route">{{drugOrder.route}}<span ng-if="drugOrder.instructions">, </span></span>
                                         {{drugOrder.instructions}}
                                     </div>
                                     <div ng-if="drugOrder.additionalInstructions"> | {{drugOrder.additionalInstructions}}</div>
