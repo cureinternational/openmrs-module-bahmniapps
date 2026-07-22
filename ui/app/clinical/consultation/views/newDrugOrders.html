@@ -74,7 +74,7 @@
                 </div>
                 <div ng-if="newTreatment.rate"> | {{newTreatment.rate}} ml/hr</div>
                 <div ng-if="newTreatment.additives"> | {{newTreatment.additives}}</div>
-                <div ng-if="newTreatment.getQuantityWithUnit()"> | {{newTreatment.getQuantityWithUnit()}}</div>
+                <div ng-if="newTreatment.getQuantityWithUnit()"><span ng-if="newTreatment.route || newTreatment.instructions"> | </span>{{newTreatment.getQuantityWithUnit()}}</div>
                 <div ng-show="newTreatment.isDischargeMedication"> | {{ ::'DISCH_LABEL' | translate }}</div>
             </div>
             <cdss-alert-row alerts="newTreatment.alerts"></cdss-alert-row>
@@ -117,7 +117,7 @@
             <div class="dosage-details">
                 <div>
                     <span ng-if="treatment.route">{{treatment.route}}</span>
-                    <span ng-if="treatment.quantity"> | {{treatment.quantity}} {{treatment.quantityUnit}}</span>
+                    <span ng-if="treatment.quantity"><span ng-if="treatment.route"> | </span>{{treatment.quantity}} {{treatment.quantityUnit}}</span>
                 </div>
             </div>
             <mfe-next-ui-variable-dose-protocol-table host-data="treatment">
