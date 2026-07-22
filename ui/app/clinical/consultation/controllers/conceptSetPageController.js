@@ -520,6 +520,15 @@ angular.module('bahmni.clinical')
                 }
             };
 
+            var startAutoSaveIfDirty = function () {
+                if ($scope.formDraft.isDirty) {
+                    autoSaveService.start(
+                        function () { return $scope.enableFormDraftFeature && $scope.formDraft.isDirty && !dirtyTrackingState.isSaving && $scope.visitHistory && $scope.visitHistory.activeVisit; },
+                        saveFormDraft
+                    );
+                }
+            };
+
             var setupDirtyTracking = function () {
                 if (dirtyTrackingState.initialized) {
                     return;
@@ -530,6 +539,7 @@ angular.module('bahmni.clinical')
                     captureTemplateCleanStates();
                     var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState;
+                    startAutoSaveIfDirty();
                 } else {
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     captureTemplateCleanStates();
@@ -585,6 +595,7 @@ angular.module('bahmni.clinical')
                             $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
                             if ($scope.formDraft.isDirty) {
                                 $state.dirtyConsultationForm = true;
+                                startAutoSaveIfDirty();
                             }
                             updateTemplateDirtyIndicators();
                         }
@@ -596,11 +607,6 @@ angular.module('bahmni.clinical')
                         formDirtyStateService.syncForm2Observations($scope.consultation.observationForms);
                     });
                 });
-
-                autoSaveService.start(
-                    function () { return $scope.enableFormDraftFeature && $scope.formDraft.isDirty && !dirtyTrackingState.isSaving && $scope.visitHistory && $scope.visitHistory.activeVisit; },
-                    saveFormDraft
-                );
             };
 
             var saveFormDraft = function () {
