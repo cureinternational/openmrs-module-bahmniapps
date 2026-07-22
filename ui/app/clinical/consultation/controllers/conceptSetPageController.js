@@ -220,7 +220,7 @@ angular.module('bahmni.clinical')
 
                 if (formUuidParam) {
                     var targetForm = _.find($scope.allTemplates, function (t) {
-                        return t && (t.formUuid || t.uuid || t.id || t.formName) === formUuidParam;
+                        return t && getTemplateId(t) === formUuidParam;
                     });
                     if (targetForm) {
                         if (targetForm.isAdded === false) {
@@ -234,7 +234,7 @@ angular.module('bahmni.clinical')
                             $state.go('patient.dashboard.show.observations', {}, { notify: false, location: 'replace' });
                         } else {
                             var isAlreadySelected = _.find($scope.consultation.selectedObsTemplate, function (t) {
-                                return t && ((t.formUuid || t.uuid || t.id || t.formName) === formUuidParam || t === targetForm);
+                                return t && (getTemplateId(t) === formUuidParam || t === targetForm);
                             });
                             if (!isAlreadySelected) {
                                 targetForm.isAdded = true;
@@ -312,27 +312,17 @@ angular.module('bahmni.clinical')
                 if (!$scope.consultation.lastvisited) {
                     return null;
                 }
+                var lastVisitedId = $scope.consultation.lastvisited;
                 var matchingTemplate = _.find($scope.consultation.selectedObsTemplate, function (template) {
-                    if (!template) {
-                        return false;
-                    }
-                    if (template.id && template.id === $scope.consultation.lastvisited) {
-                        return true;
-                    }
-                    if (template.formUuid && template.formUuid === $scope.consultation.lastvisited) {
-                        return true;
-                    }
-                    if (template.uuid && template.uuid === $scope.consultation.lastvisited) {
-                        return true;
-                    }
-                    if (template.formName && template.formName === $scope.consultation.lastvisited) {
-                        return true;
-                    }
-                    return !!(template.label && template.label === $scope.consultation.lastvisited);
+                    return (template.id === lastVisitedId) ||
+                           (template.formUuid === lastVisitedId) ||
+                           (template.uuid === lastVisitedId) ||
+                           (template.formName === lastVisitedId) ||
+                           (template.label === lastVisitedId);
                 });
                 if (!matchingTemplate) {
                     $scope.consultation.lastvisited = null;
-                    if ($state && $state.params) {
+                    if ($state.params) {
                         $state.params.formUuid = null;
                     }
                 }
@@ -397,41 +387,38 @@ angular.module('bahmni.clinical')
             };
 
             var collectObservationsFromConceptSets = function () {
-                // First, ensure all selected templates have their observations loaded from consultation.observations
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
                     if (!template.observations || template.observations.length === 0) {
                         var obs = getObservationsForTemplate(template);
-                        if (obs && obs.length > 0) {
+                        if (obs.length > 0) {
                             template.observations = obs;
                         }
                     }
                 });
 
-                // Then collect observations FROM templates into consultation.observations
                 var collectedObs = [];
-                _.each($scope.consultation.selectedObsTemplate, function (conceptSetSection) {
-                    if (conceptSetSection.observations && conceptSetSection.observations[0]) {
-                        collectedObs.push(conceptSetSection.observations[0]);
+                _.each($scope.consultation.selectedObsTemplate, function (template) {
+                    if (template.observations && template.observations[0]) {
+                        collectedObs.push(template.observations[0]);
                     }
                 });
 
-                // Update consultation.observations with collected observations
-                if (collectedObs.length > 0) {
-                    $scope.consultation.observations = collectedObs;
-                }
+                $scope.consultation.observations = collectedObs;
             };
 
             var getObservationsForTemplate = function (template) {
-                return _.filter($scope.consultation.observations, function (observation) {
-                    return !observation.formFieldPath && observation.concept.uuid === template.uuid;
+                return _.filter($scope.consultation.observations || [], function (observation) {
+                    return !observation.formFieldPath && observation.concept && observation.concept.uuid === template.uuid;
                 });
+            };
+
+            var getTemplateId = function (template) {
+                return template && (template.formUuid || template.uuid || template.id || template.formName || template.label);
             };
 
             var getSelectedObsTemplate = function (allConceptSections) {
                 return allConceptSections.filter(function (conceptSet) {
-                    if (conceptSet.isAvailable($scope.context)) {
-                        return true;
-                    }
+                    return conceptSet.isAvailable($scope.context);
                 });
             };
 
@@ -443,7 +430,7 @@ angular.module('bahmni.clinical')
                 $scope.scrollingEnabled = true;
                 $scope.showTemplatesList = false;
                 var index = _.findLastIndex($scope.consultation.selectedObsTemplate, function (consultationTemplate) {
-                    return consultationTemplate.label == template.label;
+                    return consultationTemplate && consultationTemplate.label === template.label;
                 });
 
                 if (index != -1 && $scope.consultation.selectedObsTemplate[index].allowAddMore) {

@@ -125,6 +125,7 @@ angular.module('bahmni.common.conceptSet')
                 template.isOpen = false;
                 template.klass = "";
                 template.isLoaded = false;
+                template.observations = [];
             };
             var removeFromSelectedObsTemplate = function (template) {
                 var idx = _.findIndex($scope.consultation.selectedObsTemplate, function (t) {
@@ -133,6 +134,11 @@ angular.module('bahmni.common.conceptSet')
                 if (idx > -1) {
                     $scope.consultation.selectedObsTemplate.splice(idx, 1);
                 }
+            };
+            var removeObservationsForTemplate = function (template) {
+                $scope.consultation.observations = _.filter($scope.consultation.observations || [], function (observation) {
+                    return observation.concept.uuid !== template.uuid;
+                });
             };
             $scope.remove = function (index) {
                 if (!$scope.allTemplates[index]) {
@@ -151,6 +157,7 @@ angular.module('bahmni.common.conceptSet')
                 });
                 if (isObservationForm) {
                     clearTemplateState(currentTemplate);
+                    removeObservationsForTemplate(currentTemplate);
                     if (!currentTemplate.alwaysShow) {
                         removeFromSelectedObsTemplate(currentTemplate);
                     }
@@ -163,16 +170,19 @@ angular.module('bahmni.common.conceptSet')
                     var clonedObj = $scope.allTemplates[index].clone();
                     $scope.allTemplates[index] = clonedObj;
                     clearTemplateState($scope.allTemplates[index]);
+                    removeObservationsForTemplate(currentTemplate);
                     removeFromSelectedObsTemplate(currentTemplate);
                 }
                 var templateId = getTemplateId(currentTemplate);
                 if ($scope.consultation.lastvisited === templateId) {
                     $scope.consultation.lastvisited = null;
                 }
+                if ($scope.leftPanelConceptSet && getTemplateId($scope.leftPanelConceptSet) === templateId) {
+                    $scope.leftPanelConceptSet = null;
+                }
                 if ($state.params && $state.params.formUuid && getTemplateId(currentTemplate) === $state.params.formUuid) {
                     $state.go('patient.dashboard.show.observations', {}, { notify: false, location: 'replace' });
                 }
-                $scope.leftPanelConceptSet = "";
                 messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_REMOVED_SUCCESS_KEY", { label: label }));
             };
 

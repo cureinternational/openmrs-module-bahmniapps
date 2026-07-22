@@ -77,7 +77,7 @@ angular.module('bahmni.clinical')
             if (template.component && angular.isFunction(template.component.getValue)) {
                 var formValue = template.component.getValue() || {};
                 var componentObs = formValue.observations || [];
-                if (componentObs && componentObs.length > 0) {
+                if (componentObs.length > 0) {
                     template.observations = componentObs;
                     return componentObs;
                 }
