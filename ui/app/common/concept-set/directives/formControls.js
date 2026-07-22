@@ -54,9 +54,13 @@ angular.module('bahmni.common.conceptSet')
                 } else {
                     $timeout(function () {
                         $scope.form.events = loadedFormDetails[formUuid].events;
-                        $scope.form.component = renderWithControls(loadedFormDetails[formUuid], formObservations,
-                            formUuid, collapse, $scope.patient, validateForm, locale, loadedFormTranslations[formUuid],
-                            allowedDomains);
+                        try {
+                            $scope.form.component = renderWithControls(loadedFormDetails[formUuid], formObservations,
+                                formUuid, collapse, $scope.patient, validateForm, locale, loadedFormTranslations[formUuid],
+                                allowedDomains);
+                        } catch (e) {
+                            console.error('renderWithControls error:', e);
+                        }
                         unMountReactContainer($scope.form.formUuid);
                     }, 0, false);
                 }

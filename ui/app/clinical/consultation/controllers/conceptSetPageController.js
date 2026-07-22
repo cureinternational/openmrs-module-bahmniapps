@@ -388,7 +388,7 @@ angular.module('bahmni.clinical')
 
             var collectObservationsFromConceptSets = function () {
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
-                    if (!template.observations || template.observations.length === 0) {
+                    if (template && (!template.observations || template.observations.length === 0)) {
                         var obs = getObservationsForTemplate(template);
                         if (obs.length > 0) {
                             template.observations = obs;
@@ -398,7 +398,7 @@ angular.module('bahmni.clinical')
 
                 var collectedObs = [];
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
-                    if (template.observations && template.observations[0]) {
+                    if (template && template.observations && template.observations[0]) {
                         collectedObs.push(template.observations[0]);
                     }
                 });
@@ -407,8 +407,14 @@ angular.module('bahmni.clinical')
             };
 
             var getObservationsForTemplate = function (template) {
+                if (!template || !template.uuid) {
+                    return [];
+                }
                 return _.filter($scope.consultation.observations || [], function (observation) {
-                    return !observation.formFieldPath && observation.concept && observation.concept.uuid === template.uuid;
+                    if (!observation || !observation.concept) {
+                        return false;
+                    }
+                    return !observation.formFieldPath && observation.concept.uuid === template.uuid;
                 });
             };
 

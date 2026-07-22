@@ -136,8 +136,11 @@ angular.module('bahmni.common.conceptSet')
                 }
             };
             var removeObservationsForTemplate = function (template) {
+                if (!template || !template.uuid) {
+                    return;
+                }
                 $scope.consultation.observations = _.filter($scope.consultation.observations || [], function (observation) {
-                    return observation.concept.uuid !== template.uuid;
+                    return !observation || !observation.concept || observation.concept.uuid !== template.uuid;
                 });
             };
             $scope.remove = function (index) {
