@@ -71,10 +71,10 @@
                                     </div>
 								</div>
                                 <div class="start-date fr">
-                                    <span ng-if="showEffectiveFromDate(drugOrderGroup.visitStartDate, drugOrder.effectiveStartDate)"> {{ ::'MEDICATION_STARTED_ON' | translate }} {{drugOrder.effectiveStartDate | bahmniDate}}</span>
+                                    <span ng-if="showEffectiveFromDate(drugOrderGroup.visitStartDate, drugOrder.effectiveStartDate)"> {{ ::'MEDICATION_START_DATE' | translate }} {{drugOrder.effectiveStartDate | bahmniDate}}</span>
                                     <span class="stop-date">
                                         <div ng-if="drugOrder.isDiscontinuedOrStopped()">{{ ::'MEDICATION_STOPPED_ON' | translate }} {{drugOrder.dateStopped | bahmniDate}}</div>
-                                        <div ng-if="drugOrder.orderReasonText && drugOrder.isDiscontinuedOrStopped()">{{ ::'MEDICATION_DUE_TO' | translate }} {{drugOrder.orderReasonText}}</div>
+                                        <div class="order-reason" ng-if="drugOrder.orderReasonText && drugOrder.isDiscontinuedOrStopped()">{{ ::'MEDICATION_DUE_TO' | translate }} {{drugOrder.orderReasonText}}</div>
                                         <div ng-if="getOrderReasonConcept(drugOrder) && drugOrder.isDiscontinuedOrStopped()">({{getOrderReasonConcept(drugOrder)}})</div>
                                     </span>
                                 </div>

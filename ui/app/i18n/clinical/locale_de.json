@@ -153,7 +153,7 @@
     "MEDICATION_NO_RECENT_TREATMENT": "No Recent Treatments",
     "MEDICATION_STOP": "Stop",
     "MEDICATION_REFILL": "Refill",
-    "MEDICATION_STARTED_ON": "Started on",
+    "MEDICATION_START_DATE": "Startdatum",
     "MEDICATION_STOPPED_ON": "Stopped on",
     "MEDICATION_DUE_TO": "due to",
     "MEDICATION_LABEL_START_DATE": "Start Date",

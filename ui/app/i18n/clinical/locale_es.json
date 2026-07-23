@@ -163,7 +163,7 @@
     "MEDICATION_NO_RECENT_TREATMENT": "No hay Tratamientos Recientes",
     "MEDICATION_STOP": "Detener",
     "MEDICATION_REFILL": "Rellenar",
-    "MEDICATION_STARTED_ON": "Iniciado el",
+    "MEDICATION_START_DATE": "Fecha de inicio",
     "MEDICATION_STOPPED_ON": "Finalizado el",
     "MEDICATION_DUE_TO": "debido a ",
     "MEDICATION_LABEL_START_DATE": "Fecha de inicio",
