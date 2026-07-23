@@ -455,6 +455,8 @@
 
   "LMP_WARNING_CONSULTATION_LABEL": "Days since LMP - ",
   "LMP_WARNING_DAYS_UNIT": "days",
+  "AGO_LABEL": "ago",
+  "LMP_DATE_RECORDED": "Date recorded: ",
 
   "VARIABLE_DOSAGE_HEADER": "Variable Dosage"
 }

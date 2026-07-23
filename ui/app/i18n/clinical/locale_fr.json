@@ -442,6 +442,8 @@
     "LMP_WARNING_CONSULTATION_LABEL": "Jours depuis FUM - ",
     "LMP_WARNING_DAYS_UNIT": "jours",
     "ADDITIONAL_INSTRUCTIONS": "Instructions supplémentaires",
+    "AGO_LABEL": "il y a",
+    "LMP_DATE_RECORDED": "Date enregistrée: ",
 
     "VARIABLE_DOSAGE_HEADER": "Dosage Variable"
 }
