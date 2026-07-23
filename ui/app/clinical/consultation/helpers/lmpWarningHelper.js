@@ -28,7 +28,8 @@ angular.module('bahmni.clinical')
                 currentPatientUuid = patient.uuid;
 
                 var config = clinicalAppConfigService.getLmpWarningConfig();
-                if (!config.conceptName || !config.thresholdDays) {
+                scope.thresholdDays = config.thresholdDays;
+                if (!config.conceptName || !scope.thresholdDays) {
                     scope.showLmpWarning = false;
                     return;
                 }

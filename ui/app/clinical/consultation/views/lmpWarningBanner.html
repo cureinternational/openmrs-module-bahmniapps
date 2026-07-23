@@ -1,4 +1,4 @@
-<div class="lmp-warning-banner" ng-if="showLmpWarning && lmpWarning" data-testid="lmp-warning-banner">
+<div class="lmp-warning-banner" ng-class="{ 'lmp-warning-banner-yellow': lmpWarning.daysSinceLmp < thresholdDays }" ng-if="showLmpWarning && lmpWarning" data-testid="lmp-warning-banner">
     <div class="warning-content">
         <span class="warning-icon-wrapper">
             <i class="fa fa-circle warning-icon-circle"></i>
