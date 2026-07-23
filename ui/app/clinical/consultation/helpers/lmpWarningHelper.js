@@ -9,6 +9,12 @@ angular.module('bahmni.clinical')
             scope.showLmpWarning = lmpData && lmpData.daysSinceLmp > config.thresholdDays;
             if (scope.showLmpWarning) {
                 scope.lmpWarning = { daysSinceLmp: lmpData.daysSinceLmp };
+                const lmpRecordedDate = new Intl.DateTimeFormat("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                }).format(new Date(lmpData.lmpDate));
+                scope.lmpRecordedDate = lmpRecordedDate;
             }
         };
 

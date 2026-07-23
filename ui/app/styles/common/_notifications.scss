@@ -194,8 +194,9 @@ category: Components - Alerts
 
 	.warning-text {
 		color: #333333;
-		font-size: 14px;
-		font-family: OpenSansSemiBold;
+		font-size: 17px;
+		font-weight: 100;
+		font-family: "Roboto", sans-serif;
 		flex-grow: 1;
 		margin: 0 10px;
 
@@ -212,7 +213,6 @@ category: Components - Alerts
 		color: #555555;
 		padding: 0;
 		font-size: 14px;
-		font-weight: 400;
 		flex-shrink: 0;
 		transition: opacity 0.2s ease;
 	}
