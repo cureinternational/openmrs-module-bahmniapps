@@ -122,6 +122,9 @@ angular.module('bahmni.clinical')
                     $rootScope.draftData &&
                     (!$rootScope.resumeDraftPatientUuid || $rootScope.resumeDraftPatientUuid === currentPatientUuid);
 
+                // Guard: only clear stale obs when there is no active visit.
+                // Bug fix: previously this ran on every concatObservationForms call when isDraftResumeValid
+                // was false (including during active-visit cross-module navigation), wiping unsaved forms.
                 if (!isDraftResumeValid && $scope.visitHistory && !$scope.visitHistory.activeVisit) {
                     clearStaleObsFromTemplates();
                 }
