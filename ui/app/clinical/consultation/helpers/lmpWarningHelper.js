@@ -11,11 +11,7 @@ angular.module('bahmni.clinical')
 
             if (scope.showLmpWarning) {
                 scope.lmpWarning = { daysSinceLmp: lmpData.daysSinceLmp };
-                const lmpRecordedDate = new Intl.DateTimeFormat(config.dateFormatLocale, {
-                    day: config.dateDayFormat,
-                    month: config.dateMonthFormat,
-                    year: config.dateYearFormat
-                }).format(new Date(lmpData.lmpDate));
+                const lmpRecordedDate = new Intl.DateTimeFormat(config.dateFormatLocale, config.lmpDateFormat).format(new Date(lmpData.lmpDate));
                 scope.lmpRecordedDate = lmpRecordedDate;
             }
         };
