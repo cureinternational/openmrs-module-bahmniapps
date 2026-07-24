@@ -126,3 +126,12 @@ CVE-2026-44728
 CVE-2026-12143 
 CVE-2026-48779 
 CVE-2026-53486
+CVE-2026-48779
+CVE-2026-4800 # lodash: transitive dep via bahmni-form-controls-cure; fixed version 4.18.0 does not exist on npm (scanner false positive)
+CVE-2026-53486
+CVE-2026-11998 # angularjs: AngularJS SCE bypass; no fix available; AngularJS 1.x EOL; ui/ direct dep (1.8.2), micro-frontends/ indirect via angular-component (1.8.3)
+CVE-2026-13149
+CVE-2026-59873
+CVE-2026-59874
+CVE-2026-45623
+GHSA-2p49-hgcm-8545
