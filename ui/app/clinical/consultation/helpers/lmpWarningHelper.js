@@ -4,16 +4,17 @@ angular.module('bahmni.clinical')
     .factory('lmpWarningHelper', ['patientService', 'clinicalAppConfigService', function (patientService, clinicalAppConfigService) {
         var lmpDataCache = {}; // Cache: { patientUuid: lmpData }
         var currentPatientUuid = null;
+        var config = clinicalAppConfigService.getLmpWarningConfig();
 
         var updateBanner = function (scope, lmpData, config) {
             scope.showLmpWarning = lmpData;
 
             if (scope.showLmpWarning) {
                 scope.lmpWarning = { daysSinceLmp: lmpData.daysSinceLmp };
-                const lmpRecordedDate = new Intl.DateTimeFormat("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric"
+                const lmpRecordedDate = new Intl.DateTimeFormat(config.dateFormatLocale, {
+                    day: config.dateDayFormat,
+                    month: config.dateMonthFormat,
+                    year: config.dateYearFormat
                 }).format(new Date(lmpData.lmpDate));
                 scope.lmpRecordedDate = lmpRecordedDate;
             }
@@ -34,7 +35,6 @@ angular.module('bahmni.clinical')
 
                 currentPatientUuid = patient.uuid;
 
-                var config = clinicalAppConfigService.getLmpWarningConfig();
                 scope.thresholdDays = config.thresholdDays;
                 if (!config.conceptName || !scope.thresholdDays) {
                     scope.showLmpWarning = false;
