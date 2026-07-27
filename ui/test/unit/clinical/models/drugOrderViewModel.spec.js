@@ -1053,6 +1053,68 @@ describe("drugOrderViewModel", function () {
         });
     });
 
+    describe("createFromContract - VDP orders should not have parent-level instructions", function () {
+        var fhirDosingInstructionType = 'org.openmrs.module.bahmniemrapi.drugorder.dosinginstructions.FhirDosingInstructions';
+
+        var buildVdpContract = function (overrides) {
+            var dosages = [
+                { sequence: 1, text: 'Stage 1', timing: { code: { text: 'Once a day' }, repeat: { duration: 3, durationUnit: 'd' } }, doseAndRate: [{ doseQuantity: { value: 5, unit: 'mg' } }], extension: [{ url: 'isLoadingDose', valueBoolean: false }], additionalInstruction: [], patientInstruction: '' }
+            ];
+            return Object.assign({
+                uuid: 'vdp-instr-uuid',
+                action: 'NEW',
+                careSetting: 'Inpatient',
+                dosingInstructionType: fhirDosingInstructionType,
+                effectiveStartDate: DateUtil.parse('2026-01-01').getTime(),
+                duration: 3,
+                durationUnits: 'Days',
+                dosingInstructions: {
+                    quantity: 10,
+                    quantityUnits: 'Tablet(s)',
+                    administrationInstructions: JSON.stringify(dosages)
+                },
+                drug: { name: 'Prednisolone', uuid: 'drug-uuid' },
+                provider: { name: 'Dr. Test' }
+            }, overrides || {});
+        };
+
+        it("should not have parent-level instructions for VDP order", function () {
+            var viewModel = Bahmni.Clinical.DrugOrderViewModel.createFromContract(buildVdpContract());
+            expect(viewModel.instructions).toBeUndefined();
+        });
+
+        it("should not have parent-level instructions even when route is present", function () {
+            var viewModel = Bahmni.Clinical.DrugOrderViewModel.createFromContract(buildVdpContract({
+                dosingInstructions: {
+                    route: 'Oral',
+                    quantity: 10,
+                    quantityUnits: 'Tablet(s)',
+                    administrationInstructions: JSON.stringify([
+                        { sequence: 1, text: 'Stage 1', timing: { code: { text: 'Once a day' }, repeat: { duration: 3, durationUnit: 'd' } }, doseAndRate: [{ doseQuantity: { value: 5, unit: 'mg' } }], extension: [{ url: 'isLoadingDose', valueBoolean: false }], additionalInstruction: [], patientInstruction: '' }
+                    ])
+                }
+            }));
+            expect(viewModel.instructions).toBeUndefined();
+            expect(viewModel.route).toBe('Oral');
+        });
+
+        it("should preserve stage-level instructions in stages array", function () {
+            var dosages = [
+                { sequence: 1, text: 'Stage 1', timing: { code: { text: 'Once a day' }, repeat: { duration: 3, durationUnit: 'd' } }, doseAndRate: [{ doseQuantity: { value: 5, unit: 'mg' } }], extension: [{ url: 'isLoadingDose', valueBoolean: false }], additionalInstruction: [{ text: 'Take after food' }], patientInstruction: '' }
+            ];
+            var viewModel = Bahmni.Clinical.DrugOrderViewModel.createFromContract(buildVdpContract({
+                dosingInstructions: {
+                    quantity: 10,
+                    quantityUnits: 'Tablet(s)',
+                    administrationInstructions: JSON.stringify(dosages)
+                }
+            }));
+            expect(viewModel.stages).toBeDefined();
+            expect(viewModel.stages.length).toBe(1);
+            expect(viewModel.stages[0].instructions).toBe('Take after food');
+        });
+    });
+
     describe("createFromContract - FHIR non-coded drug read-back", function () {
         var fhirDosingInstructionType = 'org.openmrs.module.bahmniemrapi.drugorder.dosinginstructions.FhirDosingInstructions';
 

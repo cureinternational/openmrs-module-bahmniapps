@@ -101,7 +101,7 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
     this.route = this.route || undefined;
     this.durationUnit = this.durationUnit || inputOptionsConfig.defaultDurationUnit;
     this.simpleDrugForm = this.simpleDrugForm || inputOptionsConfig.simpleDrugForm || false;
-    this.instructions = this.instructions || inputOptionsConfig.defaultInstructions;
+    this.instructions = this.instructions || undefined;
     this.autoExpireDate = this.autoExpireDate || undefined;
     this.frequencyType = this.frequencyType || Bahmni.Clinical.Constants.dosingTypes.uniform;
     this.isLoadingDose = this.isLoadingDose || false;
@@ -800,6 +800,7 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
         viewModel.isNonCodedDrug = !!drugOrderResponse.drugNonCoded;
         viewModel.drugNameDisplay = viewModel.drugNonCoded || constructDrugNameDisplayWithConcept(viewModel.drug, viewModel.concept) || viewModel.drugName;
         viewModel.asNeeded = false;
+        viewModel.instructions = undefined;
         viewModel.dosage = '';
         viewModel.orderNumber = drugOrderResponse.orderNumber && parseInt(drugOrderResponse.orderNumber.replace('ORD-', ''));
         if (drugOrderResponse.orderGroup) {
