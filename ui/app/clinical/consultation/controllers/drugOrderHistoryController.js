@@ -238,7 +238,7 @@ angular.module('bahmni.clinical')
             $scope.getOrderReasonConcept = function (drugOrder) {
                 if (drugOrder.orderReasonConcept) {
                     // Handle case where backend returns uuid string instead of object
-                    if (typeof drugOrder.orderReasonConcept === 'string') {
+                    if (angular.isString(drugOrder.orderReasonConcept)) {
                         // Look up the concept from stoppedOrderReasons array
                         var reasonConcept = _.find($scope.stoppedOrderReasons, { uuid: drugOrder.orderReasonConcept });
                         return reasonConcept ? (reasonConcept.display || reasonConcept.name) : drugOrder.orderReasonConcept;
