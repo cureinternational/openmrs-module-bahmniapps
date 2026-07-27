@@ -887,7 +887,7 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
             if (existingReasonConcept && existingReasonConcept.display) {
                 viewModel.orderReasonConcept.display = existingReasonConcept.display;
             }
-        }  else if (angular.isObject(viewModel.orderReasonConcept)) {
+        } else if (angular.isObject(viewModel.orderReasonConcept)) {
             // If response has object but missing name/display, try to preserve from existing
             if (existingReasonConcept && !viewModel.orderReasonConcept.name && existingReasonConcept.name) {
                 viewModel.orderReasonConcept.name = existingReasonConcept.name;
