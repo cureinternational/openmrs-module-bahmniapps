@@ -84,6 +84,7 @@ angular.module('bahmni.common.patient')
 
                 var obs = sortedObs[0];
                 var lmpDateStr = obs.value || (obs.display && obs.display.match(/(\d{4}-\d{2}-\d{2})/) || [])[1];
+                var recordedDate = obs.auditInfo.dateCreated;
 
                 if (!lmpDateStr) {
                     return null;
@@ -107,7 +108,7 @@ angular.module('bahmni.common.patient')
                 }
 
                 return {
-                    lmpDate: lmpDateStr,
+                    lmpDate: recordedDate,
                     daysSinceLmp: Math.floor((today.getTime() - lmpDate.getTime()) / (24 * 60 * 60 * 1000))
                 };
             }).catch(function () {
