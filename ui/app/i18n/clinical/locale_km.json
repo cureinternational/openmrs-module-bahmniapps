@@ -153,7 +153,7 @@
     "MEDICATION_NO_RECENT_TREATMENT": "គ្មានការព្យាបាលថ្មីៗ",
     "MEDICATION_STOP": "បញ្ឈប់",
     "MEDICATION_REFILL": "បញ្ចូល",
-    "MEDICATION_STARTED_ON": "ចាប់ផ្តើម​",
+    "MEDICATION_START_DATE": "កាលបរិច្ឆេទចាប់ផ្តើម",
     "MEDICATION_STOPPED_ON": "ចប់",
     "MEDICATION_DUE_TO": "ដោយសារ​",
     "MEDICATION_LABEL_START_DATE": "Start Date",
