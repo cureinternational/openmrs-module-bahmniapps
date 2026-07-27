@@ -745,6 +745,8 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
             action: 'action',
             careSetting: 'careSetting',
             dateStopped: 'dateStopped',
+            orderReasonConcept: 'orderReasonConcept',
+            orderReasonText: 'orderReasonText',
             uuid: 'uuid',
             dateActivated: 'dateActivated',
             encounterUuid: 'encounterUuid',
@@ -869,8 +871,35 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
     viewModel.previousOrderUuid = drugOrderResponse.previousOrderUuid;
     viewModel.dateActivated = drugOrderResponse.dateActivated;
     viewModel.encounterUuid = drugOrderResponse.encounterUuid;
+    
+    // Preserve orderReasonConcept from existing viewModel if backend returns null or uuid string only
+    var existingReasonConcept = viewModel.orderReasonConcept;
     if (drugOrderResponse.orderReasonConcept) {
         viewModel.orderReasonConcept = drugOrderResponse.orderReasonConcept;
+        // If response has only uuid string, convert to object and preserve existing name/display
+        if (typeof viewModel.orderReasonConcept === 'string') {
+            var uuidOnly = viewModel.orderReasonConcept;
+            viewModel.orderReasonConcept = {
+                uuid: uuidOnly
+            };
+            if (existingReasonConcept && existingReasonConcept.name) {
+                viewModel.orderReasonConcept.name = existingReasonConcept.name;
+            }
+            if (existingReasonConcept && existingReasonConcept.display) {
+                viewModel.orderReasonConcept.display = existingReasonConcept.display;
+            }
+        } else if (typeof viewModel.orderReasonConcept === 'object') {
+            // If response has object but missing name/display, try to preserve from existing
+            if (existingReasonConcept && !viewModel.orderReasonConcept.name && existingReasonConcept.name) {
+                viewModel.orderReasonConcept.name = existingReasonConcept.name;
+            }
+            if (existingReasonConcept && !viewModel.orderReasonConcept.display && existingReasonConcept.display) {
+                viewModel.orderReasonConcept.display = existingReasonConcept.display;
+            }
+        }
+    } else if (!drugOrderResponse.orderReasonConcept && existingReasonConcept) {
+        // Backend returned null - keep the existing value from frontend (user's selection)
+        viewModel.orderReasonConcept = existingReasonConcept;
     }
     viewModel.orderReasonText = drugOrderResponse.orderReasonText;
     viewModel.orderNumber = drugOrderResponse.orderNumber && parseInt(drugOrderResponse.orderNumber.replace("ORD-", ""));

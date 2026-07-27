@@ -32,6 +32,10 @@
             <i class="fa fa-comments left"></i>
             <pre class="left">{{stage.additionalInstructions}}</pre>
         </span>
+        <div ng-if="drugOrder.isDiscontinuedOrStopped() && (drugOrder.orderReasonText || drugOrder.orderReasonConcept)" class="stopped-reason-block">
+            <div ng-if="drugOrder.orderReasonText">{{'MEDICATION_DUE_TO'|translate}} {{drugOrder.orderReasonText}}</div>
+            <div ng-if="drugOrder.orderReasonConcept && (drugOrder.orderReasonConcept.display || drugOrder.orderReasonConcept.name)">({{drugOrder.orderReasonConcept.display || drugOrder.orderReasonConcept.name}})</div>
+        </div>
         <div class="footer-note right">
             <span class="provider" ng-if="params.showProvider">
                 <provider-directive creator-name="{{drugOrder.creatorName}}" provider-name="{{drugOrder.provider.name}}" provider-date="::drugOrder.effectiveStartDate"></provider-directive>
