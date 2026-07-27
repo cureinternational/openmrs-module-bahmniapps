@@ -159,7 +159,7 @@
     "MEDICATION_NO_RECENT_TREATMENT": "لا يوجد علاجات مؤخراُ",
     "MEDICATION_STOP": "توقف",
     "MEDICATION_REFILL": "اعادة الملء",
-    "MEDICATION_STARTED_ON": "بدأ في",
+    "MEDICATION_START_DATE": "تاريخ البدء",
     "MEDICATION_STOPPED_ON": "توقف في",
     "MEDICATION_DUE_TO": "بسبب",
     "MEDICATION_LABEL_START_DATE": "تاريخ البدأ",

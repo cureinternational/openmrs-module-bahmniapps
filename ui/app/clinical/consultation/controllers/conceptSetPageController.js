@@ -6,7 +6,7 @@ angular.module('bahmni.clinical')
         'contextChangeHandler', '$q', '$translate', 'formService', '$timeout', '$filter', 'appService', 'formDraftService', 'formDirtyStateService', 'autoSaveService',
         function ($scope, $rootScope, $stateParams, conceptSetService,
                   clinicalAppConfigService, messagingService, configurations, $state, spinner,
-              contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService, formDirtyStateService, autoSaveService) {
+            contextChangeHandler, $q, $translate, formService, $timeout, $filter, appService, formDraftService, formDirtyStateService, autoSaveService) {
             $scope.consultation.selectedObsTemplate = $scope.consultation.selectedObsTemplate || [];
             $scope.allTemplates = $scope.allTemplates || [];
             $scope.scrollingEnabled = false;
@@ -102,24 +102,31 @@ angular.module('bahmni.clinical')
             };
 
             var concatObservationForms = function () {
+                var templateAlreadySelected = function (template) {
+                    return _.find($scope.consultation.selectedObsTemplate, function (t) {
+                        var key = t.formUuid || t.uuid;
+                        var templateKey = template.formUuid || template.uuid;
+                        return key && templateKey ? key === templateKey : t.label === template.label;
+                    });
+                };
+
                 $scope.allTemplates = getSelectedObsTemplate(allConceptSections);
                 $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
                 $scope.allTemplates = $scope.allTemplates.concat($scope.consultation.observationForms);
+                $scope.allTemplates = _.uniqBy($scope.allTemplates, function (t) {
+                    return t.formUuid || t.uuid || t.id;
+                });
 
                 var currentPatientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var isDraftResumeValid = $rootScope.resumeDraftOnLoad &&
                     $rootScope.draftData &&
                     (!$rootScope.resumeDraftPatientUuid || $rootScope.resumeDraftPatientUuid === currentPatientUuid);
 
-                if (!isDraftResumeValid) {
-                    var hasStaleUnsavedObs = _.some($scope.consultation.selectedObsTemplate, function (t) {
-                        return t.hasUnsavedFormObservations;
-                    }) || _.some($scope.consultation.observationForms, function (f) {
-                        return f.hasUnsavedFormObservations;
-                    });
-                    if (hasStaleUnsavedObs) {
-                        clearStaleObsFromTemplates();
-                    }
+                // Guard: only clear stale obs when there is no active visit.
+                // Bug fix: previously this ran on every concatObservationForms call when isDraftResumeValid
+                // was false (including during active-visit cross-module navigation), wiping unsaved forms.
+                if (!isDraftResumeValid && $scope.visitHistory && !$scope.visitHistory.activeVisit) {
+                    clearStaleObsFromTemplates();
                 }
 
                 var draftFormData = isDraftResumeValid && $rootScope.draftData.formData ? $rootScope.draftData.formData : null;
@@ -185,7 +192,7 @@ angular.module('bahmni.clinical')
                     if (draftFormData) {
                         _.each($scope.allTemplates, function (template) {
                             if (template.observations && template.observations.length > 0 &&
-                                !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
+                                !templateAlreadySelected(template)) {
                                 insertTemplate(template);
                             }
                         });
@@ -199,7 +206,7 @@ angular.module('bahmni.clinical')
                 } else if (draftFormData) {
                     _.each($scope.allTemplates, function (template) {
                         if (template.hasUnsavedFormObservations &&
-                            !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === template; })) {
+                            !templateAlreadySelected(template)) {
                             insertTemplate(template);
                         }
                     });

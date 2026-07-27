@@ -1,12 +1,16 @@
-<div class="lmp-warning-banner" ng-if="showLmpWarning && lmpWarning" data-testid="lmp-warning-banner">
+<div class="lmp-warning-banner" ng-class="{ 'lmp-warning-banner-yellow': lmpWarning.daysSinceLmp < thresholdDays }" ng-if="showLmpWarning && lmpWarning" data-testid="lmp-warning-banner">
     <div class="warning-content">
         <span class="warning-icon-wrapper">
             <i class="fa fa-circle warning-icon-circle"></i>
             <i class="fa fa-exclamation warning-icon-mark"></i>
         </span>
-        <span class="warning-text">{{ 'LMP_WARNING_CONSULTATION_LABEL' | translate }}<span class="warning-days">{{lmpWarning.daysSinceLmp}} {{ 'LMP_WARNING_DAYS_UNIT' | translate }}</span></span>
+        <span class="warning-text">{{ 'LMP_WARNING_CONSULTATION_LABEL' | translate }}<span class="warning-days">{{lmpWarning.daysSinceLmp}} {{ 'LMP_WARNING_DAYS_UNIT' | translate }} {{'AGO_LABEL' | translate}}</span><span> ({{'LMP_DATE_RECORDED' | translate}} {{lmpRecordedDate}})</span></span>
         <button class="close-btn" ng-click="dismissLmpWarning()" title="Close">
-            <i class="fa fa-times"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path d="M0 0h24v24H0z" fill="none" />
+            <path fill="currentColor" stroke="currentColor" stroke-width="0.6" d="m12 12.708l-5.246 5.246q-.14.14-.344.15t-.364-.15t-.16-.354t.16-.354L11.292 12L6.046 6.754q-.14-.14-.15-.344t.15-.364t.354-.16t.354.16L12 11.292l5.246-5.246q.14-.14.345-.15q.203-.01.363.15t.16.354t-.16.354L12.708 12l5.246 5.246q.14.14.15.345q.01.203-.15.363t-.354.16t-.354-.16z" />
+        </svg>
+
         </button>
     </div>
 </div>

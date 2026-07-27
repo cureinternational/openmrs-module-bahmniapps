@@ -166,7 +166,7 @@
     "MEDICATION_NO_RECENT_TREATMENT": "Aucun traitement récent",
     "MEDICATION_STOP": "Arrêtez",
     "MEDICATION_REFILL": "Recharge",
-    "MEDICATION_STARTED_ON": "Commencé le",
+    "MEDICATION_START_DATE": "Date de début",
     "MEDICATION_STOPPED_ON": "Arrêté sur",
     "MEDICATION_DUE_TO": "en raison de",
     "MEDICATION_LABEL_START_DATE": "Date de début",
@@ -442,6 +442,8 @@
     "LMP_WARNING_CONSULTATION_LABEL": "Jours depuis FUM - ",
     "LMP_WARNING_DAYS_UNIT": "jours",
     "ADDITIONAL_INSTRUCTIONS": "Instructions supplémentaires",
+    "AGO_LABEL": "il y a",
+    "LMP_DATE_RECORDED": "Date enregistrée: ",
 
     "VARIABLE_DOSAGE_HEADER": "Dosage Variable"
 }
