@@ -375,10 +375,8 @@ angular.module('bahmni.clinical')
                     }
                 });
 
-                // Update consultation.observations with collected observations
-                if (collectedObs.length > 0) {
-                    $scope.consultation.observations = collectedObs;
-                }
+                // Always update consultation.observations, even if empty, to clear stale data
+                $scope.consultation.observations = collectedObs;
             };
 
             var getObservationsForTemplate = function (template) {
@@ -525,9 +523,8 @@ angular.module('bahmni.clinical')
                     }
                     var cachedVal = dirtyTrackingState.templateCleanStates.get(template);
                     if (currentVal !== cachedVal) {
-                        // If observations are missing (current < cached), recapture clean state
-                        // This handles cases where observations aren't available on reopen
-                        if (currentVal.length < cachedVal.length) {
+                        // If observations are empty on reopen (unloaded), recapture clean state
+                        if (currentVal === angular.toJson([]) && cachedVal !== angular.toJson([])) {
                             dirtyTrackingState.templateCleanStates.set(template, currentVal);
                             return;
                         }
