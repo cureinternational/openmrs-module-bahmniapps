@@ -2164,6 +2164,23 @@ describe("AddTreatmentController", function () {
             expect(discontinuedDrugOrder.scheduledDate).toEqual(drugOrder.dateStopped);
             expect(discontinuedDrugOrder.dateActivated).toEqual(null);
         });
+
+        it("should map VDP stop reason concept uuid and text while saving discontinued orders", function () {
+            var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            drugOrder.orderReasonConcept = {
+                uuid: '6afc2690-12b2-11e6-8c00-080027d2adbd',
+                name: 'Allergic Reaction'
+            };
+            drugOrder.orderReasonText = 'Adverse reaction observed';
+
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            scope.consultation.preSaveHandler.fire();
+
+            expect(scope.consultation.removableDrugs.length).toEqual(1);
+            var discontinuedDrugOrder = scope.consultation.removableDrugs[0];
+            expect(discontinuedDrugOrder.orderReasonConcept).toEqual('6afc2690-12b2-11e6-8c00-080027d2adbd');
+            expect(discontinuedDrugOrder.orderReasonText).toEqual('Adverse reaction observed');
+        });
     });
 
     describe("when undo removing", function () {

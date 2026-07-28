@@ -871,11 +871,9 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
     viewModel.previousOrderUuid = drugOrderResponse.previousOrderUuid;
     viewModel.dateActivated = drugOrderResponse.dateActivated;
     viewModel.encounterUuid = drugOrderResponse.encounterUuid;
-    // Preserve orderReasonConcept from existing viewModel if backend returns null or uuid string only
     var existingReasonConcept = viewModel.orderReasonConcept;
     if (drugOrderResponse.orderReasonConcept) {
         viewModel.orderReasonConcept = drugOrderResponse.orderReasonConcept;
-        // If response has only uuid string, convert to object and preserve existing name/display
         if (angular.isString(viewModel.orderReasonConcept)) {
             var uuidOnly = viewModel.orderReasonConcept;
             viewModel.orderReasonConcept = {
@@ -888,7 +886,6 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
                 viewModel.orderReasonConcept.display = existingReasonConcept.display;
             }
         } else if (angular.isObject(viewModel.orderReasonConcept)) {
-            // If response has object but missing name/display, try to preserve from existing
             if (existingReasonConcept && !viewModel.orderReasonConcept.name && existingReasonConcept.name) {
                 viewModel.orderReasonConcept.name = existingReasonConcept.name;
             }
@@ -897,7 +894,6 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
             }
         }
     } else if (!drugOrderResponse.orderReasonConcept && existingReasonConcept) {
-        // Backend returned null - keep the existing value from frontend (user's selection)
         viewModel.orderReasonConcept = existingReasonConcept;
     }
     viewModel.orderReasonText = drugOrderResponse.orderReasonText;
