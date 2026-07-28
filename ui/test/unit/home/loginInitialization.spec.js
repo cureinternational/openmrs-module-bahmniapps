@@ -1,0 +1,62 @@
+'use strict';
+
+describe('loginInitialization', function () {
+    var loginInitialization;
+    var loadConfigService;
+    var locationService;
+    var spinner;
+    var messagingService;
+    var $q;
+    var $rootScope;
+
+    beforeEach(module('bahmni.home'));
+
+    beforeEach(module(function ($provide) {
+        locationService = jasmine.createSpyObj('locationService', ['getAllByTag']);
+        loadConfigService = jasmine.createSpyObj('loadConfigService', ['loadConfig']);
+        spinner = jasmine.createSpyObj('spinner', ['forPromise']);
+        messagingService = jasmine.createSpyObj('messagingService', ['showMessage']);
+
+        $provide.value('locationService', locationService);
+        $provide.value('loadConfigService', loadConfigService);
+        $provide.value('spinner', spinner);
+        $provide.value('messagingService', messagingService);
+    }));
+
+    beforeEach(inject(function (_loginInitialization_, _$q_, _$rootScope_) {
+        loginInitialization = _loginInitialization_;
+        $q = _$q_;
+        $rootScope = _$rootScope_;
+
+        spinner.forPromise.and.callFake(function (promise) {
+            return promise;
+        });
+        locationService.getAllByTag.and.returnValue(specUtil.respondWithPromise($q, {data: {results: []}}));
+    }));
+
+    afterEach(function () {
+        localStorage.clear();
+    });
+
+    it('should set enableCommandPalette to true when home config enables it', function () {
+        loadConfigService.loadConfig.and.returnValue(
+            specUtil.respondWithPromise($q, {data: {config: {enableCommandPalette: true}}})
+        );
+
+        loginInitialization();
+        $rootScope.$apply();
+
+        expect(localStorage.getItem('enableCommandPalette')).toBe('true');
+    });
+
+    it('should set enableCommandPalette to false when home config disables it', function () {
+        loadConfigService.loadConfig.and.returnValue(
+            specUtil.respondWithPromise($q, {data: {config: {enableCommandPalette: false}}})
+        );
+
+        loginInitialization();
+        $rootScope.$apply();
+
+        expect(localStorage.getItem('enableCommandPalette')).toBe('false');
+    });
+});
