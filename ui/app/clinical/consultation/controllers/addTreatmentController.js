@@ -1204,9 +1204,21 @@ angular.module('bahmni.clinical')
                                         });
                                     }
 
+                                    var getFrequencyObject = function (frequencyName) {
+                                        if (!frequencyName) { return null; }
+                                        var freqs = treatmentConfig.getFrequencies();
+                                        return _.find(freqs, function (f) { return f.name === frequencyName; });
+                                    };
+
                                     var stageFrequencyPerDay = function (frequencyName) {
-                                        var freq = _.find(treatmentConfig.getFrequencies(), function (f) { return f.name === frequencyName; });
+                                        var freq = getFrequencyObject(frequencyName);
                                         return freq ? (freq.frequencyPerDay || 1) : 1;
+                                    };
+
+                                    var getRouteObject = function (routeName) {
+                                        if (!routeName) { return null; }
+                                        var routes = treatmentConfig.getRoutes();
+                                        return _.find(routes, function (r) { return r.name === routeName; });
                                     };
 
                                     calculatedStages.forEach(function (cs, idx) {
@@ -1219,6 +1231,7 @@ angular.module('bahmni.clinical')
                                             dose: cs.calculatedDose,
                                             unit: cs.doseUnit,
                                             frequency: s.frequency || '',
+                                            frequencyObject: getFrequencyObject(s.frequency),
                                             frequencyPerDay: stageFrequencyPerDay(s.frequency),
                                             duration: s.duration,
                                             durationUnit: s.durationUnit || '',
@@ -1247,6 +1260,7 @@ angular.module('bahmni.clinical')
                                         drugForm: (!data.isNonCodedDrug && data.drug && data.drug.dosageForm) ? data.drug.dosageForm.display : '',
                                         units: unit,
                                         route: data.route || '',
+                                        routeObject: getRouteObject(data.route),
                                         dosingRule: dosingRule,
                                         quantity: totalDosage,
                                         quantityUnit: unit,
