@@ -221,6 +221,7 @@ describe("patient dashboard controller", function () {
                 }
                 return undefined;
             });
+            _rootScope.formDraftFeatureEnabled = true;
         });
 
         var createControllerForDraft = function (patient, provider, printerMock) {
@@ -454,6 +455,7 @@ describe("patient dashboard controller", function () {
 
             it("should not navigate when enableFormDraftFeature is false", function () {
                 _appConfig.getConfigValue.and.returnValue(false);
+                _rootScope.formDraftFeatureEnabled = false;
                 createControllerForDraft({uuid: 'patient-uuid'}, {uuid: 'provider-uuid'});
                 scope.resumeDraft();
                 expect(_state.go).not.toHaveBeenCalled();

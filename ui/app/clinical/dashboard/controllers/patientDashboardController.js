@@ -5,7 +5,7 @@ angular.module('bahmni.clinical')
         '$state', 'spinner', 'visitSummary', 'appService', '$stateParams', 'diseaseTemplateService', 'patientContext', '$location', '$filter', 'formDraftService', '$rootScope', 'ngDialog', '$timeout',
         function ($scope, clinicalAppConfigService, clinicalDashboardConfig, printer,
             $state, spinner, visitSummary, appService, $stateParams, diseaseTemplateService, patientContext, $location, $filter, formDraftService, $rootScope, ngDialog, $timeout) {
-            $scope.enableFormDraftFeature = appService.getAppDescriptor().getConfigValue('enableFormDraftFeature');
+            $scope.enableFormDraftFeature = $rootScope.formDraftFeatureEnabled;
             $scope.patient = patientContext.patient;
             $scope.activeVisit = $scope.visitHistory.activeVisit;
             $scope.activeVisitData = {};
