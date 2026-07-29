@@ -212,6 +212,17 @@ describe("patient dashboard controller", function () {
     });
 
     describe("draft feature integration", function () {
+        beforeEach(function () {
+            _appConfig.getConfigValue.and.callFake(function (key) {
+                if (key === 'enableFormDraftFeature') {
+                    return true;
+                } else if (key === 'program') {
+                    return {};
+                }
+                return undefined;
+            });
+        });
+
         var createControllerForDraft = function (patient, provider, printerMock) {
             _rootScope.currentProvider = provider;
             _diseaseTemplateService.getLatestDiseaseTemplates.and.returnValue(specUtil.respondWith([]));

@@ -154,6 +154,9 @@ angular.module('bahmni.clinical')
             });
 
             var cleanUpListenerDraftSaved = $scope.$on("draft:saved", function (event, draftTimestamp) {
+                if (!$scope.enableFormDraftFeature) {
+                    return;
+                }
                 if (draftTimestamp && typeof draftTimestamp === 'object') {
                     $scope.formDraft.hasDrafts = true;
                     $scope.formDraft.draftDate = draftTimestamp.draftDate;
@@ -237,5 +240,7 @@ angular.module('bahmni.clinical')
             };
 
             $scope.init(getCurrentTab());
-            checkForExistingDrafts();
+            if ($scope.enableFormDraftFeature) {
+                checkForExistingDrafts();
+            }
         }]);

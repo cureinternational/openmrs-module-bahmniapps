@@ -232,4 +232,8 @@ angular.module('bahmni.common.appFramework')
                 });
                 return appLoader.promise;
             };
+
+            $rootScope.formDraftFeatureEnabled = function () {
+                return appDescriptor ? appDescriptor.getConfigValue('enableFormDraftFeature') : false;
+            };
         }]);
