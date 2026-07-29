@@ -526,7 +526,6 @@ div[ng-app="ot"] {
   overflow: auto;
   height: calc(100vh - 200px);
   table {
-    min-width: max-content;
     tr {
       white-space: nowrap;
       &:focus {
