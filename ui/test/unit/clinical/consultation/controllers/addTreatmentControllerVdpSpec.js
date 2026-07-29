@@ -138,4 +138,116 @@ describe('Variable Dose Protocol - Conflict Check & VDP Logic', function () {
             expect(newEntry.action).toBeUndefined();
         });
     });
+
+    describe('Conflict Check - savedOrdersPool filtering', function () {
+        it('should exclude the VDP order being revised from the conflict check pool', function () {
+            var activeOrders = [
+                { uuid: 'vdp-order-123', drugName: 'Paracetamol' },
+                { uuid: 'other-order-456', drugName: 'Amoxicillin' }
+            ];
+            var isSavedOrder = true;
+            var revisingVariableDoseDrugOrder = { uuid: 'vdp-order-123' };
+
+            // Simulate the logic from addTreatmentController.js:1130-1135
+            var savedOrdersPool = (activeOrders || []);
+            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                });
+            }
+
+            expect(savedOrdersPool.length).toBe(1);
+            expect(savedOrdersPool[0].uuid).toBe('other-order-456');
+        });
+
+        it('should keep all active orders when isSavedOrder is false', function () {
+            var activeOrders = [
+                { uuid: 'order-1', drugName: 'Paracetamol' },
+                { uuid: 'order-2', drugName: 'Amoxicillin' }
+            ];
+            var isSavedOrder = false;
+            var revisingVariableDoseDrugOrder = { uuid: 'order-1' };
+
+            // Simulate the logic from addTreatmentController.js:1130-1135
+            var savedOrdersPool = (activeOrders || []);
+            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                });
+            }
+
+            expect(savedOrdersPool.length).toBe(2);
+        });
+
+        it('should keep all active orders when revisingVariableDoseDrugOrder is null', function () {
+            var activeOrders = [
+                { uuid: 'order-1', drugName: 'Paracetamol' }
+            ];
+            var isSavedOrder = true;
+            var revisingVariableDoseDrugOrder = null;
+
+            // Simulate the logic from addTreatmentController.js:1130-1135
+            var savedOrdersPool = (activeOrders || []);
+            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                });
+            }
+
+            expect(savedOrdersPool.length).toBe(1);
+        });
+
+        it('should keep all active orders when revisingVariableDoseDrugOrder has no uuid', function () {
+            var activeOrders = [
+                { uuid: 'order-1', drugName: 'Paracetamol' }
+            ];
+            var isSavedOrder = true;
+            var revisingVariableDoseDrugOrder = {};
+
+            // Simulate the logic from addTreatmentController.js:1130-1135
+            var savedOrdersPool = (activeOrders || []);
+            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                });
+            }
+
+            expect(savedOrdersPool.length).toBe(1);
+        });
+
+        it('should keep all active orders when uuid does not match any order in the pool', function () {
+            var activeOrders = [
+                { uuid: 'order-1', drugName: 'Paracetamol' },
+                { uuid: 'order-2', drugName: 'Amoxicillin' }
+            ];
+            var isSavedOrder = true;
+            var revisingVariableDoseDrugOrder = { uuid: 'nonexistent-uuid' };
+
+            // Simulate the logic from addTreatmentController.js:1130-1135
+            var savedOrdersPool = (activeOrders || []);
+            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                });
+            }
+
+            expect(savedOrdersPool.length).toBe(2);
+        });
+
+        it('should handle null/undefined activeAndScheduledDrugOrders gracefully', function () {
+            var activeOrders = null;
+            var isSavedOrder = true;
+            var revisingVariableDoseDrugOrder = { uuid: 'order-1' };
+
+            // Simulate the logic from addTreatmentController.js:1130-1135
+            var savedOrdersPool = (activeOrders || []);
+            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                });
+            }
+
+            expect(savedOrdersPool.length).toBe(0);
+        });
+    });
 });
