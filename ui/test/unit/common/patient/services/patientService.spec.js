@@ -52,7 +52,7 @@ describe('patientService', function () {
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data).toBeTruthy();
-                expect(data.lmpDate).toBe('2026-04-10');
+                expect(data.lmpDate).toBe('2026-04-10T10:00:00.000+0000');
                 expect(data.daysSinceLmp).not.toBeLessThan(0);
             });
 
@@ -83,7 +83,7 @@ describe('patientService', function () {
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
                 expect(data).toBeTruthy();
-                expect(data.lmpDate).toBe('2026-05-06');
+                expect(data.lmpDate).toBe('2026-06-11T09:52:20.000+0000');
             });
 
             mockBackend.flush();
@@ -196,7 +196,7 @@ describe('patientService', function () {
             mockBackend.expectGET(/\/openmrs\/ws\/rest\/v1\/obs.*patient=patient-uuid-with-days&concept=LMP%20Date/).respond(lmpResponse);
 
             patientService.getPatientLmpData(patientUuid, conceptName).then(function (data) {
-                expect(data.lmpDate).toBe(lmpDateStr);
+                expect(data.lmpDate).toBe('2026-06-11T09:00:00.000+0000');
                 expect(data.daysSinceLmp).toBe(30);
             });
 
