@@ -1127,8 +1127,14 @@ angular.module('bahmni.clinical')
                                 effectiveStartDate: newVdpStart,
                                 effectiveStopDate: newVdpTotalDays > 0 ? new Date(newVdpStart.getTime() + newVdpTotalDays * 86400000) : null
                             };
+                            var savedOrdersPool = ($scope.consultation.activeAndScheduledDrugOrders || []);
+                            if (isSavedOrder && revisingVariableDoseDrugOrder && revisingVariableDoseDrugOrder.uuid) {
+                                savedOrdersPool = savedOrdersPool.filter(function (o) {
+                                    return o.uuid !== revisingVariableDoseDrugOrder.uuid;
+                                });
+                            }
                             var conflictingActiveOrder = _.find(
-                                ($scope.consultation.activeAndScheduledDrugOrders || []).concat($scope.treatments || []).concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments, editingVariableDoseIndex >= 0 ? editingVariableDoseIndex : undefined)),
+                                savedOrdersPool.concat($scope.treatments || []).concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments, editingVariableDoseIndex >= 0 ? editingVariableDoseIndex : undefined)),
                                 function (order) {
                                     return order.getDisplayName && order.getDisplayName() === vdpDrugName &&
                                            order.careSetting === vdpCareSetting &&
