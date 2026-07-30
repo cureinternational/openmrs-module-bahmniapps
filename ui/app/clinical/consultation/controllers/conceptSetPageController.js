@@ -544,12 +544,22 @@ angular.module('bahmni.clinical')
                     }
                     var cachedVal = dirtyTrackingState.templateCleanStates.get(template);
                     if (currentVal !== cachedVal) {
+                        // If observations are missing (current < cached), recapture clean state.
+                        // This handles cases where observations aren't available on reopen.
+                        if (currentVal.length < cachedVal.length) {
+                            dirtyTrackingState.templateCleanStates.set(template, currentVal);
+                            return;
+                        }
+
+                        // ponytail: Form2/React templates (e.g. WHODAS) can finish restoring
+                        // their value one or more digests after the baseline was snapshotted
+                        // empty on reopen (component.getValue() isn't ready yet). Recapture the
+                        // baseline instead of flagging dirty only for that specific case -
+                        // gated on template.component so plain Angular obs-array templates
+                        // (whose first genuine edit also looks like empty->populated) still
+                        // get flagged correctly.
                         var emptyVal = angular.toJson([]);
-                        // A transition to/from "no observations" reflects the template's async
-                        // load (e.g. a Form2/React form like WHODAS finishing getValue() after
-                        // the baseline was snapshotted empty on reopen) rather than a user edit
-                        // in either direction, so recapture the baseline instead of flagging dirty.
-                        if (currentVal === emptyVal || cachedVal === emptyVal) {
+                        if (cachedVal === emptyVal && template.component) {
                             dirtyTrackingState.templateCleanStates.set(template, currentVal);
                             return;
                         }
@@ -861,16 +871,25 @@ angular.module('bahmni.clinical')
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                 }
-                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                var captureSettledCleanState = function () {
                     clearAllDraftIndicators();
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
                     $scope.formDraft.isDirty = false;
-                    dirtyTrackingState.postSaveRefreshPending = false;
-                    dirtyTrackingState.postSaveRefreshTimeout = null;
-                    sessionStorage.removeItem('formSaveCompleted');
+                };
+                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                    captureSettledCleanState();
+                    // ponytail: extra values the save response adds (e.g. server-computed defaults)
+                    // can land in the model a digest after this tick; recapture once more so they
+                    // don't get diffed against a stale pre-extras baseline.
+                    dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                        captureSettledCleanState();
+                        dirtyTrackingState.postSaveRefreshPending = false;
+                        dirtyTrackingState.postSaveRefreshTimeout = null;
+                        sessionStorage.removeItem('formSaveCompleted');
+                    }, 0);
                 }, 0);
                 clearDraftStatus(true);
             };
@@ -886,16 +905,23 @@ angular.module('bahmni.clinical')
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                 }
-                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                var captureSettledCleanStateOnSave = function () {
                     clearAllDraftIndicators();
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
                     $scope.formDraft.isDirty = false;
-                    dirtyTrackingState.postSaveRefreshPending = false;
-                    dirtyTrackingState.postSaveRefreshTimeout = null;
-                    sessionStorage.removeItem('formSaveCompleted');
+                };
+                dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                    captureSettledCleanStateOnSave();
+                    // ponytail: same settle-tick issue as resetDraftStateAfterSave above.
+                    dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                        captureSettledCleanStateOnSave();
+                        dirtyTrackingState.postSaveRefreshPending = false;
+                        dirtyTrackingState.postSaveRefreshTimeout = null;
+                        sessionStorage.removeItem('formSaveCompleted');
+                    }, 0);
                 }, 0);
             });
 
