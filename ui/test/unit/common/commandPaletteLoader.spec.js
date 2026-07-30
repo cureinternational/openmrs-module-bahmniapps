@@ -1,22 +1,32 @@
 'use strict';
 
 describe('commandPaletteLoader', function () {
-    var originalSetTimeout;
-    var originalScriptId;
+    var loaderPath = '/base/app/common/commandPaletteLoader.js';
+
+    function removeInjectedScripts() {
+        Array.prototype.slice.call(document.querySelectorAll('script')).forEach(function (node) {
+            if (node.src && node.src.indexOf('/bahmni-new/command-palette.js') !== -1 && node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        });
+    }
+
+    function executeLoaderScript() {
+        var request = new XMLHttpRequest();
+        request.open('GET', loaderPath, false);
+        request.send(null);
+        expect(request.status === 200 || request.status === 0).toBeTruthy();
+
+        (0, eval)(request.responseText);
+    }
 
     beforeEach(function () {
         localStorage.clear();
-        originalSetTimeout = window.setTimeout;
-        originalScriptId = 'bahmni-command-palette-script';
-
-        var existingScript = document.getElementById(originalScriptId);
-        if (existingScript && existingScript.parentNode) {
-            existingScript.parentNode.removeChild(existingScript);
-        }
+        removeInjectedScripts();
     });
 
     afterEach(function () {
-        window.setTimeout = originalSetTimeout;
+        removeInjectedScripts();
         localStorage.clear();
     });
 
@@ -26,11 +36,13 @@ describe('commandPaletteLoader', function () {
 
         spyOn(document.body, 'appendChild').and.callThrough();
 
-        Bahmni.Common.commandPaletteLoader.load();
+        executeLoaderScript();
 
         expect(document.body.appendChild).toHaveBeenCalled();
-        expect(document.getElementById(originalScriptId)).toBeTruthy();
-        expect(document.getElementById(originalScriptId).src).toContain('https://example.org/bahmni-new/command-palette.js');
+
+        var appendedScript = document.body.appendChild.calls.mostRecent().args[0];
+        expect(appendedScript.tagName).toBe('SCRIPT');
+        expect(appendedScript.src).toContain('https://example.org/bahmni-new/command-palette.js');
     });
 
     it('should not append the script when disabled', function () {
@@ -38,9 +50,20 @@ describe('commandPaletteLoader', function () {
 
         spyOn(document.body, 'appendChild').and.callThrough();
 
-        Bahmni.Common.commandPaletteLoader.load();
+        executeLoaderScript();
 
         expect(document.body.appendChild).not.toHaveBeenCalled();
-        expect(document.getElementById(originalScriptId)).toBeFalsy();
+    });
+
+    it('should append relative script path when host is not set', function () {
+        localStorage.setItem('enableCommandPalette', 'true');
+        localStorage.removeItem('host');
+
+        spyOn(document.body, 'appendChild').and.callThrough();
+
+        executeLoaderScript();
+
+        var appendedScript = document.body.appendChild.calls.mostRecent().args[0];
+        expect(appendedScript.src).toContain('/bahmni-new/command-palette.js');
     });
 });

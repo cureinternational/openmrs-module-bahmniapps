@@ -8,6 +8,7 @@ describe('loginInitialization', function () {
     var messagingService;
     var $q;
     var $rootScope;
+    var $httpBackend;
 
     beforeEach(module('bahmni.home'));
 
@@ -23,15 +24,22 @@ describe('loginInitialization', function () {
         $provide.value('messagingService', messagingService);
     }));
 
-    beforeEach(inject(function (_loginInitialization_, _$q_, _$rootScope_) {
+    beforeEach(inject(function (_loginInitialization_, _$q_, _$rootScope_, _$httpBackend_) {
         loginInitialization = _loginInitialization_;
         $q = _$q_;
         $rootScope = _$rootScope_;
+        $httpBackend = _$httpBackend_;
 
         spinner.forPromise.and.callFake(function (promise) {
             return promise;
         });
-        locationService.getAllByTag.and.returnValue(specUtil.respondWithPromise($q, {data: {results: []}}));
+
+        locationService.getAllByTag.and.returnValue(
+            specUtil.respondWithPromise($q, {data: {results: []}})
+        );
+
+        $httpBackend.whenGET('../i18n/home/locale_en.json').respond({});
+        $httpBackend.whenGET('/bahmni_config/openmrs/i18n/home/locale_en.json').respond({});
     }));
 
     afterEach(function () {
@@ -45,7 +53,7 @@ describe('loginInitialization', function () {
 
         loginInitialization();
         $rootScope.$apply();
-
+        $httpBackend.flush();
         expect(localStorage.getItem('enableCommandPalette')).toBe('true');
     });
 
@@ -56,7 +64,7 @@ describe('loginInitialization', function () {
 
         loginInitialization();
         $rootScope.$apply();
-
+        $httpBackend.flush();
         expect(localStorage.getItem('enableCommandPalette')).toBe('false');
     });
 });
