@@ -544,8 +544,12 @@ angular.module('bahmni.clinical')
                     }
                     var cachedVal = dirtyTrackingState.templateCleanStates.get(template);
                     if (currentVal !== cachedVal) {
-                        // If observations are empty on reopen (unloaded), recapture clean state
-                        if (currentVal === angular.toJson([]) && cachedVal !== angular.toJson([])) {
+                        var emptyVal = angular.toJson([]);
+                        // A transition to/from "no observations" reflects the template's async
+                        // load (e.g. a Form2/React form like WHODAS finishing getValue() after
+                        // the baseline was snapshotted empty on reopen) rather than a user edit
+                        // in either direction, so recapture the baseline instead of flagging dirty.
+                        if (currentVal === emptyVal || cachedVal === emptyVal) {
                             dirtyTrackingState.templateCleanStates.set(template, currentVal);
                             return;
                         }
