@@ -32,7 +32,12 @@ angular.module('bahmni.clinical')
                 null, null, false, null
             ).then(function (response) {
                 if (response.data && response.data.length > 0) {
-                    enhancedPatient.weight = response.data[0].value;
+                    for (var i = 0; i < response.data.length; i++) {
+                        if (response.data[i].concept && response.data[i].concept.name === Bahmni.Common.Constants.weightConceptName) {
+                            enhancedPatient.weight = response.data[i].value;
+                            break;
+                        }
+                    }
                 }
             }).catch(function () {});
 
