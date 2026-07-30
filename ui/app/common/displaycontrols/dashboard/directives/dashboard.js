@@ -23,20 +23,20 @@ angular.module('bahmni.common.displaycontrol.dashboard')
             };
 
             if ($scope.patient !== undefined) {
-                var dashboardConfig = findFormV2ReactConfig($scope.config.sections);
+                dashboardConfig = findFormV2ReactConfig($scope.config.sections);
                 $scope.formData = {
                     patientUuid: $scope.patient.uuid,
                     patient: $scope.patient,
                     encounterUuid: $scope.activeEncounterUuid,
                     showEditForActiveEncounter: dashboardConfig && dashboardConfig.showEditForActiveEncounter || true,
                     numberOfVisits: dashboardConfig && dashboardConfig.maximumNoOfVisits || undefined,
-                    formGroup: dashboardConfig && dashboardConfig.formGroup || [],
+                    forms: dashboardConfig && dashboardConfig.forms || [],
                     hasNoHierarchy: $scope.hasNoHierarchy,
                     currentUser: $rootScope.currentUser,
                     consultationMapper: new Bahmni.ConsultationMapper(configurations.dosageFrequencyConfig(), configurations.dosageInstructionConfig(),
                     configurations.consultationNoteConcept(), configurations.labOrderNotesConcept()),
                     editErrorMessage: $translate.instant('CLINICAL_FORM_ERRORS_MESSAGE_KEY'),
-                    showPrintOption: (dashboardConfig && dashboardConfig.printing) ? true : false,
+                    showPrintOption: !!(dashboardConfig && dashboardConfig.printing),
                     currentProvider: $rootScope.currentProvider,
                     draftFormNames: formDraftService.getFormNamesFromDraft($rootScope.draftData)
                 };
@@ -103,10 +103,10 @@ angular.module('bahmni.common.displaycontrol.dashboard')
                 if (!sectionFormDataCache.has(section)) {
                     var sectionDashboardConfig = section.dashboardConfig;
                     sectionFormDataCache.set(section, angular.extend({}, $scope.formData, {
-                        formGroup: sectionDashboardConfig && sectionDashboardConfig.formGroup || [],
+                        forms: sectionDashboardConfig && sectionDashboardConfig.forms || [],
                         numberOfVisits: sectionDashboardConfig && sectionDashboardConfig.maximumNoOfVisits || undefined,
                         showEditForActiveEncounter: sectionDashboardConfig && sectionDashboardConfig.showEditForActiveEncounter || true,
-                        showPrintOption: sectionDashboardConfig && sectionDashboardConfig.printing ? true : false,
+                        showPrintOption: !!(sectionDashboardConfig && sectionDashboardConfig.printing),
                         sectionTitle: section.translationKey || null
                     }));
                 }
