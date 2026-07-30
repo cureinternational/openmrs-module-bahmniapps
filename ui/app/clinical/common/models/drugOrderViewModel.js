@@ -1,7 +1,5 @@
 'use strict';
 
-var MILLISECONDS_PER_DAY = 86400000;
-
 var constructDrugNameDisplayWithConcept = function (drug, concept) {
     if (!_.isEmpty(drug)) {
         if (drug.name) {
@@ -768,7 +766,7 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
         var cumulativeDays = 0;
         viewModel.stages = fhirDosages.map(function (dosage) {
             var stage = utils.fhirDosageToStage(dosage);
-            stage.startDate = new Date(new Date(drugOrderResponse.effectiveStartDate).getTime() + cumulativeDays * MILLISECONDS_PER_DAY);
+            stage.startDate = new Date(new Date(drugOrderResponse.effectiveStartDate).getTime() + cumulativeDays * Bahmni.Clinical.Constants.millisecondsPerDay);
             cumulativeDays += stage.durationDays || 0;
             return stage;
         });
