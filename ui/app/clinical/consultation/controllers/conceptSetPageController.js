@@ -431,7 +431,6 @@ angular.module('bahmni.clinical')
                     template.toggle();
                     template.klass = "active";
                     if (index > -1) {
-                        // Reload observations for existing template being reopened
                         var observationsForTemplate = getObservationsForTemplate(template);
                         if (observationsForTemplate && observationsForTemplate.length > 0) {
                             template.observations = observationsForTemplate;
@@ -544,20 +543,11 @@ angular.module('bahmni.clinical')
                     }
                     var cachedVal = dirtyTrackingState.templateCleanStates.get(template);
                     if (currentVal !== cachedVal) {
-                        // If observations are missing (current < cached), recapture clean state.
-                        // This handles cases where observations aren't available on reopen.
                         if (currentVal.length < cachedVal.length) {
                             dirtyTrackingState.templateCleanStates.set(template, currentVal);
                             return;
                         }
 
-                        // ponytail: Form2/React templates (e.g. WHODAS) can finish restoring
-                        // their value one or more digests after the baseline was snapshotted
-                        // empty on reopen (component.getValue() isn't ready yet). Recapture the
-                        // baseline instead of flagging dirty only for that specific case -
-                        // gated on template.component so plain Angular obs-array templates
-                        // (whose first genuine edit also looks like empty->populated) still
-                        // get flagged correctly.
                         var emptyVal = angular.toJson([]);
                         if (cachedVal === emptyVal && template.component) {
                             dirtyTrackingState.templateCleanStates.set(template, currentVal);
@@ -610,9 +600,6 @@ angular.module('bahmni.clinical')
                     var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
                     startAutoSaveIfDirty();
-                    // ponytail: async Form2/react components can finish restoring their values a digest
-                    // after this snapshot is taken; recapture the baseline once they settle so the
-                    // watch below doesn't mistake that settle for a real user edit.
                     dirtyTrackingState.postSaveRefreshPending = true;
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                         if (!dirtyTrackingState.postSaveRefreshPending) {
@@ -881,9 +868,6 @@ angular.module('bahmni.clinical')
                 };
                 dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                     captureSettledCleanState();
-                    // ponytail: extra values the save response adds (e.g. server-computed defaults)
-                    // can land in the model a digest after this tick; recapture once more so they
-                    // don't get diffed against a stale pre-extras baseline.
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                         captureSettledCleanState();
                         dirtyTrackingState.postSaveRefreshPending = false;
@@ -915,7 +899,6 @@ angular.module('bahmni.clinical')
                 };
                 dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                     captureSettledCleanStateOnSave();
-                    // ponytail: same settle-tick issue as resetDraftStateAfterSave above.
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                         captureSettledCleanStateOnSave();
                         dirtyTrackingState.postSaveRefreshPending = false;

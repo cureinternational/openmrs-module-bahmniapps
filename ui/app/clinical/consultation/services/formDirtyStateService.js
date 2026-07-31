@@ -91,9 +91,6 @@ angular.module('bahmni.clinical')
             _.each(observations, function (obs) {
                 collectObsValues(obs, values);
             });
-            // ponytail: sort by value to handle observations coming in different orders from server,
-            // but this doesn't detect swaps (two fields changing values with each other).
-            // Swap detection would require associating values with concept UUIDs during collection.
             values = _.sortBy(values, function (v) { return String(v); });
             return angular.toJson(values);
         };
