@@ -1,14 +1,17 @@
 'use strict';
 
 angular.module('bahmni.common.displaycontrol.dashboard')
-    .directive('dashboard', ['appService', '$stateParams', '$bahmniCookieStore', 'configurations', 'encounterService', 'spinner', 'auditLogService', 'messagingService', '$state', '$translate', 'formPrintService', 'formDraftService', function (appService, $stateParams, $bahmniCookieStore, configurations, encounterService, spinner, auditLogService, messagingService, $state, $translate, formPrintService, formDraftService) {
+    .directive('dashboard', ['appService', '$bahmniCookieStore', 'configurations', 'encounterService', 'spinner', 'auditLogService', 'messagingService', '$state', '$translate', 'formPrintService', 'formDraftService', function (appService, $bahmniCookieStore, configurations, encounterService, spinner, auditLogService, messagingService, $state, $translate, formPrintService, formDraftService) {
         var controller = function ($scope, $filter, $rootScope) {
             var dashboardConfig = null;
 
             var init = function () {
                 $scope.dashboard = Bahmni.Common.DisplayControl.Dashboard.create($scope.config || {}, $filter);
             };
-            $scope.tabConfigName = $stateParams.tabConfigName || 'default';
+            $scope.tabConfigName = $state.params.tabConfigName || 'default';
+            var cleanUpStateChange = $rootScope.$on('$stateChangeSuccess', function () {
+                $scope.tabConfigName = $state.params.tabConfigName || 'default';
+            });
 
             var findFormV2ReactConfig = function (sections) {
                 if (!sections || sections.length === 0) {
@@ -157,6 +160,7 @@ angular.module('bahmni.common.displaycontrol.dashboard')
             };
             var unbindWatch = $scope.$watch('config', init);
             $scope.$on("$stateChangeStart", unbindWatch);
+            $scope.$on('$destroy', cleanUpStateChange);
         };
 
         return {
