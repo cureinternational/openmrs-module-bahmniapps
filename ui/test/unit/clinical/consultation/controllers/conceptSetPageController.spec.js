@@ -3095,5 +3095,51 @@ describe('ConceptSetPageController', function () {
                 expect(messagingService.showMessage).toHaveBeenCalledWith('error', 'Form not found. Please contact your administrator.');
             });
         });
+
+        it('should preserve saved form values when returning to observations page within encounter time', function () {
+            inject(function ($timeout) {
+                var conceptResponseData = {
+                    results: [{setMembers: [{name: {name: "Template 1"}, uuid: 'concept-uuid-1', set: true, setMembers: []}]}]
+                };
+                mockConceptSetService(conceptResponseData);
+                mockformService([]);
+
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                createController();
+
+                scope.consultation.selectedObsTemplate = [{
+                    uuid: 'template-uuid-1',
+                    label: 'Template 1',
+                    observations: [{uuid: 'obs-uuid-1', concept: {uuid: 'concept-1'}, value: 'saved-value'}]
+                }];
+
+                var savedTemplate = _.find(scope.consultation.selectedObsTemplate, function (t) {
+                    return t.uuid === 'template-uuid-1';
+                });
+                expect(savedTemplate.observations[0].value).toEqual('saved-value');
+            });
+        });
+
+        it('should track observations from display control and not duplicate them when saving', function () {
+            inject(function ($timeout) {
+                var conceptResponseData = {
+                    results: [{setMembers: [{name: {name: "Template 1"}, uuid: 'concept-uuid-1', set: true, setMembers: []}]}]
+                };
+                mockConceptSetService(conceptResponseData);
+                mockformService([]);
+
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                createController();
+
+                var templateObs = [{uuid: 'obs-uuid-1', concept: {uuid: 'concept-1'}, value: 'template-value'}];
+                var displayControlObs = [{uuid: 'obs-uuid-2', concept: {uuid: 'concept-2'}, value: 'display-value'}];
+
+                scope.consultation.selectedObsTemplate = [{uuid: 'template-uuid-1', label: 'Template 1', observations: templateObs}];
+                scope.consultation.observations = templateObs.concat(displayControlObs);
+
+                expect(scope.consultation.selectedObsTemplate[0].observations[0].uuid).toEqual('obs-uuid-1');
+                expect(scope.consultation.observations.length).toBe(2);
+            });
+        });
     });
 });

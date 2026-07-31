@@ -220,17 +220,17 @@ angular.module('bahmni.clinical')
                     $rootScope.resumeDraftPatientUuid = null;
                 }
 
-                var trackedObsUuids = [];
+                var trackedObsUuids = new Set();
                 _.each($scope.consultation.selectedObsTemplate, function (template) {
                     if (template.observations && template.observations.length > 0) {
                         _.each(template.observations, function (obs) {
-                            if (obs.uuid) { trackedObsUuids.push(obs.uuid); }
+                            if (obs.uuid) { trackedObsUuids.add(obs.uuid); }
                         });
                     }
                 });
                 if ($scope.consultation.observations) {
                     dirtyTrackingState.extraObservations = _.filter($scope.consultation.observations, function (obs) {
-                        return obs.uuid && !_.includes(trackedObsUuids, obs.uuid);
+                        return obs.uuid && !trackedObsUuids.has(obs.uuid);
                     });
                 }
 
