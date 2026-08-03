@@ -428,7 +428,7 @@ angular.module('bahmni.clinical')
                     ($scope.addTreatmentWithDiagnosis.hasOwnProperty('order') && $scope.confirmedDiagnoses.length == 0)) {
                     return;
                 }
-                if (currentVisitType === 'IPD') {
+                if (currentVisitType === Bahmni.Clinical.Constants.visitTypes.ipd) {
                     $scope.treatment.careSetting = $scope.treatment.isDischargeMedication
                         ? Bahmni.Clinical.Constants.careSetting.outPatient
                         : Bahmni.Clinical.Constants.careSetting.inPatient;
@@ -1104,7 +1104,7 @@ angular.module('bahmni.clinical')
                     });
 
                     var vdpCareSettingFor = function (data) {
-                        return (currentVisitType === 'IPD' && !(data && data.isDischargeMedication))
+                        return (currentVisitType === Bahmni.Clinical.Constants.visitTypes.ipd && !(data && data.isDischargeMedication))
                             ? Bahmni.Clinical.Constants.careSetting.inPatient
                             : Bahmni.Clinical.Constants.careSetting.outPatient;
                     };
