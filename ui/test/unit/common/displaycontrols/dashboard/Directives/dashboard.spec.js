@@ -24,7 +24,7 @@ describe('Dashboard', function () {
         $provide.value('spinner', {});
         $provide.value('auditLogService', {});
         $provide.value('messagingService', {});
-        $provide.value('$state', {});
+        $provide.value('$state', {params: {tabConfigName: 'default'}});
         $provide.value('$translate', {});
         $provide.value('formPrintService', formPrintService);
         $provide.value('formDraftService', {getFormNamesFromDraft: function () { return []; }});
