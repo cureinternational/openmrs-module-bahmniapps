@@ -27,6 +27,9 @@ Bahmni.Clinical.Constants = (function () {
         inPatient: "INPATIENT",
         outPatient: "OUTPATIENT"
     };
+    var visitTypes = {
+        ipd: "IPD"
+    };
     var errorMessages = {
         discontinuingAndOrderingSameDrug: "DISCONTINUING_AND_ORDERING_SAME_DRUG_NOT_ALLOWED",
         incompleteForm: "INCOMPLETE_FORM_ERROR_MESSAGE",
@@ -69,6 +72,7 @@ Bahmni.Clinical.Constants = (function () {
         intradayDoseFields: ['morningDose', 'afternoonDose', 'eveningDose', 'nightDose'],
         orderActions: orderActions,
         errorMessages: errorMessages,
+        visitTypes: visitTypes,
         caseIntakeConceptClass: 'Case Intake',
         dialog: 'DIALOG',
         dashboard: 'DASHBOARD',
@@ -87,7 +91,8 @@ Bahmni.Clinical.Constants = (function () {
         adtForwardUrl: "../adt/#/patient/{{patientUuid}}/visit/{{visitUuid}}/",
         certificateHeader: "Print Header",
         careSetting: careSetting,
-        autoSaveIntervalMs: 15 * 60 * 1000
+        autoSaveIntervalMs: 15 * 60 * 1000,
+        millisecondsPerDay: 86400000
     };
 })();
 
