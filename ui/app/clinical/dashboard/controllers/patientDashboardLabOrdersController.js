@@ -31,8 +31,11 @@ angular.module('bahmni.clinical')
                 null,
                 null, null, false, null
             ).then(function (response) {
-                if (response.data && response.data.length > 0) {
-                    enhancedPatient.weight = response.data[0].value;
+                var weightObservation = response.data && _.find(response.data, function (observation) {
+                    return observation.concept && observation.concept.name === Bahmni.Common.Constants.weightConceptName;
+                });
+                if (weightObservation) {
+                    enhancedPatient.weight = weightObservation.value;
                 }
             }).catch(function () {});
 

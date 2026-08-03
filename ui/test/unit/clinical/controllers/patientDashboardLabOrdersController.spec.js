@@ -137,13 +137,25 @@ describe("PatientDashboardLabOrdersController", function () {
         });
 
         it("should set weight on patient when observation is returned", function () {
-            observationsService.fetch.and.returnValue($q.when({data: [{value: 65.5}]}));
+            observationsService.fetch.and.returnValue($q.when({data: [{value: 65.5, concept: {name: "WEIGHT"}}]}));
             initController();
             var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
             scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
             $rootScope.$digest();
             var patient = visitActionsService.downloadLabResults.calls.mostRecent().args[0];
             expect(patient.weight).toBe(65.5);
+        });
+
+        it("should not use height observation as weight when backend's fuzzy concept search returns both", function () {
+            observationsService.fetch.and.returnValue($q.when({data: [
+                {value: 160, concept: {name: "HEIGHT"}}
+            ]}));
+            initController();
+            var labOrderResults = [{orderUuid: 'order-1', isPanel: false}];
+            scope.$broadcast("event:downloadLabResultsFromDashboard", labOrderResults, '2024-01-01', 'acc-1');
+            $rootScope.$digest();
+            var patient = visitActionsService.downloadLabResults.calls.mostRecent().args[0];
+            expect(patient.weight).toBeUndefined();
         });
 
         it("should not set weight when no observations are returned", function () {
