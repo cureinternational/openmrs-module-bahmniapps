@@ -2,7 +2,7 @@
 
 describe('VisitController', function () {
     var scope, $controller, success, encounterService, patient, dateUtil, $timeout, getEncounterPromise, window;
-    var locationService, appService, $location, auditLogService, sessionService, visitService;
+    var locationService, appService, $location, auditLogService, logoutService, visitService;
     var q, state, rootScope, controller, allergyService;
     var configurations = {
         encounterConfig: function () {
@@ -60,7 +60,7 @@ describe('VisitController', function () {
         visitService = jasmine.createSpyObj('visitService', ['getVisit']);
         $location = jasmine.createSpyObj('$location', ['search']);
         auditLogService = jasmine.createSpyObj('auditLogService', ['log']);
-        sessionService = jasmine.createSpyObj('sessionService', ['destroy']);
+        logoutService = jasmine.createSpyObj('logoutService', ['attemptLogout']);
         allergyService.getAllergyForPatient.and.returnValue(Promise.resolve(allergiesMock));
         allergyService.getNoKnownAllergyUuid.and.returnValue(Promise.resolve("no-known-allergy-uuid"));
         allergyService.fetchAndProcessAllergies.and.returnValue(Promise.resolve("Pollen, Eggs"));
@@ -70,9 +70,6 @@ describe('VisitController', function () {
         window = $window;
         auditLogService.log.and.returnValue({
             then: function(callback) { return callback(); }
-        });
-        sessionService.destroy.and.returnValue({
-            then: function() { }
         });
         spyOn(clinicalAppConfigService, 'getVisitConfig').and.returnValue([]);
         spyOn(configurations, 'encounterConfig').and.returnValue({
@@ -113,7 +110,7 @@ describe('VisitController', function () {
                 appService: appService,
                 allergyService: allergyService,
                 auditLogService: auditLogService,
-                sessionService: sessionService,
+                logoutService: logoutService,
                 $location: $location,
                 $window: window
             });
@@ -175,10 +172,9 @@ describe('VisitController', function () {
         });
 
 
-        it('should call auditLogService.log and sessionService.destroy on logout', function (){
+        it('should delegate to logoutService.attemptLogout on logout', function (){
             scope.ipdDashboard.hostApi.onLogOut();
-            expect(auditLogService.log).toHaveBeenCalledWith(undefined, 'USER_LOGOUT_SUCCESS', undefined, 'MODULE_LABEL_LOGOUT_KEY');
-            expect(sessionService.destroy).toHaveBeenCalled();
+            expect(logoutService.attemptLogout).toHaveBeenCalledWith(scope);
         });
 
         it('should call auditLogService.log while handleAuditEvent is triggered', function (){
@@ -217,7 +213,7 @@ describe('VisitController', function () {
             appService: appService,
             allergyService: allergyService,
             auditLogService: auditLogService,
-            sessionService: sessionService,
+            logoutService: logoutService,
             $location: $location,
             $window: window
         });
@@ -340,7 +336,7 @@ describe('VisitController', function () {
                 appService: appService,
                 allergyService: allergyService,
                 auditLogService: auditLogService,
-                sessionService: sessionService,
+                logoutService: logoutService,
                 $location: $location,
                 $window: window
             });
@@ -368,7 +364,7 @@ describe('VisitController', function () {
                 appService: appService,
                 allergyService: allergyService,
                 auditLogService: auditLogService,
-                sessionService: sessionService,
+                logoutService: logoutService,
                 $location: $location,
                 $window: window
             });
@@ -396,7 +392,7 @@ describe('VisitController', function () {
                 appService: appService,
                 allergyService: allergyService,
                 auditLogService: auditLogService,
-                sessionService: sessionService,
+                logoutService: logoutService,
                 $location: $location,
                 $window: window
             });
