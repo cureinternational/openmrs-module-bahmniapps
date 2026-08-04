@@ -21,6 +21,8 @@ angular.module('bahmni.clinical')
             var allConceptSections = [];
 
             var init = function () {
+                $rootScope.deletedFormIds = $scope.consultation && $scope.consultation.deletedFormIds ? $scope.consultation.deletedFormIds.slice() : [];
+
                 if ($rootScope.draftDiscarded) {
                     var preservedDeletedFormIds = $scope.consultation && $scope.consultation.deletedFormIds ? $scope.consultation.deletedFormIds.slice() : [];
                     $scope.allTemplates = [];
@@ -29,6 +31,7 @@ angular.module('bahmni.clinical')
                     $rootScope.draftDiscarded = false;
                     if (preservedDeletedFormIds && preservedDeletedFormIds.length > 0) {
                         $scope.consultation.deletedFormIds = preservedDeletedFormIds;
+                        $rootScope.deletedFormIds = preservedDeletedFormIds;
                     }
                 }
 
@@ -165,13 +168,15 @@ angular.module('bahmni.clinical')
                 if (deletedFormIds.length > 0) {
                     if ($scope.consultation.observations) {
                         $scope.consultation.observations = _.filter($scope.consultation.observations, function (obs) {
+                            if (!obs) return true;
                             if (obs.concept && obs.concept.uuid && _.includes(deletedFormIds, obs.concept.uuid)) {
                                 return false;
                             }
                             if (obs.formFieldPath) {
                                 var formName = obs.formFieldPath.split('.')[0];
                                 return !_.find($scope.consultation.observationForms, function (form) {
-                                    return (form.formUuid && _.includes(deletedFormIds, form.formUuid)) && form.formName === formName;
+                                    var formId = form.formUuid || form.uuid || form.id;
+                                    return formId && _.includes(deletedFormIds, formId) && form.formName === formName;
                                 });
                             }
                             return true;
