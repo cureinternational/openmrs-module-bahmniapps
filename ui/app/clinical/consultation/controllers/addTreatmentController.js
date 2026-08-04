@@ -1267,7 +1267,6 @@ angular.module('bahmni.clinical')
                                         stages.push({
                                             stageName: s.stageName,
                                             sequence: sequenceOffset + idx + 1,
-                                            isLoadingDose: false,
                                             dose: cs.calculatedDose,
                                             unit: cs.doseUnit,
                                             frequency: s.frequency || '',
