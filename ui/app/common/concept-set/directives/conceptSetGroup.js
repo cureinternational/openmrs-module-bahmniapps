@@ -9,8 +9,10 @@ angular.module('bahmni.common.conceptSet')
                   conceptSetUiConfigService, $timeout, clinicalAppConfigService, $stateParams, $translate, $state) {
             var conceptSetUIConfig = conceptSetUiConfigService.getConfig();
             var init = function () {
-                $scope.validationHandler = new Bahmni.ConceptSet.ConceptSetGroupPanelViewValidationHandler($scope.allTemplates, $scope.consultation);
-                contextChangeHandler.add($scope.validationHandler.validate);
+                if ($scope.consultation && $scope.allTemplates) {
+                    $scope.validationHandler = new Bahmni.ConceptSet.ConceptSetGroupPanelViewValidationHandler($scope.allTemplates, $scope.consultation);
+                    contextChangeHandler.add($scope.validationHandler.validate);
+                }
             };
             $scope.toggleSideBar = function () {
                 $rootScope.showLeftpanelToggle = !$rootScope.showLeftpanelToggle;
@@ -114,6 +116,7 @@ angular.module('bahmni.common.conceptSet')
             };
 
             var clearTemplateState = function (template) {
+                if (!template) return;
                 template.observations = [];
                 template.hasUnsavedFormObservations = false;
                 template.draftValidationPassed = undefined;
@@ -161,6 +164,7 @@ angular.module('bahmni.common.conceptSet')
 
                 if ($scope.consultation && $scope.consultation.observations) {
                     $scope.consultation.observations = _.filter($scope.consultation.observations, function (observation) {
+                        if (!observation) return true;
                         if (observation.concept && observation.concept.uuid === templateId) {
                             return false;
                         }
