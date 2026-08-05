@@ -176,11 +176,17 @@ angular.module('bahmni.common.conceptSet')
                 }
 
                 if ($scope.consultation && $scope.consultation.observationForms) {
-                    _.each($scope.consultation.observationForms, function (observationForm) {
-                        if (isTemplateMatch(observationForm, templateId)) {
-                            clearTemplateState(observationForm);
-                        }
-                    });
+                    if (!isFormPinned) {
+                        _.remove($scope.consultation.observationForms, function (observationForm) {
+                            return isTemplateMatch(observationForm, templateId);
+                        });
+                    } else {
+                        _.each($scope.consultation.observationForms, function (observationForm) {
+                            if (isTemplateMatch(observationForm, templateId)) {
+                                clearTemplateState(observationForm);
+                            }
+                        });
+                    }
                 }
 
                 if ($scope.consultation && ($scope.consultation.lastvisited === currentTemplate.id || $scope.consultation.lastvisited === currentTemplate.formUuid)) {
@@ -193,24 +199,6 @@ angular.module('bahmni.common.conceptSet')
                 }
 
                 messagingService.showMessage("info", $translate.instant("CLINICAL_TEMPLATE_REMOVED_SUCCESS_KEY", {label: label}));
-
-                var parentScope = $scope.$parent;
-                while (parentScope && !parentScope.allTemplates) {
-                    parentScope = parentScope.$parent;
-                }
-                if (parentScope && parentScope.allTemplates) {
-                    if (!isFormPinned) {
-                        _.remove(parentScope.allTemplates, function (template) {
-                            return isTemplateMatch(template, templateId);
-                        });
-                    } else {
-                        _.each(parentScope.allTemplates, function (template) {
-                            if (isTemplateMatch(template, templateId)) {
-                                clearTemplateState(template);
-                            }
-                        });
-                    }
-                }
             };
 
             $scope.openActiveForm = function (conceptSet) {

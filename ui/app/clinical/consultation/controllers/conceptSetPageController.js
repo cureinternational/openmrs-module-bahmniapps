@@ -232,7 +232,12 @@ angular.module('bahmni.clinical')
                         return draftObs.formNamespace === 'Bahmni' && draftObs.formFieldPath;
                     });
                     if (form2DraftObs.length > 0) {
+                        var deletedFormIds = $rootScope.deletedFormIds || [];
                         _.each($scope.consultation.observationForms, function (obsForm) {
+                            var obsFormId = obsForm.formUuid || obsForm.uuid || obsForm.id;
+                            if (obsFormId && _.includes(deletedFormIds, obsFormId)) {
+                                return;
+                            }
                             var matchingObs = _.filter(form2DraftObs, function (draftObs) {
                                 return draftObs.formFieldPath.split('.')[0] === obsForm.formName;
                             });
@@ -509,6 +514,9 @@ angular.module('bahmni.clinical')
 
                 var deletedFormIds = $rootScope.deletedFormIds || [];
                 collectedObs = _.filter(collectedObs, function (obs) {
+                    if (obs.concept && obs.concept.uuid && _.includes(deletedFormIds, obs.concept.uuid)) {
+                        return false;
+                    }
                     if (obs.formFieldPath) {
                         var formName = obs.formFieldPath.split('.')[0];
                         var isDeletedForm = _.find($scope.consultation.observationForms, function (form) {
