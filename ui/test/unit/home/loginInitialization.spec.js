@@ -68,7 +68,7 @@ describe('loginInitialization', function () {
 
         loginInitialization();
         $rootScope.$apply();
-        $httpBackend.flush();
+       
 
         expect(localStorage.getItem('enableCommandPalette')).toBe('true');
     });
@@ -86,7 +86,7 @@ describe('loginInitialization', function () {
 
         loginInitialization();
         $rootScope.$apply();
-        $httpBackend.flush();
+       
 
         expect(localStorage.getItem('enableCommandPalette')).toBe('false');
     });
