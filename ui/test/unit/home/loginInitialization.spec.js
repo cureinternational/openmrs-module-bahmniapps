@@ -35,11 +35,20 @@ describe('loginInitialization', function () {
         });
 
         locationService.getAllByTag.and.returnValue(
-            specUtil.respondWithPromise($q, {data: {results: []}})
+            specUtil.respondWithPromise($q, {
+                data: {
+                    results: []
+                }
+            })
         );
 
+        // Existing locale mocks
         $httpBackend.whenGET('../i18n/home/locale_en.json').respond({});
         $httpBackend.whenGET('/bahmni_config/openmrs/i18n/home/locale_en.json').respond({});
+
+        // Additional common locale mocks
+        $httpBackend.whenGET('../i18n/common/locale_en.json').respond({});
+        $httpBackend.whenGET('/bahmni_config/openmrs/i18n/common/locale_en.json').respond({});
     }));
 
     afterEach(function () {
@@ -48,23 +57,37 @@ describe('loginInitialization', function () {
 
     it('should set enableCommandPalette to true when home config enables it', function () {
         loadConfigService.loadConfig.and.returnValue(
-            specUtil.respondWithPromise($q, {data: {config: {enableCommandPalette: true}}})
+            specUtil.respondWithPromise($q, {
+                data: {
+                    config: {
+                        enableCommandPalette: true
+                    }
+                }
+            })
         );
 
         loginInitialization();
         $rootScope.$apply();
         $httpBackend.flush();
+
         expect(localStorage.getItem('enableCommandPalette')).toBe('true');
     });
 
     it('should set enableCommandPalette to false when home config disables it', function () {
         loadConfigService.loadConfig.and.returnValue(
-            specUtil.respondWithPromise($q, {data: {config: {enableCommandPalette: false}}})
+            specUtil.respondWithPromise($q, {
+                data: {
+                    config: {
+                        enableCommandPalette: false
+                    }
+                }
+            })
         );
 
         loginInitialization();
         $rootScope.$apply();
         $httpBackend.flush();
+
         expect(localStorage.getItem('enableCommandPalette')).toBe('false');
     });
 });
