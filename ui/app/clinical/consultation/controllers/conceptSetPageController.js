@@ -245,6 +245,11 @@ angular.module('bahmni.clinical')
                 var formUuidParam = $stateParams.formUuid;
                 var FORM_PRELOAD_DIRTY_TRACKING_DELAY_MS = 1000;
 
+                if ($scope.consultation._draftCleanState !== undefined) {
+                    var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    $scope.formDraft.isDirty = currentState !== $scope.consultation._draftCleanState;
+                }
+
                 $timeout(setupDirtyTracking, formUuidParam ? FORM_PRELOAD_DIRTY_TRACKING_DELAY_MS : 0);
 
                 if (formUuidParam) {
@@ -571,6 +576,13 @@ angular.module('bahmni.clinical')
                 _.each($scope.allTemplates, function (template) {
                     template.hasUnsavedFormObservations = false;
                     template.draftValidationPassed = undefined;
+                });
+                _.each($scope.consultation.selectedObsTemplate, function (template) {
+                    template.hasUnsavedFormObservations = false;
+                    template.draftValidationPassed = undefined;
+                });
+                _.each($scope.consultation.observationForms, function (form) {
+                    form.hasUnsavedFormObservations = false;
                 });
             };
 
