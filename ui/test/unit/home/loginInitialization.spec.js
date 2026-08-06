@@ -17,7 +17,6 @@ describe('loginInitialization', function () {
         loadConfigService = jasmine.createSpyObj('loadConfigService', ['loadConfig']);
         spinner = jasmine.createSpyObj('spinner', ['forPromise']);
         messagingService = jasmine.createSpyObj('messagingService', ['showMessage']);
-
         $provide.value('locationService', locationService);
         $provide.value('loadConfigService', loadConfigService);
         $provide.value('spinner', spinner);
@@ -41,12 +40,11 @@ describe('loginInitialization', function () {
                 }
             })
         );
-
         $httpBackend.whenGET('../i18n/home/locale_en.json').respond({});
         $httpBackend.whenGET('/bahmni_config/openmrs/i18n/home/locale_en.json').respond({});
-
+        $httpBackend.whenGET('../i18n/common/locale_en.json').respond({});
+        $httpBackend.whenGET('/bahmni_config/openmrs/i18n/common/locale_en.json').respond({});
     }));
-
     afterEach(function () {
         localStorage.clear();
     });
@@ -61,11 +59,8 @@ describe('loginInitialization', function () {
                 }
             })
         );
-
         loginInitialization();
         $rootScope.$apply();
-       
-
         expect(localStorage.getItem('enableCommandPalette')).toBe('true');
     });
 
@@ -82,8 +77,6 @@ describe('loginInitialization', function () {
 
         loginInitialization();
         $rootScope.$apply();
-       
-
         expect(localStorage.getItem('enableCommandPalette')).toBe('false');
     });
 });
