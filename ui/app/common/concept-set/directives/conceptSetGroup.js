@@ -124,6 +124,7 @@ angular.module('bahmni.common.conceptSet')
                 template.component = null;
                 template.errorMessage = null;
                 template.isValid = undefined;
+                template.isAdded = false;
                 template.isOpen = false;
                 template.klass = "";
                 template.isLoaded = false;
@@ -145,16 +146,14 @@ angular.module('bahmni.common.conceptSet')
                 clearTemplateState(currentTemplate);
 
                 if (!isFormPinned) {
-                    if (!$rootScope.deletedFormIds) {
-                        $rootScope.deletedFormIds = [];
+                    if ($scope.consultation) {
+                        if (!$scope.consultation.deletedFormIds) {
+                            $scope.consultation.deletedFormIds = [];
+                        }
+                        if (!_.includes($scope.consultation.deletedFormIds, templateId)) {
+                            $scope.consultation.deletedFormIds.push(templateId);
+                        }
                     }
-                    if (!_.includes($rootScope.deletedFormIds, templateId)) {
-                        $rootScope.deletedFormIds.push(templateId);
-                    }
-
-                    _.remove($scope.allTemplates, function (template) {
-                        return isTemplateMatch(template, templateId);
-                    });
                     if ($scope.consultation && $scope.consultation.selectedObsTemplate) {
                         _.remove($scope.consultation.selectedObsTemplate, function (template) {
                             return isTemplateMatch(template, templateId);
