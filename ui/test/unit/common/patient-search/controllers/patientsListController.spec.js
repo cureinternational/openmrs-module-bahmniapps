@@ -91,7 +91,7 @@ describe("PatientsListController", function () {
             _appService.getAppDescriptor.and.returnValue(getAppDescriptor);
             _patientService = jasmine.createSpyObj('patientService', ['findPatients', 'search','getRecentPatients']);
             _printer = jasmine.createSpyObj('printer', ['printFromScope']);
-            _window = jasmine.createSpyObj('$window', ['open', 'location']);
+            _window = jasmine.createSpyObj('$window', ['open', 'location', 'addEventListener', 'removeEventListener']);
             findPatientsPromise = specUtil.createServicePromise('findPatients');
             searchPatientsPromise = specUtil.createServicePromise('search');
             getRecentPatientsPromise = specUtil.createServicePromise('getRecentPatients');
@@ -625,6 +625,134 @@ describe("PatientsListController", function () {
                 { id: 1, name: 'Shyam', dob: '13 Aug 1997' },
                 { id: 3, name: 'Ganesh', dob: '05 Jan 1994' }
             ]);
+        });
+    });
+
+    describe("top scroll indicator syncing", function () {
+        var elements = {};
+
+        var createScrollContainer = function (id) {
+            var container = document.createElement('div');
+            container.id = id;
+            container.style.width = '100px';
+            container.style.overflow = 'auto';
+            document.body.appendChild(container);
+            return container;
+        };
+
+        var setUpScrollDom = function (tableOverflows) {
+            var contentWidth = tableOverflows ? 500 : 50;
+
+            elements.mainTableScroll = createScrollContainer('mainTableScroll');
+            var table = document.createElement('table');
+            table.className = 'patient-list-table';
+            table.style.width = contentWidth + 'px';
+            elements.mainTableScroll.appendChild(table);
+
+            elements.topIndicator = createScrollContainer('topScrollIndicator');
+            elements.spacer = document.createElement('div');
+            elements.spacer.id = 'scrollIndicatorSpacer';
+            elements.topIndicator.appendChild(elements.spacer);
+        };
+
+        var recalculateHeadings = function () {
+            scope.search.activePatients = [{ name: 'Ram', identifier: 'GAN1234' }];
+            scope.ignoredTabularViewHeadingsConfig = [];
+            scope.getHeadings();
+            $timeout.flush();
+        };
+
+        beforeEach(function () {
+            scope.$apply(setUp);
+        });
+
+        afterEach(function () {
+            Object.keys(elements).forEach(function (key) {
+                var el = elements[key];
+                if (el && el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+            });
+            elements = {};
+        });
+
+        it('should show the indicator when the table content overflows its container', function () {
+            setUpScrollDom(true);
+
+            recalculateHeadings();
+
+            expect(scope.showScrollIndicator).toBe(true);
+        });
+
+        it('should hide the indicator when the table content fits within its container', function () {
+            setUpScrollDom(false);
+
+            recalculateHeadings();
+
+            expect(scope.showScrollIndicator).toBe(false);
+        });
+
+        it('should wire up scroll syncing between the indicator and the table', function () {
+            setUpScrollDom(true);
+
+            spyOn(elements.mainTableScroll, 'addEventListener').and.callThrough();
+            spyOn(elements.topIndicator, 'addEventListener').and.callThrough();
+
+            recalculateHeadings();
+
+            expect(elements.mainTableScroll.addEventListener).toHaveBeenCalledWith('scroll', jasmine.any(Function));
+            expect(elements.topIndicator.addEventListener).toHaveBeenCalledWith('scroll', jasmine.any(Function));
+        });
+
+        it('should remove scroll listeners and the window resize handler once the scope is destroyed', function () {
+            setUpScrollDom(true);
+            recalculateHeadings();
+
+            spyOn(elements.mainTableScroll, 'removeEventListener').and.callThrough();
+            spyOn(elements.topIndicator, 'removeEventListener').and.callThrough();
+
+            scope.$destroy();
+
+            expect(elements.mainTableScroll.removeEventListener).toHaveBeenCalledWith('scroll', jasmine.any(Function));
+            expect(elements.topIndicator.removeEventListener).toHaveBeenCalledWith('scroll', jasmine.any(Function));
+            expect(_window.removeEventListener).toHaveBeenCalledWith('resize', jasmine.any(Function), false);
+        });
+
+        it('should re-evaluate the indicator visibility whenever the window is resized', function () {
+            setUpScrollDom(true);
+            recalculateHeadings();
+            expect(scope.showScrollIndicator).toBe(true);
+
+            elements.mainTableScroll.querySelector('.patient-list-table').style.width = '50px';
+            elements.mainTableScroll.style.width = '500px';
+
+            angular.element(_window).triggerHandler('resize');
+            $timeout.flush();
+
+            expect(scope.showScrollIndicator).toBe(false);
+        });
+
+        it('should not throw and should not bind listeners when the indicator elements are absent from the DOM', function () {
+            recalculateHeadings();
+
+            expect(scope.showScrollIndicator).toBeUndefined();
+        });
+
+        it('should not rebind scroll listeners on repeated syncScrollbars calls for the same elements', function () {
+            setUpScrollDom(true);
+
+            spyOn(elements.mainTableScroll, 'addEventListener').and.callThrough();
+            spyOn(elements.mainTableScroll, 'removeEventListener').and.callThrough();
+            spyOn(elements.topIndicator, 'addEventListener').and.callThrough();
+            spyOn(elements.topIndicator, 'removeEventListener').and.callThrough();
+
+            recalculateHeadings();
+            recalculateHeadings();
+
+            expect(elements.mainTableScroll.addEventListener.calls.count()).toBe(1);
+            expect(elements.topIndicator.addEventListener.calls.count()).toBe(1);
+            expect(elements.mainTableScroll.removeEventListener).not.toHaveBeenCalled();
+            expect(elements.topIndicator.removeEventListener).not.toHaveBeenCalled();
         });
     });
 
