@@ -40,6 +40,8 @@ describe('loginInitialization', function () {
 
         $httpBackend.whenGET('../i18n/home/locale_en.json').respond({});
         $httpBackend.whenGET('/bahmni_config/openmrs/i18n/home/locale_en.json').respond({});
+        $httpBackend.whenGET('../i18n/common/locale_en.json').respond({});
+        $httpBackend.whenGET('/bahmni_config/openmrs/i18n/common/locale_en.json').respond({});
     }));
 
     afterEach(function () {
