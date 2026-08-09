@@ -220,7 +220,7 @@ angular.module('bahmni.clinical')
                 }
                 if (draftFormData) {
                     populateFormWithDraftData(draftFormData);
-                    $scope.consultation._draftCleanState = undefined;
+                    $rootScope._draftCleanState = undefined;
                     $scope.formDraft.isDirty = true;
                 }
                 if ($rootScope.resumeDraftOnLoad) {
@@ -245,9 +245,12 @@ angular.module('bahmni.clinical')
                 var formUuidParam = $stateParams.formUuid;
                 var FORM_PRELOAD_DIRTY_TRACKING_DELAY_MS = 1000;
 
-                if ($scope.consultation._draftCleanState !== undefined) {
+                if ($rootScope._justSavedConsultation) {
+                    dirtyTrackingState.postSaveRefreshPending = true;
+                    $scope.formDraft.isDirty = false;
+                } else if ($rootScope._draftCleanState !== undefined) {
                     var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                    $scope.formDraft.isDirty = currentState !== $scope.consultation._draftCleanState;
+                    $scope.formDraft.isDirty = currentState !== $rootScope._draftCleanState;
                 }
 
                 $timeout(setupDirtyTracking, formUuidParam ? FORM_PRELOAD_DIRTY_TRACKING_DELAY_MS : 0);
@@ -593,9 +596,6 @@ angular.module('bahmni.clinical')
                 $scope.formDraft.statusMessage = null;
                 $scope.formDraft.statusParams = {};
                 $scope.formDraft.statusError = false;
-                if ($scope.consultation && !preserveCleanState) {
-                    $scope.consultation._draftCleanState = undefined;
-                }
             };
 
             var startAutoSaveIfDirty = function () {
@@ -620,15 +620,21 @@ angular.module('bahmni.clinical')
                     return;
                 }
                 dirtyTrackingState.initialized = true;
-                if ($scope.consultation._draftCleanState !== undefined) {
-                    dirtyTrackingState.cleanState = $scope.consultation._draftCleanState;
+                var isDraftBeingResumed = $rootScope.resumeDraftOnLoad && $rootScope.draftData;
+                var justSaved = $rootScope._justSavedConsultation;
+                if (justSaved) {
+                    $rootScope._justSavedConsultation = false;
+                    dirtyTrackingState.postSaveRefreshPending = true;
+                }
+                if ($rootScope._draftCleanState !== undefined && !justSaved) {
+                    dirtyTrackingState.cleanState = $rootScope._draftCleanState;
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
                     var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
                     startAutoSaveIfDirty();
-                    if (!$scope.formDraft.isDirty || !hasUnsavedTemplateFlags()) {
+                    if (isDraftBeingResumed && (!$scope.formDraft.isDirty || !hasUnsavedTemplateFlags())) {
                         dirtyTrackingState.postSaveRefreshPending = true;
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                             if (!dirtyTrackingState.postSaveRefreshPending) {
@@ -639,47 +645,51 @@ angular.module('bahmni.clinical')
                             dirtyTrackingState.cleanState = settledState;
                             dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                             captureTemplateCleanStates();
-                            $scope.consultation._draftCleanState = settledState;
+                            $rootScope._draftCleanState = settledState;
                             $scope.formDraft.isDirty = false;
                             dirtyTrackingState.postSaveRefreshPending = false;
                             dirtyTrackingState.postSaveRefreshTimeout = null;
                         }, 0);
                     }
                 } else {
-                    dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                    dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
-                    captureTemplateCleanStates();
-                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
-                    dirtyTrackingState.postSaveRefreshPending = true;
-                    if (dirtyTrackingState.postSaveRefreshTimeout) {
-                        $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
-                    }
-                    dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
-                        if (!dirtyTrackingState.postSaveRefreshPending) {
-                            dirtyTrackingState.postSaveRefreshTimeout = null;
-                            return;
-                        }
-                        var partialRefreshState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                        dirtyTrackingState.cleanState = partialRefreshState;
+                    if (!justSaved) {
+                        dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                         dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                         captureTemplateCleanStates();
-                        $scope.consultation._draftCleanState = partialRefreshState;
-                        $scope.formDraft.isDirty = false;
+                        $rootScope._draftCleanState = dirtyTrackingState.cleanState;
+                    }
+                    if (isDraftBeingResumed) {
+                        dirtyTrackingState.postSaveRefreshPending = true;
+                        if (dirtyTrackingState.postSaveRefreshTimeout) {
+                            $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
+                        }
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                             if (!dirtyTrackingState.postSaveRefreshPending) {
                                 dirtyTrackingState.postSaveRefreshTimeout = null;
                                 return;
                             }
-                            var settledCleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                            dirtyTrackingState.cleanState = settledCleanState;
+                            var partialRefreshState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                            dirtyTrackingState.cleanState = partialRefreshState;
                             dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                             captureTemplateCleanStates();
-                            $scope.consultation._draftCleanState = settledCleanState;
+                            $rootScope._draftCleanState = partialRefreshState;
                             $scope.formDraft.isDirty = false;
-                            dirtyTrackingState.postSaveRefreshPending = false;
-                            dirtyTrackingState.postSaveRefreshTimeout = null;
+                            dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
+                                if (!dirtyTrackingState.postSaveRefreshPending) {
+                                    dirtyTrackingState.postSaveRefreshTimeout = null;
+                                    return;
+                                }
+                                var settledCleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                                dirtyTrackingState.cleanState = settledCleanState;
+                                dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
+                                captureTemplateCleanStates();
+                                $rootScope._draftCleanState = settledCleanState;
+                                $scope.formDraft.isDirty = false;
+                                dirtyTrackingState.postSaveRefreshPending = false;
+                                dirtyTrackingState.postSaveRefreshTimeout = null;
+                            }, 0);
                         }, 0);
-                    }, 0);
+                    }
                 }
 
                 dirtyTrackingState.watchDeregister = $scope.$watch(
@@ -697,7 +707,8 @@ angular.module('bahmni.clinical')
                                 dirtyTrackingState.cleanState = newTemplateState;
                                 dirtyTrackingState.cleanStateExtras = newExtraState;
                                 captureTemplateCleanStates();
-                                $scope.consultation._draftCleanState = newTemplateState;
+                                $rootScope._draftCleanState = newTemplateState;
+                                console.log('settle: isDirty=false');
                                 $scope.formDraft.isDirty = false;
                                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
@@ -761,7 +772,7 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
-                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    $rootScope._draftCleanState = dirtyTrackingState.cleanState;
                     dirtyTrackingState.postSaveRefreshPending = true;
                     if (dirtyTrackingState.postSaveRefreshTimeout) {
                         $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
@@ -771,7 +782,7 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                         dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                         captureTemplateCleanStates();
-                        $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                        $rootScope._draftCleanState = dirtyTrackingState.cleanState;
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshPending = false;
                         dirtyTrackingState.postSaveRefreshTimeout = null;
@@ -895,7 +906,7 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
-                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    $rootScope._draftCleanState = dirtyTrackingState.cleanState;
                     $scope.formDraft.isDirty = false;
                 };
                 dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
@@ -921,22 +932,12 @@ angular.module('bahmni.clinical')
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                 }
-                var captureSettledCleanStateOnSave = function () {
-                    clearAllDraftIndicators();
-                    dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                    dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
-                    captureTemplateCleanStates();
-                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
-                    $scope.formDraft.isDirty = false;
-                };
+                clearAllDraftIndicators();
+                $rootScope._justSavedConsultation = true;
                 dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
-                    captureSettledCleanStateOnSave();
-                    dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
-                        captureSettledCleanStateOnSave();
-                        dirtyTrackingState.postSaveRefreshPending = false;
-                        dirtyTrackingState.postSaveRefreshTimeout = null;
-                        sessionStorage.removeItem('formSaveCompleted');
-                    }, 0);
+                    dirtyTrackingState.postSaveRefreshPending = false;
+                    dirtyTrackingState.postSaveRefreshTimeout = null;
+                    sessionStorage.removeItem('formSaveCompleted');
                 }, 0);
             });
 

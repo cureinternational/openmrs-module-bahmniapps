@@ -3144,5 +3144,55 @@ describe('ConceptSetPageController', function () {
                 expect(scope.consultation.observations.length).toBe(2);
             });
         });
+
+        describe('Save as Draft button state (CURE-125302)', function () {
+            it('should maintain correct isDirty state across navigation and save', function () {
+                inject(function ($timeout, formDirtyStateService) {
+                    var conceptResponseData = {
+                        results: [{setMembers: [{name: {name: "Template 1"}, uuid: 'concept-uuid-1', set: true, setMembers: []}]}]
+                    };
+                    mockConceptSetService(conceptResponseData);
+                    mockformService([]);
+
+                    rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                    rootScope.formDraftFeatureEnabled = true;
+
+                    // Step 1: First visit, no edits - button should be disabled
+                    createController();
+                    $timeout.flush();
+                    expect(scope.formDraft.isDirty).toBe(false);
+
+                    // Step 2: Make edits - button should be enabled
+                    scope.consultation.selectedObsTemplate = [{
+                        uuid: 'template-uuid-1',
+                        label: 'Template 1',
+                        observations: [{uuid: 'obs-uuid-1', concept: {uuid: 'concept-1'}, value: 'edited-value'}]
+                    }];
+                    scope.$apply(); // Trigger watcher
+                    $timeout.flush();
+                    expect(scope.formDraft.isDirty).toBe(true);
+
+                    // Step 3: Navigate away (form data persisted in scope)
+                    // isDirty should remain true (button enabled)
+                    expect(scope.formDraft.isDirty).toBe(true);
+
+                    // Step 4: Come back to module (new controller instance with persisted _draftCleanState)
+                    // Simulate returning to the module by creating a new controller with persistent state
+                    rootScope._draftCleanState = '{"observations":[]}'; // Old clean state before edits
+                    createController();
+                    $timeout.flush();
+                    // Form has unsaved edits, so isDirty should be true (button enabled)
+                    expect(scope.formDraft.isDirty).toBe(true);
+
+                    // Step 5: Click Save - button should be disabled after save
+                    rootScope._justSavedConsultation = true;
+                    // New controller created after save
+                    createController();
+                    $timeout.flush();
+                    // After save, isDirty should be false (button disabled)
+                    expect(scope.formDraft.isDirty).toBe(false);
+                });
+            });
+        });
     });
 });
