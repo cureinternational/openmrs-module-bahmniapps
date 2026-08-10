@@ -307,6 +307,7 @@ module.exports = function (grunt) {
                             libraryJSFiles,
                             'components/openmrs-uicommons/**/*',
                             '*.{ico,txt,html,js}',
+                            'common/commandPaletteLoader.js',
                             '.htaccess',
                             'images/**/*.{gif,webp}',
                             'styles/**/*.css',
