@@ -631,22 +631,14 @@ angular.module('bahmni.clinical')
                     $rootScope._justSavedConsultation = false;
                     dirtyTrackingState.postSaveRefreshPending = true;
                 }
-                if ($rootScope._draftCleanState !== undefined && !justSaved && !isDraftBeingResumed) {
-                    var freshCleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                    if (freshCleanState === $rootScope._draftCleanState) {
-                        dirtyTrackingState.cleanState = $rootScope._draftCleanState;
-                        dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
-                        captureTemplateCleanStates();
-                        var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                        var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
-                        $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
-                        startAutoSaveIfDirty();
-                    } else {
-                        $rootScope._draftCleanState = undefined;
-                        if ($scope.consultation) {
-                            $scope.consultation._draftCleanState = undefined;
-                        }
-                    }
+                if ($rootScope._draftCleanState !== undefined && !justSaved) {
+                    dirtyTrackingState.cleanState = $rootScope._draftCleanState;
+                    dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
+                    captureTemplateCleanStates();
+                    var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
+                    $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
+                    startAutoSaveIfDirty();
                     if (isDraftBeingResumed && (!$scope.formDraft.isDirty || !hasUnsavedTemplateFlags())) {
                         dirtyTrackingState.postSaveRefreshPending = true;
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {

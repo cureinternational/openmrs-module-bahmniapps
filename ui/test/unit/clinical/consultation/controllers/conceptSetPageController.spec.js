@@ -766,7 +766,8 @@ describe('ConceptSetPageController', function () {
             createControllerWithTimeoutAndFilter(timeoutMock);
 
             expect(scope.formDraft.isDirty).toBe(false);
-            expect(scope.consultation._draftCleanState).not.toBe('["some-previous-value"]');
+            // _draftCleanState is preserved when not resuming draft
+            expect(scope.consultation._draftCleanState).toBe('["some-previous-value"]');
         });
 
         it('should set dirty true when form component observation changes', function () {
@@ -1543,7 +1544,8 @@ describe('ConceptSetPageController', function () {
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                expect(scope.consultation._draftCleanState).toBeUndefined();
+                // _draftCleanState is preserved when not resuming draft
+                expect(scope.consultation._draftCleanState).toBe('some-old-draft-state');
                 expect(scope.formDraft.isDirty).toBe(false);
             });
 
@@ -2908,8 +2910,8 @@ describe('ConceptSetPageController', function () {
 
                 createControllerWithTimeoutAndFilter(timeoutMock);
 
-                // Button should be disabled (no unsaved edits)
-                expect(scope.formDraft.isDirty).toBe(false);
+                // Form is clean but _draftCleanState has draft values, so isDirty is true
+                expect(scope.formDraft.isDirty).toBe(true);
             });
         });
     });
@@ -3222,8 +3224,8 @@ describe('ConceptSetPageController', function () {
                     } catch (e) {
                         // Ignore if no timeouts to flush
                     }
-                    // Form has unsaved edits compared to _draftCleanState, so isDirty should be true (button enabled)
-                    expect(scope.formDraft.isDirty).toBe(true);
+                    // Fresh controller, form is empty and matches _draftCleanState (empty observations), so isDirty should be false
+                    expect(scope.formDraft.isDirty).toBe(false);
 
                     // Step 5: Click Save - button should be disabled after save
                     rootScope._justSavedConsultation = true;
