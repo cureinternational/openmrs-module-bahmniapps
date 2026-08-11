@@ -849,6 +849,8 @@ angular.module('bahmni.clinical')
                                 $scope.formDraft.isDirty = true;
                                 $state.dirtyConsultationForm = true;
                                 startAutoSaveIfDirty();
+                                // Resync template baselines to prevent per-template indicator desync
+                                captureTemplateCleanStates();
                                 // Don't update cleanState - let the timeout callback decide based on the saved state
                                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);

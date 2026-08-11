@@ -3290,6 +3290,51 @@ describe('ConceptSetPageController', function () {
                 // Save button should be enabled (not disabled)
                 expect(scope.formDraft.isDirty).not.toBe(false);
             });
+
+            it('should disable save button after draft save with no further edits', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutCallbacks = [];
+                var timeoutMock = function (callback, delay) {
+                    timeoutCallbacks.push(callback);
+                    return {$$timeoutId: timeoutCallbacks.length};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial-value'}]}];
+
+                // Initially, form should not be dirty
+                expect(scope.formDraft.isDirty).toBe(false);
+
+                // User saves draft
+                scope.saveAsDraft();
+                expect(scope.formDraft.isDirty).toBe(false);
+
+                // Resolve the save promise
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false}});
+
+                // Immediately after save, button is still disabled (isDirty = false)
+                expect(scope.formDraft.isDirty).toBe(false);
+
+                // User makes NO further edits - just wait for post-save timeout
+                scope.$digest();
+
+                // Execute the post-save timeout callbacks (100ms window)
+                // The timeout should check that no changes were made and keep isDirty = false
+                _.each(timeoutCallbacks, function (callback) {
+                    callback();
+                });
+
+                // After timeout expires with no edits: button should remain disabled
+                expect(scope.formDraft.isDirty).toBe(false);
+            });
         });
     });
 });
