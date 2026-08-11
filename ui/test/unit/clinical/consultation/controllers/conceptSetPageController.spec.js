@@ -960,6 +960,32 @@ describe('ConceptSetPageController', function () {
             expect(scope.formDraft.showSpinner).toBe(false);
         });
 
+        it('should mark the form dirty if user changes a value after save completes but before stabilization', function () {
+            var conceptResponseData = { results: [{ setMembers: [{ name: { name: 'abcd' }, uuid: 123 }] }] };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var timeoutMock = function (callback, delay) {
+                return { $$timeoutId: delay };
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+            scope.visitHistory = { activeVisit: { uuid: 'visit-uuid' } };
+            scope.consultation.selectedObsTemplate = [{ uuid: 123, observations: [{ value: 'initial' }] }];
+
+            scope.saveAsDraft();
+            saveDraftPromise.callThenCallBack({ data: { timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false } });
+
+            scope.consultation.selectedObsTemplate[0].observations[0].value = 'updated';
+            scope.$digest();
+
+            expect(scope.formDraft.isDirty).toBe(true);
+        });
+
         it('should broadcast draft:saved event with date and time on successful save', function () {
             var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
             mockConceptSetService(conceptResponseData);
