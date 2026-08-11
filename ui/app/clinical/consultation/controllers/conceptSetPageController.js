@@ -564,7 +564,6 @@ angular.module('bahmni.clinical')
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
                     startAutoSaveIfDirty();
-                
                 } else if ($scope.consultation._draftCleanState !== undefined) {
                     dirtyTrackingState.cleanState = $scope.consultation._draftCleanState;
                     captureTemplateCleanStates();
