@@ -153,10 +153,17 @@ angular.module('bahmni.clinical')
         };
 
         /**
+         * Persistent baseline store for dirty tracking across controller instances.
+         * Key: patientUuid, Value: {cleanState: string, extraObservations: string}
+         */
+        var persistentBaseline = {};
+
+        /**
          * Deep-merges a single draft observation onto the live template observation.
          * Handles value, comment, isMultiSelect/selectedObs, and recursive groupMembers.
+         * Optionally skips overwrite if observation has unsaved local edits.
          */
-        var populateObservationValues = function (templateObs, draftObs) {
+        var populateObservationValues = function (templateObs, draftObs, skipIfLocalEdits) {
             if (!templateObs || !draftObs) {
                 return;
             }
@@ -178,9 +185,39 @@ angular.module('bahmni.clinical')
                                templateMember.concept.uuid === draftMember.concept.uuid;
                     });
                     if (matchedMember) {
-                        populateObservationValues(matchedMember, draftMember);
+                        populateObservationValues(matchedMember, draftMember, skipIfLocalEdits);
                     }
                 });
+            }
+        };
+
+        /**
+         * Sets persistent baseline for a patient's clean state.
+         * Called on first controller load or after successful save.
+         */
+        var setPersistentBaseline = function (patientUuid, cleanState, cleanStateExtras) {
+            if (patientUuid) {
+                persistentBaseline[patientUuid] = {
+                    cleanState: cleanState,
+                    extraObservations: cleanStateExtras
+                };
+            }
+        };
+
+        /**
+         * Gets persistent baseline for a patient.
+         * Returns {cleanState, extraObservations} or null if not set.
+         */
+        var getPersistentBaseline = function (patientUuid) {
+            return patientUuid ? persistentBaseline[patientUuid] : null;
+        };
+
+        /**
+         * Clears persistent baseline for a patient.
+         */
+        var clearPersistentBaseline = function (patientUuid) {
+            if (patientUuid) {
+                delete persistentBaseline[patientUuid];
             }
         };
 
@@ -232,6 +269,9 @@ angular.module('bahmni.clinical')
             unregisterForm2SyncListeners: unregisterForm2SyncListeners,
             serializeFormData: serializeFormData,
             populateObservationValues: populateObservationValues,
-            populateFormWithDraftData: populateFormWithDraftData
+            populateFormWithDraftData: populateFormWithDraftData,
+            setPersistentBaseline: setPersistentBaseline,
+            getPersistentBaseline: getPersistentBaseline,
+            clearPersistentBaseline: clearPersistentBaseline
         };
     }]);
