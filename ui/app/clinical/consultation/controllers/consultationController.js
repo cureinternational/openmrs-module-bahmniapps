@@ -109,6 +109,12 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                 return appService.getAppDescriptor().getConfigValue('allowConsultationWhenNoOpenVisit');
             };
 
+            $scope.isSaveDisabled = function () {
+                return !visitHistory.activeVisit &&
+                    !retrospectiveEntryService.getRetrospectiveEntry() &&
+                    !$scope.allowConsultation();
+            };
+
             $scope.closeDashboard = function (dashboard) {
                 clinicalDashboardConfig.closeTab(dashboard);
                 $scope.$parent.$parent.$broadcast("event:switchDashboard", clinicalDashboardConfig.currentTab);
