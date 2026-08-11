@@ -486,6 +486,7 @@ angular.module('bahmni.clinical')
                 templateCleanStates: new WeakMap(),
                 initialized: false,
                 watchDeregister: null,
+                postSaveWatchDeregister: null,
                 postSaveRefreshPending: false,
                 postSaveRefreshTimeout: null,
                 form2ListenerState: null,
@@ -584,9 +585,7 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                         captureTemplateCleanStates();
                         $scope.consultation._draftCleanState = settledCleanState;
-                        if (patientUuid) {
-                            formDirtyStateService.setPersistentBaseline(patientUuid, settledCleanState, dirtyTrackingState.cleanStateExtras);
-                        }
+                        savePersistentBaseline(settledCleanState);
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshPending = false;
                         dirtyTrackingState.postSaveRefreshTimeout = null;
@@ -609,9 +608,7 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.cleanState = partialRefreshState;
                         captureTemplateCleanStates();
                         $scope.consultation._draftCleanState = partialRefreshState;
-                        if (patientUuid) {
-                            formDirtyStateService.setPersistentBaseline(patientUuid, partialRefreshState, dirtyTrackingState.cleanStateExtras);
-                        }
+                        savePersistentBaseline(partialRefreshState);
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                             if (!dirtyTrackingState.postSaveRefreshPending) {
@@ -622,9 +619,7 @@ angular.module('bahmni.clinical')
                             dirtyTrackingState.cleanState = settledCleanState;
                             captureTemplateCleanStates();
                             $scope.consultation._draftCleanState = settledCleanState;
-                            if (patientUuid) {
-                                formDirtyStateService.setPersistentBaseline(patientUuid, settledCleanState, dirtyTrackingState.cleanStateExtras);
-                            }
+                            savePersistentBaseline(settledCleanState);
                             $scope.formDraft.isDirty = false;
                             dirtyTrackingState.postSaveRefreshPending = false;
                             dirtyTrackingState.postSaveRefreshTimeout = null;
@@ -651,7 +646,6 @@ angular.module('bahmni.clinical')
                                 }
                                 dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                                     dirtyTrackingState.postSaveRefreshPending = false;
-                                    dirtyTrackingState.postSaveRefreshTimeout = null;
                                 }, 0);
                                 updateTemplateDirtyIndicators();
                                 return;
@@ -698,7 +692,7 @@ angular.module('bahmni.clinical')
 
                 return formDraftService.saveDraft(patientUuid, providerUuid, formData).then(function (response) {
                     var serverTimestamp = response.data.timestamp;
-                    // Set up watch for post-save dirty tracking if not already done
+
                     if (!dirtyTrackingState.postSaveWatchDeregister) {
                         dirtyTrackingState.postSaveWatchDeregister = $scope.$watch(
                             function () {
@@ -712,7 +706,6 @@ angular.module('bahmni.clinical')
                         );
                     }
 
-                    // Schedule a deferred check for changes during stabilization
                     $scope.$evalAsync(function () {
                         var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                         if (currentState !== dirtyTrackingState.cleanState) {
@@ -734,7 +727,6 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                     captureTemplateCleanStates();
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
-                    var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                     savePersistentBaseline(dirtyTrackingState.cleanState);
                     dirtyTrackingState.postSaveRefreshPending = true;
 
@@ -865,20 +857,8 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            var populateFormWithDraftData = function (draftFormData) {
-                var result = formDirtyStateService.populateFormWithDraftData(draftFormData, $scope.consultation.selectedObsTemplate);
-                if (!result.success) {
-                    $scope.formDraft.statusMessage = 'ERROR_LOADING_DRAFT_KEY';
-                    $scope.formDraft.statusError = true;
-                } else {
-                    $scope.formDraft.isDraftResumed = true;
-                    _.each(result.updatedTemplates, function (template) {
-                        template.hasUnsavedFormObservations = true;
-                    });
-                }
-            };
-
             var resetDraftStateAfterSave = function () {
+                clearPatientBaseline();
                 $scope.formDraft.isDirty = false;
                 $scope.formDraft.hasDrafts = false;
                 dirtyTrackingState.postSaveRefreshPending = true;
@@ -933,6 +913,9 @@ angular.module('bahmni.clinical')
             $scope.$on('$destroy', function () {
                 if (dirtyTrackingState.watchDeregister) {
                     dirtyTrackingState.watchDeregister();
+                }
+                if (dirtyTrackingState.postSaveWatchDeregister) {
+                    dirtyTrackingState.postSaveWatchDeregister();
                 }
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
