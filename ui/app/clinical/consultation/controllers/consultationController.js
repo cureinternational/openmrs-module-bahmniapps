@@ -111,8 +111,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
 
             $scope.isSaveDisabled = function () {
                 return !visitHistory.activeVisit &&
-                    !retrospectiveEntryService.getRetrospectiveEntry() &&
-                    !$scope.allowConsultation();
+                    !retrospectiveEntryService.getRetrospectiveEntry();
             };
 
             $scope.closeDashboard = function (dashboard) {
