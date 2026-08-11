@@ -3169,6 +3169,127 @@ describe('ConceptSetPageController', function () {
                 expect(scope.consultation.selectedObsTemplate[0].observations[0].uuid).toEqual('obs-uuid-1');
                 expect(scope.consultation.observations.length).toBe(2);
             });
+
+            it('should set persistent baseline after successful draft save', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-uuid-123'};
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'test-value'}]}];
+
+                scope.saveAsDraft();
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid'}});
+
+                var baseline = formDirtyStateService.getPersistentBaseline('patient-uuid-123');
+                expect(baseline).toBeDefined();
+                expect(baseline.cleanState).toBeDefined();
+                expect(baseline.extraObservations).toBeDefined();
+            });
+
+            it('should clear persistent baseline when event:save-successful is fired', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-uuid-456'};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'test'}]}];
+
+                // Set baseline manually to simulate prior save
+                formDirtyStateService.setPersistentBaseline('patient-uuid-456', '["test"]', '[]');
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-456')).toBeDefined();
+
+                // Trigger event:save-successful
+                rootScope.$broadcast('event:save-successful');
+
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-456')).toBeNull();
+            });
+
+            it('should clear persistent baseline when draft is discarded', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var discardPromise = specUtil.createServicePromise('discardDraft');
+                formDraftService.discardDraft.and.returnValue(discardPromise);
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-uuid-789'};
+
+                // Set baseline manually to simulate prior save
+                formDirtyStateService.setPersistentBaseline('patient-uuid-789', '["test"]', '[]');
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-789')).toBeDefined();
+
+                scope.discardDraft();
+                discardPromise.callThenCallBack({});
+
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-789')).toBeNull();
+            });
+
+            it('should prevent data loss: edits after save not overwritten by stale draft on re-entry', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-edit-test'};
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial-value'}]}];
+
+                // User saves draft
+                scope.saveAsDraft();
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid'}});
+
+                // User makes another edit after save
+                scope.consultation.selectedObsTemplate[0].observations[0].value = 'second-edit-value';
+                scope.$digest();
+
+                // Verify isDirty is true (edit was detected during post-save stabilization)
+                expect(scope.formDraft.isDirty).toBe(true);
+
+                // Baseline should exist from the save
+                var baseline = formDirtyStateService.getPersistentBaseline('patient-edit-test');
+                expect(baseline).toBeDefined();
+            });
+
+            it('should keep isDirty true when user edits during post-save stabilization window', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutMock = function (callback, delay) {
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial'}]}];
+
+                scope.saveAsDraft();
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false}});
+
+                // Immediately edit during post-save period
+                scope.consultation.selectedObsTemplate[0].observations[0].value = 'edited-during-stabilization';
+                scope.$digest();
+
+                // isDirty should remain true
+                expect(scope.formDraft.isDirty).toBe(true);
+                // Save button should be enabled (not disabled)
+                expect(scope.formDraft.isDirty).not.toBe(false);
+            });
         });
     });
 });

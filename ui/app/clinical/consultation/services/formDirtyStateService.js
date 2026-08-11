@@ -198,9 +198,8 @@ angular.module('bahmni.clinical')
         /**
          * Deep-merges a single draft observation onto the live template observation.
          * Handles value, comment, isMultiSelect/selectedObs, and recursive groupMembers.
-         * Optionally skips overwrite if observation has unsaved local edits.
          */
-        var populateObservationValues = function (templateObs, draftObs, skipIfLocalEdits) {
+        var populateObservationValues = function (templateObs, draftObs) {
             if (!templateObs || !draftObs) {
                 return;
             }
@@ -222,7 +221,7 @@ angular.module('bahmni.clinical')
                                templateMember.concept.uuid === draftMember.concept.uuid;
                     });
                     if (matchedMember) {
-                        populateObservationValues(matchedMember, draftMember, skipIfLocalEdits);
+                        populateObservationValues(matchedMember, draftMember);
                     }
                 });
             }
