@@ -208,9 +208,6 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
 
     const startDateForSubmission = (pickedDate) => {
         if (!pickedDate) return pickedDate;
-        // initialValues.startDate is always a Date (drugOrder.effectiveStartDate) from the
-        // Angular host. A date-only string would parse as UTC midnight and break the
-        // local-timezone day comparison below, so guard against unparseable values.
         const initial = initialValues.startDate ? new Date(initialValues.startDate) : null;
         const initialIsValid = initial && Number.isFinite(initial.getTime());
         if (initialIsValid &&
