@@ -136,3 +136,7 @@ GHSA-2p49-hgcm-8545
 CVE-2026-14257
 GHSA-r28c-9q8g-f849
 CVE-2026-69152
+
+# image-size 0.5.5 indirect dependency via @nx/webpack -> less
+CVE-2025-71329
+CVE-2025-71330
