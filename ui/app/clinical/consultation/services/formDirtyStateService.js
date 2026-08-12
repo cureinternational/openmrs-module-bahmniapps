@@ -239,18 +239,10 @@ angular.module('bahmni.clinical')
                 };
             }
         };
-
-        /**
-         * Gets persistent baseline for a patient.
-         * Returns {cleanState, extraObservations} or null if not set.
-         */
         var getPersistentBaseline = function (patientUuid) {
-            return patientUuid ? persistentBaseline[patientUuid] : null;
+            return (patientUuid && persistentBaseline[patientUuid]) ? persistentBaseline[patientUuid] : null;
         };
 
-        /**
-         * Clears persistent baseline for a patient.
-         */
         var clearPersistentBaseline = function (patientUuid) {
             if (patientUuid) {
                 delete persistentBaseline[patientUuid];

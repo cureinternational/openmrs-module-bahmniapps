@@ -218,8 +218,6 @@ angular.module('bahmni.clinical')
                     }
                 }
 
-                // Sync Form2/React component state to observations before loading draft
-                // This ensures local component changes aren't lost when draft is merged
                 if ($scope.consultation.observationForms && $scope.consultation.observationForms.length > 0) {
                     formDirtyStateService.syncForm2Observations($scope.consultation.observationForms);
                 }
@@ -257,8 +255,6 @@ angular.module('bahmni.clinical')
                             if (!matchingTemplate.observations || matchingTemplate.observations.length === 0) {
                                 matchingTemplate.observations = [stripObservationFlags(draftObservation)];
                             } else if (!persistentBaseline) {
-                                // Merge draft only on first load (no persistent baseline)
-                                // On re-entry, skip merge: fresh server observations are authoritative
                                 var cleanedDraftObservation = stripObservationFlags(draftObservation);
                                 _.each(matchingTemplate.observations, function (templateObservation) {
                                     if (templateObservation.concept && cleanedDraftObservation.concept &&
@@ -758,7 +754,6 @@ angular.module('bahmni.clinical')
                 var patientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var persistentBaseline = patientUuid ? formDirtyStateService.getPersistentBaseline(patientUuid) : null;
 
-                // Prefer persistent baseline if available (surviving controller re-entry)
                 if (persistentBaseline && persistentBaseline.cleanState) {
                     dirtyTrackingState.cleanState = persistentBaseline.cleanState;
                     dirtyTrackingState.cleanStateExtras = persistentBaseline.extraObservations;
@@ -845,13 +840,10 @@ angular.module('bahmni.clinical')
                             var newExtraState = newVal.split('|')[1];
 
                             if (dirtyTrackingState.postSaveRefreshPending) {
-                                // Form changed during post-save stabilization - mark as dirty
                                 $scope.formDraft.isDirty = true;
                                 $state.dirtyConsultationForm = true;
                                 startAutoSaveIfDirty();
-                                // Resync template baselines to prevent per-template indicator desync
                                 captureTemplateCleanStates();
-                                // Don't update cleanState - let the timeout callback decide based on the saved state
                                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                                 }
@@ -899,6 +891,7 @@ angular.module('bahmni.clinical')
 
                 return formDraftService.saveDraft(patientUuid, providerUuid, formData).then(function (response) {
                     var serverTimestamp = response.data.timestamp;
+                    var savedCleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
 
                     if (!dirtyTrackingState.postSaveWatchDeregister) {
                         dirtyTrackingState.postSaveWatchDeregister = $scope.$watch(
@@ -915,7 +908,7 @@ angular.module('bahmni.clinical')
 
                     $scope.$evalAsync(function () {
                         var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                        if (currentState !== dirtyTrackingState.cleanState) {
+                        if (currentState !== savedCleanState) {
                             $scope.formDraft.isDirty = true;
                         }
                     });
@@ -938,7 +931,6 @@ angular.module('bahmni.clinical')
                     savePersistentBaseline(dirtyTrackingState.cleanState);
                     dirtyTrackingState.postSaveRefreshPending = true;
 
-                    // Capture the saved state for later comparison in the timeout
                     var savedCleanState = dirtyTrackingState.cleanState;
                     var savedCleanStateExtras = dirtyTrackingState.cleanStateExtras;
 
@@ -951,17 +943,14 @@ angular.module('bahmni.clinical')
                             return;
                         }
 
-                        // Check if user made changes since save
                         var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                         var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
 
-                        // If state changed since save, don't clear isDirty - let watch callback handle it
                         if (currentState !== savedCleanState || currentExtras !== savedCleanStateExtras) {
                             dirtyTrackingState.postSaveRefreshPending = false;
                             return;
                         }
 
-                        // Only clear isDirty if no changes were made since save
                         dirtyTrackingState.cleanState = currentState;
                         dirtyTrackingState.cleanStateExtras = currentExtras;
                         captureTemplateCleanStates();
@@ -969,6 +958,10 @@ angular.module('bahmni.clinical')
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshPending = false;
                         dirtyTrackingState.postSaveRefreshTimeout = null;
+                        if (dirtyTrackingState.postSaveWatchDeregister) {
+                            dirtyTrackingState.postSaveWatchDeregister();
+                            dirtyTrackingState.postSaveWatchDeregister = null;
+                        }
                     }, 0);
                     $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
                 }, function () {
