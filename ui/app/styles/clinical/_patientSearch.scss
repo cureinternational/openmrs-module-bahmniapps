@@ -13,6 +13,23 @@
     }
 }
 
+.list-view-scroll-indicator {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    height: 8px;
+    background: $white;
+    border: 1px solid #edf2f7;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.scroll-indicator-spacer {
+    height: 1px;
+    background: transparent;
+}
+
 .tab-content {
     overflow: auto;
     padding: 5px;
