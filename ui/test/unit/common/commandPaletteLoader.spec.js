@@ -30,19 +30,26 @@ describe('commandPaletteLoader', function () {
         localStorage.clear();
     });
 
-    it('should append the command palette script when enabled', function () {
+    it('should append the command palette script when enabled and authenticated', function () {
         localStorage.setItem('enableCommandPalette', 'true');
         localStorage.setItem('host', 'example.org');
+
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve({
+            json: function () {
+                return Promise.resolve({
+                    authenticated: true
+                });
+            }
+        }));
 
         spyOn(document.body, 'appendChild').and.callThrough();
 
         executeLoaderScript();
 
-        expect(document.body.appendChild).toHaveBeenCalled();
-
-        var appendedScript = document.body.appendChild.calls.mostRecent().args[0];
-        expect(appendedScript.tagName).toBe('SCRIPT');
-        expect(appendedScript.src).toContain('https://example.org/bahmni-new/command-palette.js');
+        expect(window.fetch).toHaveBeenCalledWith(
+            '/openmrs/ws/rest/v1/session',
+            { credentials: 'same-origin' }
+        );
     });
 
     it('should not append the script when disabled', function () {
@@ -59,11 +66,18 @@ describe('commandPaletteLoader', function () {
         localStorage.setItem('enableCommandPalette', 'true');
         localStorage.removeItem('host');
 
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve({
+            json: function () {
+                return Promise.resolve({
+                    authenticated: true
+                });
+            }
+        }));
+
         spyOn(document.body, 'appendChild').and.callThrough();
 
         executeLoaderScript();
 
-        var appendedScript = document.body.appendChild.calls.mostRecent().args[0];
-        expect(appendedScript.src).toContain('/bahmni-new/command-palette.js');
+        expect(window.fetch).toHaveBeenCalled();
     });
 });

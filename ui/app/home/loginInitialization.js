@@ -28,6 +28,11 @@ angular.module('bahmni.home')
                     function (response) {
                         var config = response.data && response.data.config;
                         localStorage.setItem('enableCommandPalette', config && config.enableCommandPalette === true ? 'true' : 'false');
+                        if (window.Bahmni &&
+                            window.Bahmni.Common &&
+                            window.Bahmni.Common.commandPaletteLoader) {
+                            window.Bahmni.Common.commandPaletteLoader.load();
+                        }
                     },
                     function () {
                         localStorage.setItem('enableCommandPalette', 'false');
