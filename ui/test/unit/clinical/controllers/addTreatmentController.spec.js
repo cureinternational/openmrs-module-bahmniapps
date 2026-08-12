@@ -2668,5 +2668,195 @@ describe("AddTreatmentController", function () {
             expect(entry.concept).toBeNull();
             expect(entry.drugName).toBe('Prednisolone');
         });
+
+        describe("VDP duplicate validation on create and edit", function () {
+            beforeEach(function () {
+                scope.variableDoseHostApi.openModal = jasmine.createSpy('openModal');
+            });
+
+            var makeStage = function (startDate) {
+                return { stageName: 'Stage 1', sequence: 1, isLoadingDose: false, dose: '5', unit: 'mg', frequency: 'Twice a day', frequencyPerDay: 2, duration: '1', durationUnit: 'Day(s)', instructions: '', rate: '', additives: '', additionalInstructions: '', startDate: startDate || new Date('2026-08-08') };
+            };
+
+            var buildSaveData = function (overrides) {
+                return angular.extend({
+                    drug: { uuid: 'drug-uuid', name: 'Prednisolone', dosageForm: { display: 'Tablet' } },
+                    isNonCodedDrug: false,
+                    drugNonCoded: null,
+                    units: 'mg',
+                    route: 'Oral',
+                    startDate: new Date('2026-08-08'),
+                    dosingRule: '',
+                    loadingDose: null,
+                    stages: [makeStage()]
+                }, overrides || {});
+            };
+
+            var savedOrderFor = function (overrides) {
+                var order = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, angular.extend({
+                    drug: { name: 'Prednisolone', uuid: 'drug-uuid' },
+                    uuid: 'order-uuid',
+                    effectiveStartDate: DateUtil.parse('2026-08-08'),
+                    effectiveStopDate: DateUtil.parse('2026-08-09')
+                }, overrides || {}));
+                order.careSetting = Bahmni.Clinical.Constants.careSetting.outPatient;
+                return order;
+            };
+
+            it("should allow revising a saved VDP order when a future prescription for the same drug exists (regression: must not conflict with itself)", function () {
+                scope.consultation.activeAndScheduledDrugOrders = [
+                    savedOrderFor({ uuid: 'aug-8-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-09') }),
+                    savedOrderFor({ uuid: 'aug-10-order', effectiveStartDate: DateUtil.parse('2026-08-10'), effectiveStopDate: DateUtil.parse('2026-08-11') })
+                ];
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', scope.consultation.activeAndScheduledDrugOrders[0]);
+                scope.variableDoseHostApi.onSave(buildSaveData(), true);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+                expect(scope.consultation.variableDoseTreatments[0].action).toBe(Bahmni.Clinical.Constants.orderActions.revise);
+                expect(scope.consultation.variableDoseTreatments[0].previousOrderUuid).toBe('aug-8-order');
+            });
+
+            it("should allow revising a saved VDP order when no other prescription exists", function () {
+                scope.consultation.activeAndScheduledDrugOrders = [
+                    savedOrderFor({ uuid: 'aug-8-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-09') })
+                ];
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', scope.consultation.activeAndScheduledDrugOrders[0]);
+                scope.variableDoseHostApi.onSave(buildSaveData(), true);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+                expect(scope.consultation.variableDoseTreatments[0].action).toBe(Bahmni.Clinical.Constants.orderActions.revise);
+            });
+
+            it("should allow creating two non-overlapping VDPs for the same drug", function () {
+                scope.variableDoseHostApi.onSave(buildSaveData(), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                scope.variableDoseHostApi.onSave(buildSaveData({
+                    startDate: new Date('2026-08-20'),
+                    stages: [makeStage(new Date('2026-08-20'))]
+                }), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(2);
+            });
+
+            it("should block creating a second overlapping VDP for the same drug", function () {
+                scope.variableDoseHostApi.onSave(buildSaveData(), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                scope.variableDoseHostApi.onSave(buildSaveData({
+                    startDate: new Date('2026-08-09'),
+                    stages: [makeStage(new Date('2026-08-09'))]
+                }), false);
+                rootScope.$apply();
+
+                expect(ngDialog.open).toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+            });
+
+            it("should allow editing an unsaved coded VDP without conflicting with itself", function () {
+                scope.variableDoseHostApi.onSave(buildSaveData(), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                rootScope.$broadcast('event:editVariableDoseOrder', 0);
+                scope.variableDoseHostApi.onSave(buildSaveData({
+                    startDate: new Date('2026-08-10'),
+                    stages: [makeStage(new Date('2026-08-10'))]
+                }), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+                expect(scope.consultation.variableDoseTreatments[0].startDate.getTime()).toBe(new Date('2026-08-10').getTime());
+            });
+
+            it("should allow editing an unsaved non-coded VDP without conflicting with itself", function () {
+                scope.variableDoseHostApi.onSave(buildSaveData({
+                    drug: null,
+                    isNonCodedDrug: true,
+                    drugNonCoded: 'Herbal Mixture 500mg'
+                }), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                rootScope.$broadcast('event:editVariableDoseOrder', 0);
+                scope.variableDoseHostApi.onSave(buildSaveData({
+                    drug: null,
+                    isNonCodedDrug: true,
+                    drugNonCoded: 'Herbal Mixture 500mg',
+                    startDate: new Date('2026-08-10'),
+                    stages: [makeStage(new Date('2026-08-10'))]
+                }), false);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+                expect(scope.consultation.variableDoseTreatments[0].drugNonCoded).toBe('Herbal Mixture 500mg');
+            });
+
+            it("should still block a new VDP that duplicates an active regular prescription", function () {
+                scope.consultation.activeAndScheduledDrugOrders = [
+                    savedOrderFor({ uuid: 'active-regular-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-12') })
+                ];
+
+                scope.variableDoseHostApi.onSave(buildSaveData(), false);
+                rootScope.$apply();
+
+                expect(ngDialog.open).toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(0);
+            });
+
+            it("should still allow revising a saved VDP order when activeAndScheduledDrugOrders is missing but treatmentDrugs is present (post-save consultation)", function () {
+                scope.consultation.activeAndScheduledDrugOrders = undefined;
+                scope.consultation.treatmentDrugs = [
+                    savedOrderFor({ uuid: 'aug-8-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-09') }),
+                    savedOrderFor({ uuid: 'aug-10-order', effectiveStartDate: DateUtil.parse('2026-08-10'), effectiveStopDate: DateUtil.parse('2026-08-11') })
+                ];
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', scope.consultation.treatmentDrugs[0]);
+                scope.variableDoseHostApi.onSave(buildSaveData(), true);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+                expect(scope.consultation.variableDoseTreatments[0].action).toBe(Bahmni.Clinical.Constants.orderActions.revise);
+                expect(scope.consultation.variableDoseTreatments[0].previousOrderUuid).toBe('aug-8-order');
+            });
+
+            it("should still block an overlapping revise when activeAndScheduledDrugOrders is missing but treatmentDrugs is present (post-save consultation)", function () {
+                scope.consultation.activeAndScheduledDrugOrders = undefined;
+                scope.consultation.treatmentDrugs = [
+                    savedOrderFor({ uuid: 'aug-8-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-09') }),
+                    savedOrderFor({ uuid: 'aug-9-order', effectiveStartDate: DateUtil.parse('2026-08-09'), effectiveStopDate: DateUtil.parse('2026-08-11') })
+                ];
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', scope.consultation.treatmentDrugs[0]);
+                scope.variableDoseHostApi.onSave(buildSaveData({
+                    stages: [{
+                        stageName: 'Stage 1', sequence: 1, isLoadingDose: false, dose: '5', unit: 'mg', frequency: 'Twice a day', frequencyPerDay: 2, duration: '2', durationUnit: 'Day(s)', instructions: '', rate: '', additives: '', additionalInstructions: '', startDate: new Date('2026-08-08')
+                    }]
+                }), true);
+                rootScope.$apply();
+
+                expect(ngDialog.open).toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(0);
+            });
+        });
     });
 });

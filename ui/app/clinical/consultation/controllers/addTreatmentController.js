@@ -13,6 +13,7 @@ angular.module('bahmni.clinical')
             var DateUtil = Bahmni.Common.Util.DateUtil;
             var DrugOrderViewModel = Bahmni.Clinical.DrugOrderViewModel;
             var scrollTop = _.partial($window.scrollTo, 0, 0);
+            var activeAndScheduledOrdersSnapshot = [];
 
             $scope.showOrderSetDetails = true;
             $scope.addTreatment = true;
@@ -511,10 +512,13 @@ angular.module('bahmni.clinical')
                 allDrugOrders = _.reject(allDrugOrders, newDrugOrder);
                 var unsavedNotBeingEditedOrders = _.filter(allDrugOrders, { isBeingEdited: false });
                 var existingDrugOrders;
+                var existingActiveOrders = $scope.consultation.activeAndScheduledDrugOrders ||
+                    $scope.consultation.treatmentDrugs ||
+                    activeAndScheduledOrdersSnapshot;
                 if (newDrugOrder.isBeingEdited) {
-                    existingDrugOrders = _.reject($scope.consultation.activeAndScheduledDrugOrders, { uuid: newDrugOrder.previousOrderUuid });
+                    existingDrugOrders = _.reject(existingActiveOrders, { uuid: newDrugOrder.previousOrderUuid });
                 } else {
-                    existingDrugOrders = $scope.consultation.activeAndScheduledDrugOrders;
+                    existingDrugOrders = existingActiveOrders;
                 }
                 existingDrugOrders = existingDrugOrders.concat(unsavedNotBeingEditedOrders);
 
@@ -1001,6 +1005,7 @@ angular.module('bahmni.clinical')
                 $scope.consultation.discontinuedDrugs = $scope.consultation.discontinuedDrugs || [];
                 $scope.consultation.drugOrdersWithUpdatedOrderAttributes = $scope.consultation.drugOrdersWithUpdatedOrderAttributes || {};
                 $scope.consultation.activeAndScheduledDrugOrders = getActiveDrugOrders(activeDrugOrders);
+                activeAndScheduledOrdersSnapshot = $scope.consultation.activeAndScheduledDrugOrders;
 
                 mergeActiveAndScheduledWithDiscontinuedOrders();
 
@@ -1138,6 +1143,13 @@ angular.module('bahmni.clinical')
 
                     var findConflictingVdpOrder = function (data) {
                         var newDrugOrder = buildPendingVdpDrugOrder(data);
+                        var editedOrder = (editingVariableDoseIndex >= 0)
+                            ? ($scope.consultation.variableDoseTreatments || [])[editingVariableDoseIndex]
+                            : revisingVariableDoseDrugOrder;
+                        if (editedOrder && editedOrder.uuid) {
+                            newDrugOrder.isBeingEdited = true;
+                            newDrugOrder.previousOrderUuid = editedOrder.uuid;
+                        }
                         var vdpExcludeIndex = editingVariableDoseIndex >= 0 ? editingVariableDoseIndex : undefined;
                         var conflict = getConflictingDrugOrder(newDrugOrder, vdpExcludeIndex);
                         return conflict || null;

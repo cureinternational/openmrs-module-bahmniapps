@@ -208,8 +208,15 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
 
     const startDateForSubmission = (pickedDate) => {
         if (!pickedDate) return pickedDate;
-        const now = new Date();
+        const initial = initialValues.startDate ? new Date(initialValues.startDate) : null;
+        if (initial &&
+            initial.getFullYear() === pickedDate.getFullYear() &&
+            initial.getMonth() === pickedDate.getMonth() &&
+            initial.getDate() === pickedDate.getDate()) {
+            return initial;
+        }
         const combined = new Date(pickedDate);
+        const now = new Date();
         combined.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
         return combined;
     };
