@@ -642,6 +642,116 @@ describe("Edit Mode (initialValues pre-population)", () => {
     });
 });
 
+describe("Start date submission", () => {
+    const prePopulatedInitialValues = (startDate) => ({
+        drug: { name: "Paracetamol", uuid: "drug-uuid-1", dosageForm: { display: "Tablet" } },
+        units: "mg",
+        route: "Oral",
+        startDate,
+        isLoadingDose: false,
+        loadingDose: null,
+        stages: [validStage(), validStage()],
+    });
+
+    it("preserves the original time-of-day when saving a saved-order edit with a non-midnight start date", async () => {
+        const originalStartDate = new Date(2024, 0, 1, 10, 30, 0);
+        renderModal({
+            ...defaultHostData,
+            editMode: true,
+            initialValues: prePopulatedInitialValues(originalStartDate),
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText("Save Changes").closest("button").disabled).toBe(false);
+        });
+        fireEvent.click(screen.getByText("Save Changes").closest("button"));
+
+        const sentStartDate = mockOnSave.mock.calls[0][0].startDate;
+        expect(sentStartDate.getFullYear()).toBe(2024);
+        expect(sentStartDate.getMonth()).toBe(0);
+        expect(sentStartDate.getDate()).toBe(1);
+        expect(sentStartDate.getHours()).toBe(10);
+        expect(sentStartDate.getMinutes()).toBe(30);
+    });
+
+    it("preserves an untouched midnight start date exactly on a saved-order edit (no re-stamping)", async () => {
+        const originalStartDate = new Date(2024, 0, 1);
+        renderModal({
+            ...defaultHostData,
+            editMode: true,
+            initialValues: prePopulatedInitialValues(originalStartDate),
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText("Save Changes").closest("button").disabled).toBe(false);
+        });
+        fireEvent.click(screen.getByText("Save Changes").closest("button"));
+
+        const sentStartDate = mockOnSave.mock.calls[0][0].startDate;
+        expect(sentStartDate.getFullYear()).toBe(2024);
+        expect(sentStartDate.getMonth()).toBe(0);
+        expect(sentStartDate.getDate()).toBe(1);
+        expect(sentStartDate.getHours()).toBe(0);
+        expect(sentStartDate.getMinutes()).toBe(0);
+    });
+
+    it("stamps the current time-of-day only when the user actually changes the start date on a saved-order edit", async () => {
+        const originalStartDate = new Date(2024, 0, 1, 10, 30, 0);
+        const { container } = renderModal({
+            ...defaultHostData,
+            editMode: true,
+            initialValues: prePopulatedInitialValues(originalStartDate),
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText("Save Changes").closest("button").disabled).toBe(false);
+        });
+
+        const dateInput = getDropdownInput(container, "variable-dose-start-date");
+        fireEvent.change(dateInput, { target: { value: "10 Feb 2024" } });
+        fireEvent.blur(dateInput);
+
+        fireEvent.click(screen.getByText("Save Changes").closest("button"));
+
+        const sentStartDate = mockOnSave.mock.calls[0][0].startDate;
+        expect(sentStartDate.getFullYear()).toBe(2024);
+        expect(sentStartDate.getMonth()).toBe(1);
+        expect(sentStartDate.getDate()).toBe(10);
+        const sentElapsed = sentStartDate.getTime() - new Date(2024, 1, 10).getTime();
+        const now = new Date();
+        const nowElapsed = now.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        expect(sentElapsed).toBeGreaterThanOrEqual(nowElapsed - 60000);
+        expect(sentElapsed).toBeLessThanOrEqual(nowElapsed);
+    });
+
+    it("stamps the current time-of-day when a new order's start date is picked (no previous date exists)", async () => {
+        const { container } = renderModal({
+            ...defaultHostData,
+            initialValues: prePopulatedInitialValues(null),
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText("Save").closest("button").disabled).toBe(false);
+        });
+
+        const dateInput = getDropdownInput(container, "variable-dose-start-date");
+        fireEvent.change(dateInput, { target: { value: "10 Feb 2024" } });
+        fireEvent.blur(dateInput);
+
+        fireEvent.click(screen.getByText("Save").closest("button"));
+
+        const sentStartDate = mockOnSave.mock.calls[0][0].startDate;
+        expect(sentStartDate.getFullYear()).toBe(2024);
+        expect(sentStartDate.getMonth()).toBe(1);
+        expect(sentStartDate.getDate()).toBe(10);
+        const sentElapsed = sentStartDate.getTime() - new Date(2024, 1, 10).getTime();
+        const now = new Date();
+        const nowElapsed = now.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        expect(sentElapsed).toBeGreaterThanOrEqual(nowElapsed - 60000);
+        expect(sentElapsed).toBeLessThanOrEqual(nowElapsed);
+    });
+});
+
 describe("Non-coded drug (Accept flow)", () => {
     it("Accept checkbox is enabled when text is typed and no coded drug is selected", async () => {
         const { container } = renderModal();
