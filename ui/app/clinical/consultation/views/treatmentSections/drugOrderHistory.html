@@ -44,7 +44,7 @@
                                 </div>
 								<div class="button-group-wrapper">
                                     <div class="button-group">
-                                        <button type="button" class="disch-btn" ng-disabled="true">
+                                        <button type="button" class="disch-btn" ng-disabled="true" ng-hide="drugOrder.isVariableDoseOrder">
                                             <i class="fa fa-check" ng-show="drugOrder.isDischargeMedication"></i>
                                             {{ ::'DISCH_BUTTON' | translate }}
                                         </button>
