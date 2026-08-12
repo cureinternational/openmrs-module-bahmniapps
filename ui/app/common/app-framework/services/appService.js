@@ -224,7 +224,7 @@ angular.module('bahmni.common.appFramework')
                     });
                 }
                 promises.push($http.get(baseUrl + 'home/app.json').then(function (response) {
-                    $rootScope.formDraftFeatureEnabled = response.data.config.enableFormDraftFeature || false;
+                    $rootScope.formDraftFeatureEnabled = (response.data && response.data.config && response.data.config.enableFormDraftFeature) || false;
                 }, function () {
                     $rootScope.formDraftFeatureEnabled = false;
                 }));
