@@ -3059,11 +3059,9 @@ describe('ConceptSetPageController', function () {
                 scope.patient = {uuid: 'patient-uuid-456'};
                 scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'test'}]}];
 
-                // Set baseline manually to simulate prior save
                 formDirtyStateService.setPersistentBaseline('patient-uuid-456', '["test"]', '[]');
                 expect(formDirtyStateService.getPersistentBaseline('patient-uuid-456')).toBeDefined();
 
-                // Trigger event:save-successful
                 rootScope.$broadcast('event:save-successful');
 
                 expect(formDirtyStateService.getPersistentBaseline('patient-uuid-456')).toBeNull();
@@ -3080,7 +3078,6 @@ describe('ConceptSetPageController', function () {
                 createControllerWithTimeoutAndFilter();
                 scope.patient = {uuid: 'patient-uuid-789'};
 
-                // Set baseline manually to simulate prior save
                 formDirtyStateService.setPersistentBaseline('patient-uuid-789', '["test"]', '[]');
                 expect(formDirtyStateService.getPersistentBaseline('patient-uuid-789')).toBeDefined();
 
@@ -3103,18 +3100,14 @@ describe('ConceptSetPageController', function () {
                 scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
                 scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial-value'}]}];
 
-                // User saves draft
                 scope.saveAsDraft();
                 saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid'}});
 
-                // User makes another edit after save
                 scope.consultation.selectedObsTemplate[0].observations[0].value = 'second-edit-value';
                 scope.$digest();
 
-                // Verify isDirty is true (edit was detected during post-save stabilization)
                 expect(scope.formDraft.isDirty).toBe(true);
 
-                // Baseline should exist from the save
                 var baseline = formDirtyStateService.getPersistentBaseline('patient-edit-test');
                 expect(baseline).toBeDefined();
             });
@@ -3139,13 +3132,10 @@ describe('ConceptSetPageController', function () {
                 scope.saveAsDraft();
                 saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false}});
 
-                // Immediately edit during post-save period
                 scope.consultation.selectedObsTemplate[0].observations[0].value = 'edited-during-stabilization';
                 scope.$digest();
 
-                // isDirty should remain true
                 expect(scope.formDraft.isDirty).toBe(true);
-                // Save button should be enabled (not disabled)
                 expect(scope.formDraft.isDirty).not.toBe(false);
             });
 
@@ -3168,29 +3158,21 @@ describe('ConceptSetPageController', function () {
                 scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
                 scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial-value'}]}];
 
-                // Initially, form should not be dirty
                 expect(scope.formDraft.isDirty).toBe(false);
 
-                // User saves draft
                 scope.saveAsDraft();
                 expect(scope.formDraft.isDirty).toBe(false);
 
-                // Resolve the save promise
                 saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false}});
 
-                // Immediately after save, button is still disabled (isDirty = false)
                 expect(scope.formDraft.isDirty).toBe(false);
 
-                // User makes NO further edits - just wait for post-save timeout
                 scope.$digest();
 
-                // Execute the post-save timeout callbacks (100ms window)
-                // The timeout should check that no changes were made and keep isDirty = false
                 _.each(timeoutCallbacks, function (callback) {
                     callback();
                 });
 
-                // After timeout expires with no edits: button should remain disabled
                 expect(scope.formDraft.isDirty).toBe(false);
             });
         });
