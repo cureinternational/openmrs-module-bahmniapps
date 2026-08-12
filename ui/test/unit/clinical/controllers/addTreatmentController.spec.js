@@ -2857,6 +2857,23 @@ describe("AddTreatmentController", function () {
                 expect(ngDialog.open).toHaveBeenCalled();
                 expect(scope.consultation.variableDoseTreatments.length).toBe(0);
             });
+
+            it("should allow revising a saved VDP order when both activeAndScheduledDrugOrders and treatmentDrugs are missing (init snapshot fallback)", function () {
+                scope.consultation.activeAndScheduledDrugOrders = undefined;
+                scope.consultation.treatmentDrugs = undefined;
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', savedOrderFor({
+                    uuid: 'aug-8-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-09')
+                }));
+                scope.variableDoseHostApi.onSave(buildSaveData(), true);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(ngDialog.open).not.toHaveBeenCalled();
+                expect(scope.consultation.variableDoseTreatments.length).toBe(1);
+                expect(scope.consultation.variableDoseTreatments[0].action).toBe(Bahmni.Clinical.Constants.orderActions.revise);
+                expect(scope.consultation.variableDoseTreatments[0].previousOrderUuid).toBe('aug-8-order');
+            });
         });
     });
 });

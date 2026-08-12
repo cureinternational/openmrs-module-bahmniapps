@@ -13,6 +13,10 @@ angular.module('bahmni.clinical')
             var DateUtil = Bahmni.Common.Util.DateUtil;
             var DrugOrderViewModel = Bahmni.Clinical.DrugOrderViewModel;
             var scrollTop = _.partial($window.scrollTo, 0, 0);
+            // Captured in init() from $scope.consultation.activeAndScheduledDrugOrders so the conflict
+            // check survives copyConsultationToScope replacing $scope.consultation. treatmentDrugs is
+            // the primary post-save source (see getConflictingDrugOrder); this snapshot is the last
+            // resort when neither pool exists. Do not remove the fallback chain below.
             var activeAndScheduledOrdersSnapshot = [];
 
             $scope.showOrderSetDetails = true;
@@ -512,6 +516,8 @@ angular.module('bahmni.clinical')
                 allDrugOrders = _.reject(allDrugOrders, newDrugOrder);
                 var unsavedNotBeingEditedOrders = _.filter(allDrugOrders, { isBeingEdited: false });
                 var existingDrugOrders;
+                // Post-save consultations carry treatmentDrugs (consultationMapper); the init() snapshot
+                // covers cases where neither pool exists. Keep this chain intact.
                 var existingActiveOrders = $scope.consultation.activeAndScheduledDrugOrders ||
                     $scope.consultation.treatmentDrugs ||
                     activeAndScheduledOrdersSnapshot;
@@ -1143,6 +1149,8 @@ angular.module('bahmni.clinical')
 
                     var findConflictingVdpOrder = function (data) {
                         var newDrugOrder = buildPendingVdpDrugOrder(data);
+                        // revisingVariableDoseDrugOrder is set by event:reviseVariableDoseOrder;
+                        // editedOrder may be undefined if the broadcast was missed, hence the guard.
                         var editedOrder = (editingVariableDoseIndex >= 0)
                             ? ($scope.consultation.variableDoseTreatments || [])[editingVariableDoseIndex]
                             : revisingVariableDoseDrugOrder;
