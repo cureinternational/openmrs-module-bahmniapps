@@ -12,6 +12,8 @@ angular.module('bahmni.home')
                     function (response) {
                         deferrable.reject();
                         if (response.status) {
+                            // This block checks if status code is 401 and reloads the page instead of throwing a pop up error message
+                            // Refer BAH-2407 Clinical Module homepage is throwing error on Login Page issue.
                             if (response.status == 401) {
                                 location.reload();
                             } else {
