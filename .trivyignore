@@ -140,3 +140,5 @@ CVE-2026-69152
 # image-size 0.5.5 indirect dependency via @nx/webpack -> less
 CVE-2025-71329
 CVE-2025-71330
+CVE-2026-67213
+CVE-2026-67214

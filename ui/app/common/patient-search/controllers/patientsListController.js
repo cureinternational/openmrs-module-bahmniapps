@@ -118,7 +118,76 @@ angular.module('bahmni.common.patientSearch')
                     $scope.activeHeaders.push(newHeading);
                 }
             });
+            // Table width/columns change asynchronously; wait for layout to settle before measuring scroll widths.
+            $timeout(syncScrollbars, 0);
         };
+
+        var scrollListeners = {};
+
+        var unbindScrollListeners = function () {
+            if (scrollListeners.mainTableScroll && scrollListeners.onMainScroll) {
+                scrollListeners.mainTableScroll.removeEventListener('scroll', scrollListeners.onMainScroll);
+            }
+            if (scrollListeners.topIndicator && scrollListeners.onTopScroll) {
+                scrollListeners.topIndicator.removeEventListener('scroll', scrollListeners.onTopScroll);
+            }
+            scrollListeners = {};
+        };
+
+        var bindScrollListeners = function (topIndicator, mainTableScroll) {
+            if (scrollListeners.topIndicator === topIndicator && scrollListeners.mainTableScroll === mainTableScroll) {
+                return;
+            }
+            unbindScrollListeners();
+
+            scrollListeners.topIndicator = topIndicator;
+            scrollListeners.mainTableScroll = mainTableScroll;
+
+            scrollListeners.onMainScroll = function () {
+                topIndicator.scrollLeft = mainTableScroll.scrollLeft;
+            };
+
+            scrollListeners.onTopScroll = function () {
+                mainTableScroll.scrollLeft = topIndicator.scrollLeft;
+            };
+
+            mainTableScroll.addEventListener('scroll', scrollListeners.onMainScroll);
+            topIndicator.addEventListener('scroll', scrollListeners.onTopScroll);
+        };
+
+        var syncScrollbars = function () {
+            var topIndicator = document.getElementById('topScrollIndicator');
+            var mainTableScroll = document.getElementById('mainTableScroll');
+            var spacer = document.getElementById('scrollIndicatorSpacer');
+
+            if (!topIndicator || !mainTableScroll || !spacer) {
+                unbindScrollListeners();
+                return;
+            }
+
+            var table = mainTableScroll.querySelector('table.patient-list-table');
+            if (table) {
+                spacer.style.width = table.scrollWidth + 'px';
+                $scope.showScrollIndicator = table.scrollWidth > mainTableScroll.clientWidth;
+            }
+
+            bindScrollListeners(topIndicator, mainTableScroll);
+        };
+
+        var onWindowResize = function () {
+            $timeout(syncScrollbars, 0);
+        };
+        var supportsWindowResizeBinding = typeof $window.addEventListener === 'function';
+        if (supportsWindowResizeBinding) {
+            angular.element($window).on('resize', onWindowResize);
+        }
+
+        $scope.$on('$destroy', function () {
+            unbindScrollListeners();
+            if (supportsWindowResizeBinding) {
+                angular.element($window).off('resize', onWindowResize);
+            }
+        });
 
         $scope.isHeadingOfDateColumn = function (heading) {
             if ($scope.search.searchType && $scope.search.searchType.dateColumns) {

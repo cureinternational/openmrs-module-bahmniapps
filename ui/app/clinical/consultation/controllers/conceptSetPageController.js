@@ -20,13 +20,66 @@ angular.module('bahmni.clinical')
             var customRepresentation = Bahmni.ConceptSet.CustomRepresentationBuilder.build(fields, 'setMembers', numberOfLevels);
             var allConceptSections = [];
 
+            var getDeletedFormIds = function () {
+                return $scope.consultation && $scope.consultation.deletedFormIds ? $scope.consultation.deletedFormIds.slice() : [];
+            };
+
+            var getRootDeletedFormIds = function () {
+                return getDeletedFormIds();
+            };
+
+            var getFormId = function (form) {
+                return form.formUuid || form.uuid || form.id;
+            };
+
+            var isObservationFromDeletedForm = function (obs, deletedFormIds) {
+                if (!obs) return false;
+                if (obs.concept && obs.concept.uuid && _.includes(deletedFormIds, obs.concept.uuid)) {
+                    return true;
+                }
+                if (obs.formFieldPath) {
+                    var formName = obs.formFieldPath.split('.')[0];
+                    return _.find($scope.consultation.observationForms, function (form) {
+                        var formId = getFormId(form);
+                        return formId && _.includes(deletedFormIds, formId) && form.formName === formName;
+                    });
+                }
+                return false;
+            };
+
+            var clearTemplateAddedState = function (template) {
+                if (!template) return;
+                template.isAdded = false;
+                template.isOpen = false;
+                template.klass = "";
+                template.isLoaded = false;
+            };
+
+            var isTemplateSelected = function (template) {
+                return _.find($scope.consultation.selectedObsTemplate, function (t) {
+                    return t === template;
+                });
+            };
+
+            var activateTemplate = function (template) {
+                template.isOpen = true;
+                template.isLoaded = true;
+                template.klass = "active";
+            };
+
             var init = function () {
                 if ($rootScope.draftDiscarded) {
+                    var preservedDeletedFormIds = getDeletedFormIds();
+                    clearPatientBaseline();
                     $scope.allTemplates = [];
                     $scope.consultation.selectedObsTemplate = [];
                     $scope.consultation.observationForms = [];
                     $rootScope.draftDiscarded = false;
+                    if (preservedDeletedFormIds && preservedDeletedFormIds.length > 0) {
+                        $scope.consultation.deletedFormIds = preservedDeletedFormIds;
+                    }
                 }
+
                 if (!($scope.allTemplates !== undefined && $scope.allTemplates.length > 0)) {
                     spinner.forPromise(conceptSetService.getConcept({
                         name: "All Observation Templates",
@@ -111,11 +164,30 @@ angular.module('bahmni.clinical')
                 };
 
                 $scope.allTemplates = getSelectedObsTemplate(allConceptSections);
-                $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
-                $scope.allTemplates = $scope.allTemplates.concat($scope.consultation.observationForms);
-                $scope.allTemplates = _.uniqBy($scope.allTemplates, function (t) {
-                    return t.formUuid || t.uuid || t.id;
+
+                var deletedFormIds = getRootDeletedFormIds();
+                _.each($scope.allTemplates, function (template) {
+                    var templateId = getFormId(template);
+                    if (templateId && _.includes(deletedFormIds, templateId)) {
+                        clearTemplateAddedState(template);
+                    }
                 });
+
+                $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
+
+                var observationFormsToAdd = $scope.consultation.observationForms || [];
+                $scope.allTemplates = $scope.allTemplates.concat(observationFormsToAdd);
+
+                _.each(observationFormsToAdd, function (form) {
+                    var formId = getFormId(form);
+                    if (formId && _.includes(deletedFormIds, formId)) {
+                        clearTemplateAddedState(form);
+                    }
+                });
+
+                $scope.allTemplates = _.uniqBy($scope.allTemplates, getFormId);
+
+                $scope.uniqueTemplates = _.uniqBy($scope.allTemplates, 'label');
 
                 var currentPatientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var isDraftResumeValid = $rootScope.resumeDraftOnLoad &&
@@ -129,7 +201,30 @@ angular.module('bahmni.clinical')
                     clearStaleObsFromTemplates();
                 }
 
+                var deletedFormIds = getRootDeletedFormIds();
+                if (deletedFormIds.length > 0) {
+                    if ($scope.consultation.observations) {
+                        $scope.consultation.observations = _.filter($scope.consultation.observations, function (obs) {
+                            return !isObservationFromDeletedForm(obs, deletedFormIds);
+                        });
+                    }
+                    if ($scope.allTemplates) {
+                        _.each($scope.allTemplates, function (template) {
+                            var templateId = getFormId(template);
+                            if (templateId && _.includes(deletedFormIds, templateId)) {
+                                template.observations = [];
+                            }
+                        });
+                    }
+                }
+
+                if ($scope.consultation.observationForms && $scope.consultation.observationForms.length > 0) {
+                    formDirtyStateService.syncForm2Observations($scope.consultation.observationForms);
+                }
+
                 var draftFormData = isDraftResumeValid && $rootScope.draftData.formData ? $rootScope.draftData.formData : null;
+                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
+                var persistentBaseline = patientUuid ? formDirtyStateService.getPersistentBaseline(patientUuid) : null;
 
                 var parsedDraftObs = null;
                 if (draftFormData) {
@@ -151,34 +246,45 @@ angular.module('bahmni.clinical')
                         }
                         return copy;
                     };
-                    _.each(parsedDraftObs, function (draftObs) {
-                        if (!draftObs.concept) { return; }
+                    _.each(parsedDraftObs, function (draftObservation) {
+                        if (!draftObservation.concept) { return; }
                         var matchingTemplate = _.find($scope.allTemplates, function (t) {
-                            return t.uuid === draftObs.concept.uuid;
+                            return t.uuid === draftObservation.concept.uuid;
                         });
                         if (matchingTemplate) {
                             if (!matchingTemplate.observations || matchingTemplate.observations.length === 0) {
-                                matchingTemplate.observations = [stripObservationFlags(draftObs)];
-                            } else {
-                                formDirtyStateService.populateObservationValues(matchingTemplate.observations[0], stripObservationFlags(draftObs));
+                                matchingTemplate.observations = [stripObservationFlags(draftObservation)];
+                            } else if (!persistentBaseline) {
+                                var cleanedDraftObservation = stripObservationFlags(draftObservation);
+                                _.each(matchingTemplate.observations, function (templateObservation) {
+                                    if (templateObservation.concept && cleanedDraftObservation.concept &&
+                                        templateObservation.concept.uuid === cleanedDraftObservation.concept.uuid) {
+                                        formDirtyStateService.populateObservationValues(templateObservation, cleanedDraftObservation);
+                                    }
+                                });
                             }
                             matchingTemplate.hasUnsavedFormObservations = true;
                         }
                     });
-                    var form2DraftObs = _.filter(parsedDraftObs, function (draftObs) {
-                        return draftObs.formNamespace === 'Bahmni' && draftObs.formFieldPath;
+                    var form2DraftObservations = _.filter(parsedDraftObs, function (draftObservation) {
+                        return draftObservation.formNamespace === 'Bahmni' && draftObservation.formFieldPath;
                     });
-                    if (form2DraftObs.length > 0) {
-                        _.each($scope.consultation.observationForms, function (obsForm) {
-                            var matchingObs = _.filter(form2DraftObs, function (draftObs) {
-                                return draftObs.formFieldPath.split('.')[0] === obsForm.formName;
+                    if (form2DraftObservations.length > 0) {
+                        var deletedFormIds = getRootDeletedFormIds();
+                        _.each($scope.consultation.observationForms, function (observationForm) {
+                            var observationFormId = getFormId(observationForm);
+                            if (observationFormId && _.includes(deletedFormIds, observationFormId)) {
+                                return;
+                            }
+                            var matchingFormObservations = _.filter(form2DraftObservations, function (draftObservation) {
+                                return draftObservation.formFieldPath.split('.')[0] === observationForm.formName;
                             });
-                            if (matchingObs.length > 0 && obsForm.observations.length === 0) {
-                                _.each(matchingObs, function (obs) {
-                                    obsForm.observations.push(obs);
+                            if (matchingFormObservations.length > 0 && observationForm.observations.length === 0) {
+                                _.each(matchingFormObservations, function (observation) {
+                                    observationForm.observations.push(observation);
                                 });
-                                obsForm.isOpen = true;
-                                obsForm.hasUnsavedFormObservations = true;
+                                observationForm.isOpen = true;
+                                observationForm.hasUnsavedFormObservations = true;
                             }
                         });
                     }
@@ -211,10 +317,7 @@ angular.module('bahmni.clinical')
                         }
                     });
                 }
-                if (draftFormData) {
-                    populateFormWithDraftData(draftFormData);
-                }
-                $scope.consultation._draftCleanState = undefined;
+
                 if ($rootScope.resumeDraftOnLoad) {
                     $rootScope.resumeDraftOnLoad = false;
                     $rootScope.resumeDraftPatientUuid = null;
@@ -229,8 +332,12 @@ angular.module('bahmni.clinical')
                     }
                 });
                 if ($scope.consultation.observations) {
+                    var deletedFormIds = getRootDeletedFormIds();
                     dirtyTrackingState.extraObservations = _.filter($scope.consultation.observations, function (obs) {
-                        return obs.uuid && !trackedObsUuids.has(obs.uuid);
+                        if (!obs.uuid || trackedObsUuids.has(obs.uuid)) {
+                            return false;
+                        }
+                        return !isObservationFromDeletedForm(obs, deletedFormIds);
                     });
                 }
 
@@ -241,16 +348,17 @@ angular.module('bahmni.clinical')
 
                 if (formUuidParam) {
                     var targetForm = _.find($scope.allTemplates, function (t) {
-                        return t.formUuid === formUuidParam;
+                        return getFormId(t) === formUuidParam;
                     });
                     if (targetForm) {
-                        if (!_.find($scope.consultation.selectedObsTemplate, function (t) { return t === targetForm; })) {
+                        var deletedFormIds = getRootDeletedFormIds();
+                        if (!_.includes(deletedFormIds, formUuidParam) && !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === targetForm; })) {
                             targetForm.isAdded = true;
                             $scope.consultation.selectedObsTemplate.push(targetForm);
+                            $timeout(function () {
+                                $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
+                            }, 0);
                         }
-                        $timeout(function () {
-                            $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
-                        }, 0);
                     } else {
                         messagingService.showMessage('error', 'Form not found. Please contact your administrator.');
                     }
@@ -294,16 +402,27 @@ angular.module('bahmni.clinical')
             };
 
             var insertInDefaultOrder = function () {
+                var deletedFormIds = getRootDeletedFormIds();
                 _.each($scope.allTemplates, function (template) {
                     if (template.observations.length > 0) {
-                        insertTemplate(template);
+                        var templateId = getFormId(template);
+                        if (!templateId || (!_.includes(deletedFormIds, templateId) && !isTemplateSelected(template))) {
+                            insertTemplate(template);
+                        }
                     }
                 });
             };
 
             var insertTemplate = function (template) {
                 if (template && !(template.isDefault() || template.alwaysShow)) {
-                    $scope.consultation.selectedObsTemplate.push(template);
+                    if (isTemplateSelected(template)) {
+                        return;
+                    }
+                    var deletedFormIds = getRootDeletedFormIds();
+                    var templateId = getFormId(template);
+                    if (!templateId || !_.includes(deletedFormIds, templateId)) {
+                        $scope.consultation.selectedObsTemplate.push(template);
+                    }
                 }
             };
 
@@ -314,14 +433,27 @@ angular.module('bahmni.clinical')
             };
 
             var openTemplate = function (template) {
-                template.isOpen = true;
-                template.isLoaded = true;
-                template.klass = "active";
+                activateTemplate(template);
             };
 
             var initializeDefaultTemplates = function () {
+                var deletedFormIds = getRootDeletedFormIds();
+                var currentlySelected = _.clone($scope.consultation.selectedObsTemplate) || [];
                 $scope.consultation.selectedObsTemplate = _.filter($scope.allTemplates, function (template) {
-                    return template.isDefault() || template.alwaysShow;
+                    var isCurrentlySelected = _.find(currentlySelected, function (t) {
+                        return t === template;
+                    });
+                    if (isCurrentlySelected) {
+                        return true;
+                    }
+                    if (template.isDefault() || template.alwaysShow) {
+                        var templateId = getFormId(template);
+                        if (templateId && _.includes(deletedFormIds, templateId)) {
+                            return false;
+                        }
+                        return true;
+                    }
+                    return false;
                 });
             };
 
@@ -395,6 +527,11 @@ angular.module('bahmni.clinical')
                     });
                 }
 
+                var deletedFormIds = getRootDeletedFormIds();
+                collectedObs = _.filter(collectedObs, function (obs) {
+                    return !isObservationFromDeletedForm(obs, deletedFormIds);
+                });
+
                 $scope.consultation.observations = collectedObs;
             };
 
@@ -417,6 +554,13 @@ angular.module('bahmni.clinical')
             };
 
             $scope.addTemplate = function (template) {
+                var templateId = template.formUuid || template.uuid || template.id;
+                if (templateId && $scope.consultation && $scope.consultation.deletedFormIds) {
+                    $scope.consultation.deletedFormIds = _.filter($scope.consultation.deletedFormIds, function (id) {
+                        return id !== templateId;
+                    });
+                }
+
                 $scope.scrollingEnabled = true;
                 $scope.showTemplatesList = false;
                 var index = _.findLastIndex($scope.consultation.selectedObsTemplate, function (consultationTemplate) {
@@ -519,11 +663,26 @@ angular.module('bahmni.clinical')
                 templateCleanStates: new WeakMap(),
                 initialized: false,
                 watchDeregister: null,
+                postSaveWatchDeregister: null,
                 postSaveRefreshPending: false,
                 postSaveRefreshTimeout: null,
                 form2ListenerState: null,
                 isSaving: false,
                 extraObservations: []
+            };
+
+            var savePersistentBaseline = function (cleanState) {
+                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
+                if (patientUuid) {
+                    formDirtyStateService.setPersistentBaseline(patientUuid, cleanState, dirtyTrackingState.cleanStateExtras);
+                }
+            };
+
+            var clearPatientBaseline = function () {
+                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
+                if (patientUuid) {
+                    formDirtyStateService.clearPersistentBaseline(patientUuid);
+                }
             };
 
             var captureTemplateCleanStates = function () {
@@ -592,7 +751,19 @@ angular.module('bahmni.clinical')
                     return;
                 }
                 dirtyTrackingState.initialized = true;
-                if ($scope.consultation._draftCleanState !== undefined) {
+                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
+                var persistentBaseline = patientUuid ? formDirtyStateService.getPersistentBaseline(patientUuid) : null;
+
+                if (persistentBaseline && persistentBaseline.cleanState) {
+                    dirtyTrackingState.cleanState = persistentBaseline.cleanState;
+                    dirtyTrackingState.cleanStateExtras = persistentBaseline.extraObservations;
+                    captureTemplateCleanStates();
+                    var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                    var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
+                    $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
+                    $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    startAutoSaveIfDirty();
+                } else if ($scope.consultation._draftCleanState !== undefined) {
                     dirtyTrackingState.cleanState = $scope.consultation._draftCleanState;
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
@@ -600,6 +771,7 @@ angular.module('bahmni.clinical')
                     var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
                     startAutoSaveIfDirty();
+                    savePersistentBaseline(dirtyTrackingState.cleanState);
                     dirtyTrackingState.postSaveRefreshPending = true;
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                         if (!dirtyTrackingState.postSaveRefreshPending) {
@@ -611,6 +783,7 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                         captureTemplateCleanStates();
                         $scope.consultation._draftCleanState = settledCleanState;
+                        savePersistentBaseline(settledCleanState);
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshPending = false;
                         dirtyTrackingState.postSaveRefreshTimeout = null;
@@ -620,6 +793,7 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    savePersistentBaseline(dirtyTrackingState.cleanState);
                     dirtyTrackingState.postSaveRefreshPending = true;
                     if (dirtyTrackingState.postSaveRefreshTimeout) {
                         $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
@@ -634,6 +808,7 @@ angular.module('bahmni.clinical')
                         dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                         captureTemplateCleanStates();
                         $scope.consultation._draftCleanState = partialRefreshState;
+                        savePersistentBaseline(partialRefreshState);
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                             if (!dirtyTrackingState.postSaveRefreshPending) {
@@ -645,6 +820,7 @@ angular.module('bahmni.clinical')
                             dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                             captureTemplateCleanStates();
                             $scope.consultation._draftCleanState = settledCleanState;
+                            savePersistentBaseline(settledCleanState);
                             $scope.formDraft.isDirty = false;
                             dirtyTrackingState.postSaveRefreshPending = false;
                             dirtyTrackingState.postSaveRefreshTimeout = null;
@@ -664,18 +840,17 @@ angular.module('bahmni.clinical')
                             var newExtraState = newVal.split('|')[1];
 
                             if (dirtyTrackingState.postSaveRefreshPending) {
-                                dirtyTrackingState.cleanState = newTemplateState;
-                                dirtyTrackingState.cleanStateExtras = newExtraState;
+                                $scope.formDraft.isDirty = true;
+                                $state.dirtyConsultationForm = true;
+                                startAutoSaveIfDirty();
                                 captureTemplateCleanStates();
-                                $scope.consultation._draftCleanState = newTemplateState;
-                                $scope.formDraft.isDirty = false;
                                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                                 }
                                 dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
                                     dirtyTrackingState.postSaveRefreshPending = false;
-                                    dirtyTrackingState.postSaveRefreshTimeout = null;
                                 }, 0);
+                                updateTemplateDirtyIndicators();
                                 return;
                             }
                             $scope.formDraft.isDirty = newTemplateState !== dirtyTrackingState.cleanState || newExtraState !== dirtyTrackingState.cleanStateExtras;
@@ -716,6 +891,28 @@ angular.module('bahmni.clinical')
 
                 return formDraftService.saveDraft(patientUuid, providerUuid, formData).then(function (response) {
                     var serverTimestamp = response.data.timestamp;
+                    var savedCleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+
+                    if (!dirtyTrackingState.postSaveWatchDeregister) {
+                        dirtyTrackingState.postSaveWatchDeregister = $scope.$watch(
+                            function () {
+                                return formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                            },
+                            function (newVal, oldVal) {
+                                if (newVal !== oldVal && dirtyTrackingState.postSaveRefreshPending) {
+                                    $scope.formDraft.isDirty = true;
+                                }
+                            }
+                        );
+                    }
+
+                    $scope.$evalAsync(function () {
+                        var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                        if (currentState !== savedCleanState) {
+                            $scope.formDraft.isDirty = true;
+                        }
+                    });
+
                     var savedDate = new Date(serverTimestamp);
                     var draftDate = $filter('date')(savedDate, 'dd MMM yyyy');
                     var draftTime = $filter('date')(savedDate, 'hh:mm a');
@@ -731,18 +928,40 @@ angular.module('bahmni.clinical')
                     dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     captureTemplateCleanStates();
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
+                    savePersistentBaseline(dirtyTrackingState.cleanState);
                     dirtyTrackingState.postSaveRefreshPending = true;
+
+                    var savedCleanState = dirtyTrackingState.cleanState;
+                    var savedCleanStateExtras = dirtyTrackingState.cleanStateExtras;
+
                     if (dirtyTrackingState.postSaveRefreshTimeout) {
                         $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                     }
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
-                        dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
-                        dirtyTrackingState.cleanStateExtras = angular.toJson(dirtyTrackingState.extraObservations);
+                        if (!dirtyTrackingState.postSaveRefreshPending) {
+                            dirtyTrackingState.postSaveRefreshTimeout = null;
+                            return;
+                        }
+
+                        var currentState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
+                        var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
+
+                        if (currentState !== savedCleanState || currentExtras !== savedCleanStateExtras) {
+                            dirtyTrackingState.postSaveRefreshPending = false;
+                            return;
+                        }
+
+                        dirtyTrackingState.cleanState = currentState;
+                        dirtyTrackingState.cleanStateExtras = currentExtras;
                         captureTemplateCleanStates();
                         $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
                         $scope.formDraft.isDirty = false;
                         dirtyTrackingState.postSaveRefreshPending = false;
                         dirtyTrackingState.postSaveRefreshTimeout = null;
+                        if (dirtyTrackingState.postSaveWatchDeregister) {
+                            dirtyTrackingState.postSaveWatchDeregister();
+                            dirtyTrackingState.postSaveWatchDeregister = null;
+                        }
                     }, 0);
                     $rootScope.$broadcast('draft:saved', {draftDate: draftDate, draftTime: draftTime});
                 }, function () {
@@ -838,20 +1057,8 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            var populateFormWithDraftData = function (draftFormData) {
-                var result = formDirtyStateService.populateFormWithDraftData(draftFormData, $scope.consultation.selectedObsTemplate);
-                if (!result.success) {
-                    $scope.formDraft.statusMessage = 'ERROR_LOADING_DRAFT_KEY';
-                    $scope.formDraft.statusError = true;
-                } else {
-                    $scope.formDraft.isDraftResumed = true;
-                    _.each(result.updatedTemplates, function (template) {
-                        template.hasUnsavedFormObservations = true;
-                    });
-                }
-            };
-
             var resetDraftStateAfterSave = function () {
+                clearPatientBaseline();
                 $scope.formDraft.isDirty = false;
                 $scope.formDraft.hasDrafts = false;
                 dirtyTrackingState.postSaveRefreshPending = true;
@@ -880,12 +1087,29 @@ angular.module('bahmni.clinical')
             $scope.consultation.postSaveHandler.register("resetDraftStateAfterSave", resetDraftStateAfterSave);
 
             var saveSuccessfulListener = $rootScope.$on('event:save-successful', function () {
+                var patientUuid = $scope.patient ? $scope.patient.uuid : null;
+                if (patientUuid) {
+                    formDirtyStateService.clearPersistentBaseline(patientUuid);
+                }
                 $scope.formDraft.isDirty = false;
                 $scope.formDraft.hasDrafts = false;
                 dirtyTrackingState.postSaveRefreshPending = true;
                 $scope.formDraft.showSpinner = false;
                 $rootScope.draftData = null;
                 clearDraftStatus(true);
+                var deletedFormIds = getRootDeletedFormIds();
+                if (deletedFormIds && angular.isArray(deletedFormIds) && deletedFormIds.length > 0 &&
+                    $scope.allTemplates && angular.isArray($scope.allTemplates)) {
+                    _.each($scope.allTemplates, function (template) {
+                        if (!template) return;
+                        var templateId = getFormId(template);
+                        if (templateId && _.includes(deletedFormIds, templateId)) {
+                            template.isDeleted = true;
+                            template.isAdded = false;
+                            template.observations = [];
+                        }
+                    });
+                }
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
                 }
@@ -916,6 +1140,9 @@ angular.module('bahmni.clinical')
             $scope.$on('$destroy', function () {
                 if (dirtyTrackingState.watchDeregister) {
                     dirtyTrackingState.watchDeregister();
+                }
+                if (dirtyTrackingState.postSaveWatchDeregister) {
+                    dirtyTrackingState.postSaveWatchDeregister();
                 }
                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
