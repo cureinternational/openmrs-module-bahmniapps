@@ -10,7 +10,9 @@ describe('ConsultationController - isSaveDisabled', function () {
         retrospectiveEntryService.getRetrospectiveEntry.and.returnValue(null);
 
         appDescriptor = jasmine.createSpyObj('appDescriptor', ['getConfigValue', 'getExtensions', 'formatUrl']);
-        appDescriptor.getConfigValue.and.returnValue(null);
+        appDescriptor.getConfigValue.and.callFake(function (key) {
+            return key === 'adtNavigationConfig' ? {} : null;
+        });
         appDescriptor.getExtensions.and.returnValue([]);
         appDescriptor.formatUrl.and.returnValue('');
 
@@ -116,6 +118,34 @@ describe('ConsultationController - isSaveDisabled', function () {
         });
 
         it('should return false when in retrospective entry mode without an active visit', function () {
+            createMocks({ activeVisit: null });
+            retrospectiveEntryService.getRetrospectiveEntry.and.returnValue({ date: new Date() });
+            buildController();
+            expect(scope.isSaveDisabled()).toBe(false);
+        });
+    });
+
+    // mobileHeader.html binds ng-disabled="isSaveDisabled()" on the mobile save button
+    describe('mobile save button - isSaveDisabled()', function () {
+        it('should be enabled (false) when active visit exists — mobile save button is clickable', function () {
+            createMocks({ activeVisit: { uuid: 'visit-uuid', location: { uuid: 'loc-uuid' } } });
+            buildController();
+            expect(scope.isSaveDisabled()).toBe(false);
+        });
+
+        it('should be disabled (true) when no active visit — mobile save button is blocked', function () {
+            createMocks({ activeVisit: null });
+            buildController();
+            expect(scope.isSaveDisabled()).toBe(true);
+        });
+
+        it('should be disabled (true) when visit is at a different location — mobile save button is blocked', function () {
+            createMocks({ activeVisit: null, visits: [{ uuid: 'other-visit', location: { uuid: 'other-loc' } }] });
+            buildController();
+            expect(scope.isSaveDisabled()).toBe(true);
+        });
+
+        it('should be enabled (false) in retrospective mode — mobile save button is clickable', function () {
             createMocks({ activeVisit: null });
             retrospectiveEntryService.getRetrospectiveEntry.and.returnValue({ date: new Date() });
             buildController();

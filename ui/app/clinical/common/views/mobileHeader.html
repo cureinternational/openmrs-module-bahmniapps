@@ -20,7 +20,10 @@
             ng-click="openConsultation()" accesskey="{{'CONSULTATION_SHORTCUT_KEY' | translate}}"
             ng-bind-html="'CONSULTATION_TAB_KEY' | translate">
         </button>
-        <button class="confirm consultation-btn" ng-show="availableBoards && !stateChange()" single-click="save()" accesskey="{{'SAVE_ACCESS_KEY' | translate}}">
+        <button class="confirm consultation-btn" ng-show="availableBoards && !stateChange()" single-click="save()"
+                ng-disabled="isSaveDisabled()"
+                title="{{isSaveDisabled() ? ('NO_ACTIVE_VISIT_MESSAGE' | translate) : ''}}"
+                accesskey="{{'SAVE_ACCESS_KEY' | translate}}">
             <span class="text" ng-bind-html="'CLINICAL_SAVE_TRANSLATION_KEY'| translate"></span>
         </button>
     </div>
