@@ -871,30 +871,8 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
     viewModel.previousOrderUuid = drugOrderResponse.previousOrderUuid;
     viewModel.dateActivated = drugOrderResponse.dateActivated;
     viewModel.encounterUuid = drugOrderResponse.encounterUuid;
-    var existingReasonConcept = viewModel.orderReasonConcept;
     if (drugOrderResponse.orderReasonConcept) {
         viewModel.orderReasonConcept = drugOrderResponse.orderReasonConcept;
-        if (angular.isString(viewModel.orderReasonConcept)) {
-            var uuidOnly = viewModel.orderReasonConcept;
-            viewModel.orderReasonConcept = {
-                uuid: uuidOnly
-            };
-            if (existingReasonConcept && existingReasonConcept.name) {
-                viewModel.orderReasonConcept.name = existingReasonConcept.name;
-            }
-            if (existingReasonConcept && existingReasonConcept.display) {
-                viewModel.orderReasonConcept.display = existingReasonConcept.display;
-            }
-        } else if (angular.isObject(viewModel.orderReasonConcept)) {
-            if (existingReasonConcept && !viewModel.orderReasonConcept.name && existingReasonConcept.name) {
-                viewModel.orderReasonConcept.name = existingReasonConcept.name;
-            }
-            if (existingReasonConcept && !viewModel.orderReasonConcept.display && existingReasonConcept.display) {
-                viewModel.orderReasonConcept.display = existingReasonConcept.display;
-            }
-        }
-    } else if (!drugOrderResponse.orderReasonConcept && existingReasonConcept) {
-        viewModel.orderReasonConcept = existingReasonConcept;
     }
     viewModel.orderReasonText = drugOrderResponse.orderReasonText;
     viewModel.orderNumber = drugOrderResponse.orderNumber && parseInt(drugOrderResponse.orderNumber.replace("ORD-", ""));
