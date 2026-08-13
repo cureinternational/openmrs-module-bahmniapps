@@ -3317,6 +3317,48 @@ describe('ConceptSetPageController', function () {
 
                 expect(scope.formDraft.isDirty).toBe(false);
             });
+
+            it('should broadcast openFormByUuid even when form is already in selectedObsTemplate', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'Test Form'}, uuid: 'form-uuid-123', formUuid: 'form-uuid-123'}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutCallbacks = [];
+                var timeoutMock = function (callback, delay) {
+                    timeoutCallbacks.push(callback);
+                    return {$$timeoutId: timeoutCallbacks.length};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+                stateParams.formUuid = 'form-uuid-123';
+                var testForm = {uuid: 'form-uuid-123', label: 'Test Form', formUuid: 'form-uuid-123'};
+                scope.consultation.selectedObsTemplate = [testForm];
+
+                var broadcastSpy = spyOn(rootScope, '$broadcast');
+                scope.$digest();
+                _.each(timeoutCallbacks, function (callback) {
+                    callback();
+                });
+
+                expect(broadcastSpy).toHaveBeenCalledWith('event:openFormByUuid', jasmine.any(Object));
+            });
+
+            it('should not add form to selectedObsTemplate twice when form is already selected', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'Test Form'}, uuid: 'form-uuid-456', formUuid: 'form-uuid-456'}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var testForm = {uuid: 'form-uuid-456', label: 'Test Form', formUuid: 'form-uuid-456'};
+                scope.consultation.selectedObsTemplate = [testForm];
+
+                var initialLength = scope.consultation.selectedObsTemplate.length;
+                scope.$digest();
+
+                expect(scope.consultation.selectedObsTemplate.length).toBe(initialLength);
+                expect(scope.consultation.selectedObsTemplate.length).toBe(1);
+            });
         });
     });
+
 });

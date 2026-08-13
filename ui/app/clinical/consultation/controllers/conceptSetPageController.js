@@ -352,9 +352,11 @@ angular.module('bahmni.clinical')
                     });
                     if (targetForm) {
                         var deletedFormIds = getRootDeletedFormIds();
-                        if (!_.includes(deletedFormIds, formUuidParam) && !_.find($scope.consultation.selectedObsTemplate, function (t) { return t === targetForm; })) {
-                            targetForm.isAdded = true;
-                            $scope.consultation.selectedObsTemplate.push(targetForm);
+                        if (!_.includes(deletedFormIds, formUuidParam)) {
+                            if (!_.find($scope.consultation.selectedObsTemplate, function (t) { return t === targetForm; })) {
+                                targetForm.isAdded = true;
+                                $scope.consultation.selectedObsTemplate.push(targetForm);
+                            }
                             $timeout(function () {
                                 $rootScope.$broadcast('event:openFormByUuid', { form: targetForm });
                             }, 0);
