@@ -237,6 +237,10 @@ angular.module('bahmni.clinical')
 
             $scope.getOrderReasonConcept = function (drugOrder) {
                 if (drugOrder.orderReasonConcept) {
+                    if (angular.isString(drugOrder.orderReasonConcept)) {
+                        var reasonConcept = _.find($scope.stoppedOrderReasons, { uuid: drugOrder.orderReasonConcept });
+                        return reasonConcept ? (reasonConcept.display || reasonConcept.name) : drugOrder.orderReasonConcept;
+                    }
                     return drugOrder.orderReasonConcept.display || drugOrder.orderReasonConcept.name;
                 }
             };

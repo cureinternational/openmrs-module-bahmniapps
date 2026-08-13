@@ -1051,6 +1051,19 @@ describe("drugOrderViewModel", function () {
             expect(viewModel.stageCount).toBe(2);
             expect(viewModel.hasLoadingDose).toBe(true);
         });
+
+        it("should map stop reason concept and text for VDP contracts", function () {
+            var dosages = [
+                { sequence: 1, text: 'Stage 1', timing: { code: { text: 'Once a day' }, repeat: { duration: 3, durationUnit: 'd' } }, doseAndRate: [{ doseQuantity: { value: 5, unit: 'mg' } }], extension: [{ url: 'isLoadingDose', valueBoolean: false }], additionalInstruction: [], patientInstruction: '' }
+            ];
+            var contract = buildVdpContract(dosages);
+            contract.orderReasonConcept = '6afc2690-12b2-11e6-8c00-080027d2adbd';
+            contract.orderReasonText = 'Adverse reaction observed';
+
+            var viewModel = Bahmni.Clinical.DrugOrderViewModel.createFromContract(contract);
+            expect(viewModel.orderReasonConcept).toBe('6afc2690-12b2-11e6-8c00-080027d2adbd');
+            expect(viewModel.orderReasonText).toBe('Adverse reaction observed');
+        });
     });
 
     describe("createFromContract - VDP orders should not have parent-level instructions", function () {

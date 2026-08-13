@@ -742,6 +742,8 @@ Bahmni.Clinical.DrugOrderViewModel.createFromContract = function (drugOrderRespo
             action: 'action',
             careSetting: 'careSetting',
             dateStopped: 'dateStopped',
+            orderReasonConcept: 'orderReasonConcept',
+            orderReasonText: 'orderReasonText',
             uuid: 'uuid',
             dateActivated: 'dateActivated',
             encounterUuid: 'encounterUuid',

@@ -344,6 +344,73 @@ describe("DrugOrderHistoryController", function () {
         });
     });
 
+    describe("getOrderReasonConcept", function () {
+        it("should return reason display text by looking up stoppedOrderReasons when concept is uuid string", function () {
+            treatmentConfig.stoppedOrderReasonConcepts = [
+                {
+                    uuid: '6afc2690-12b2-11e6-8c00-080027d2adbd',
+                    display: 'Allergic Reaction',
+                    name: 'Allergic Reaction'
+                }
+            ];
+            initController();
+
+            var result = scope.getOrderReasonConcept({
+                orderReasonConcept: '6afc2690-12b2-11e6-8c00-080027d2adbd'
+            });
+
+            expect(result).toBe('Allergic Reaction');
+        });
+
+        it("should return display or name when concept is an object", function () {
+            expect(scope.getOrderReasonConcept({
+                orderReasonConcept: {
+                    display: 'Allergic Reaction',
+                    name: 'Allergic Reaction'
+                }
+            })).toBe('Allergic Reaction');
+        });
+
+        it("should lookup and return display text when concept is UUID string", function () {
+            treatmentConfig.stoppedOrderReasonConcepts = [
+                {
+                    uuid: '6afc2690-12b2-11e6-8c00-080027d2adbd',
+                    display: 'Allergic Reaction',
+                    name: 'Allergic Reaction'
+                },
+                {
+                    uuid: 'another-uuid-12b2-11e6-8c00-080027d2adbd',
+                    display: 'Adverse Event',
+                    name: 'Adverse Event'
+                }
+            ];
+            initController();
+
+            var result = scope.getOrderReasonConcept({
+                orderReasonConcept: '6afc2690-12b2-11e6-8c00-080027d2adbd'
+            });
+
+            expect(result).toBe('Allergic Reaction');
+        });
+
+        it("should return UUID string when UUID lookup fails", function () {
+            treatmentConfig.stoppedOrderReasonConcepts = [
+                {
+                    uuid: '6afc2690-12b2-11e6-8c00-080027d2adbd',
+                    display: 'Allergic Reaction',
+                    name: 'Allergic Reaction'
+                }
+            ];
+            initController();
+
+            var result = scope.getOrderReasonConcept({
+                orderReasonConcept: 'non-existent-uuid'
+            });
+
+            expect(result).toBe('non-existent-uuid');
+        });
+    });
+
     it('should broadcast refillDrugOrder event on refill', function () {
         var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(prescribedDrugOrders[0]);
         scope.refill(drugOrder);
