@@ -53,6 +53,22 @@ angular.module('bahmni.common.services')
             });
         };
 
+        var getProviderDrafts = function (providerUuid) {
+            if (!providerUuid) {
+                return $q.when([]);
+            }
+            return $http.get(formDraftUrl + '/list', {
+                params: {
+                    providerUuid: providerUuid
+                },
+                suppressError: true
+            }).then(function (response) {
+                return response.data;
+            }, function () {
+                return [];
+            });
+        };
+
         var discardDraft = function (patientUuid, providerUuid) {
             if (!patientUuid || !providerUuid) {
                 return;
@@ -107,6 +123,7 @@ angular.module('bahmni.common.services')
             markDraftAsSaved: markDraftAsSaved,
             parseDraftObs: parseDraftObs,
             getFormNamesFromDraft: getFormNamesFromDraft,
-            hasDraftsForProvider: hasDraftsForProvider
+            hasDraftsForProvider: hasDraftsForProvider,
+            getProviderDrafts: getProviderDrafts
         };
     }]);
