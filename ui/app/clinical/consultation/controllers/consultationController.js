@@ -575,7 +575,6 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                     return $q.when({});
                 }
                 sessionStorage.setItem('formSaveCompleted', 'true');
-                $state.mainSaveInProgress = true;
                 $rootScope.$broadcast('event:save-started');
                 try {
                     var alerts = angular.copy($rootScope.cdssAlerts) || [];
@@ -585,6 +584,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
 
                     if (activeAlerts && activeAlerts.length > 0) {
                         messagingService.showMessage("error", "{{ 'CDSS_ALERT_SAVE_ERROR' | translate }}");
+                        $rootScope.$broadcast('event:save-failed');
                         return $q.when({});
                     }
 
@@ -606,7 +606,6 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                             params.cachebuster = Math.random();
                             return encounterService.create(encounterData)
                             .then(function (saveResponse) {
-                                $state.mainSaveInProgress = false;
                                 $state.dirtyConsultationForm = false;
                                 $state.orderRemoved = false;
                                 $state.orderCreated = false;
@@ -651,6 +650,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                                         });
                                     }));
                             }).catch(function (error) {
+                                $rootScope.$broadcast('event:save-failed');
                                 var message = Bahmni.Clinical.Error.translate(error) || "{{'CLINICAL_SAVE_FAILURE_MESSAGE_KEY' | translate}}";
                                 messagingService.showMessage('error', message);
                             });
