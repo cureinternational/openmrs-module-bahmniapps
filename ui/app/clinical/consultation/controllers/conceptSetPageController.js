@@ -670,10 +670,14 @@ angular.module('bahmni.clinical')
                                 updateTemplateDirtyIndicators();
                                 return;
                             }
-                            $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
+                            $scope.formDraft.isDirty = newTemplateState !== dirtyTrackingState.cleanState || newExtraState !== dirtyTrackingState.cleanStateExtras;
+                            if ($scope.formDraft.isDirty && $state.justSaved) {
+                                $state.justSaved = false;
+                            }
                             if (!dirtyTrackingState.mainSaveInProgress && !$state.justSaved) {
                                 if ($scope.formDraft.isDirty) {
                                     $state.dirtyConsultationForm = true;
+                                    startAutoSaveIfDirty();
                                 } else {
                                     $state.dirtyConsultationForm = false;
                                 }
@@ -808,14 +812,18 @@ angular.module('bahmni.clinical')
                 return $q.when();
             };
 
-            $rootScope.$on('event:save-started', function () {
+            var deregSaveStarted = $rootScope.$on('event:save-started', function () {
                 dirtyTrackingState.mainSaveInProgress = true;
             });
 
-            $rootScope.$on('event:changes-saved', function () {
+            var deregChangesSaved = $rootScope.$on('event:changes-saved', function () {
                 dirtyTrackingState.mainSaveInProgress = false;
                 dirtyTrackingState.cleanState = formDirtyStateService.getObsValues($scope.consultation.selectedObsTemplate);
                 $scope.formDraft.isDirty = false;
+            });
+
+            var deregSaveFailed = $rootScope.$on('event:save-failed', function () {
+                dirtyTrackingState.mainSaveInProgress = false;
             });
 
             var draftCheckPromise = null;
@@ -963,6 +971,9 @@ angular.module('bahmni.clinical')
                 }
                 saveSuccessfulListener();
                 saveStartedListener();
+                deregSaveStarted();
+                deregChangesSaved();
+                deregSaveFailed();
                 $state.saveFormDraftIfDirty = null;
             });
 
