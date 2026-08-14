@@ -351,22 +351,118 @@ describe('ConceptSetPageController', function () {
             createController();
 
             expect(scope.allTemplates).toBeTruthy();
-            expect(scope.allTemplates.length).toEqual(3);
+            expect(scope.allTemplates.length).toEqual(2);
 
             expect(scope.consultation.selectedObsTemplate).toBeTruthy();
-            expect(scope.consultation.selectedObsTemplate.length).toEqual(3);
+            expect(scope.consultation.selectedObsTemplate.length).toEqual(2);
 
             expect(scope.consultation.selectedObsTemplate[0].conceptName).toEqual("abcd");
             expect(scope.consultation.selectedObsTemplate[0].observations[0].uuid).toEqual("cafedead");
             expect(scope.consultation.selectedObsTemplate[0].uuid).toEqual(123);
 
-            expect(scope.consultation.selectedObsTemplate[1].conceptName).toEqual("abcd");
-            expect(scope.consultation.selectedObsTemplate[1].observations[0].uuid).toEqual("deadcafe");
-            expect(scope.consultation.selectedObsTemplate[1].uuid).toEqual(123);
+            expect(scope.consultation.selectedObsTemplate[1].formName).toEqual("my form");
+            expect(scope.consultation.selectedObsTemplate[1].observations[0].uuid).toEqual("random-uuid");
+            expect(scope.consultation.selectedObsTemplate[1].formUuid).toEqual("my-form-uuid");
+        });
 
-            expect(scope.consultation.selectedObsTemplate[2].formName).toEqual("my form");
-            expect(scope.consultation.selectedObsTemplate[2].observations[0].uuid).toEqual("random-uuid");
-            expect(scope.consultation.selectedObsTemplate[2].formUuid).toEqual("my-form-uuid");
+        it("should not duplicate Form 1 template when resuming a draft", function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: "abcd"}, uuid: 123}]
+                    }
+                ]
+            };
+            var data = [
+                {
+                    name: "my form",
+                    version: '1',
+                    uuid: "my-form-uuid",
+                    privileges: []
+                }
+            ];
+            mockConceptSetService(conceptResponseData);
+            mockformService(data);
+
+            scope.patient = {};
+            scope.consultation.observations = [{
+                concept: {
+                    name: "abcd",
+                    uuid: 123
+                },
+                uuid: "obs-uuid-1"
+            }];
+
+            rootScope.resumeDraftOnLoad = true;
+            rootScope.draftData = {
+                formData: JSON.stringify([{
+                    concept: { uuid: 123 },
+                    uuid: "draft-uuid",
+                    observations: []
+                }])
+            };
+
+            createController();
+
+            var form1Templates = _.filter(scope.consultation.selectedObsTemplate, function (t) {
+                return t.uuid === 123;
+            });
+            expect(form1Templates.length).toEqual(1);
+        });
+
+        it("should insert multiple Form 2 templates with undefined labels during draft resume", function () {
+            var conceptResponseData = {
+                results: [
+                    {
+                        setMembers: [{name: {name: "concept1"}, uuid: 100}]
+                    }
+                ]
+            };
+            var form2Data = [
+                {
+                    name: "form-a",
+                    formName: "form-a",
+                    formUuid: "form-uuid-1",
+                    uuid: "form-uuid-1",
+                    version: '1',
+                    privileges: []
+                },
+                {
+                    name: "form-b",
+                    formName: "form-b",
+                    formUuid: "form-uuid-2",
+                    uuid: "form-uuid-2",
+                    version: '1',
+                    privileges: []
+                }
+            ];
+            mockConceptSetService(conceptResponseData);
+            mockformService(form2Data);
+
+            scope.patient = {};
+            rootScope.resumeDraftOnLoad = true;
+            rootScope.draftData = {
+                formData: JSON.stringify([
+                    {
+                        formNamespace: "Bahmni",
+                        formFieldPath: "form-a.1/101",
+                        uuid: "obs-1"
+                    },
+                    {
+                        formNamespace: "Bahmni",
+                        formFieldPath: "form-b.1/102",
+                        uuid: "obs-2"
+                    }
+                ])
+            };
+
+            createController();
+
+            var form2Templates = _.filter(scope.consultation.selectedObsTemplate, function (t) {
+                return t.formUuid;
+            });
+            expect(form2Templates.length).toEqual(2);
+            expect(_.map(form2Templates, 'formUuid')).toEqual(['form-uuid-1', 'form-uuid-2']);
         });
 
         it("should load all templates specific to program when program uuid is present", function () {
@@ -874,6 +970,32 @@ describe('ConceptSetPageController', function () {
             saveDraftPromise['finally'].calls.mostRecent().args[0]();
 
             expect(scope.formDraft.showSpinner).toBe(false);
+        });
+
+        it('should mark the form dirty if user changes a value after save completes but before stabilization', function () {
+            var conceptResponseData = { results: [{ setMembers: [{ name: { name: 'abcd' }, uuid: 123 }] }] };
+            mockConceptSetService(conceptResponseData);
+            mockformService({});
+
+            var timeoutMock = function (callback, delay) {
+                return { $$timeoutId: delay };
+            };
+            timeoutMock.cancel = jasmine.createSpy('cancel');
+
+            var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+            formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+            createControllerWithTimeoutAndFilter(timeoutMock);
+            scope.visitHistory = { activeVisit: { uuid: 'visit-uuid' } };
+            scope.consultation.selectedObsTemplate = [{ uuid: 123, observations: [{ value: 'initial' }] }];
+
+            scope.saveAsDraft();
+            saveDraftPromise.callThenCallBack({ data: { timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false } });
+
+            scope.consultation.selectedObsTemplate[0].observations[0].value = 'updated';
+            scope.$digest();
+
+            expect(scope.formDraft.isDirty).toBe(true);
         });
 
         it('should broadcast draft:saved event with date and time on successful save', function () {
@@ -2841,12 +2963,13 @@ describe('ConceptSetPageController', function () {
             expect(rootScope.draftData).toBeNull();
         });
 
-        it('should clear stale hasUnsavedFormObservations in concatObservationForms when isDraftResumeValid is false and activeVisit is present', function () {
+        it('should preserve unsaved form observations in concatObservationForms when isDraftResumeValid is false but activeVisit is present', function () {
             rootScope.resumeDraftOnLoad = false;
             rootScope.draftData = null;
             scope.visitHistory = {activeVisit: {uuid: 'active-visit-uuid'}};
             // Pre-populate selectedObsTemplate so initializeDefaultTemplates is skipped,
-            // and set a stale unsaved form obs on observationForms to exercise the stale-obs guard
+            // and set a stale unsaved form obs on observationForms to verify
+            // that the stale-obs guard does NOT fire when an active visit is present.
             scope.consultation.selectedObsTemplate = [{uuid: 'tmpl-1', label: 'Template 1'}];
             scope.consultation.observationForms = [{
                 formName: 'Form1',
@@ -2859,8 +2982,295 @@ describe('ConceptSetPageController', function () {
             createController();
 
             var hasAnyFormUnsaved = _.some(scope.consultation.observationForms, function (f) { return f.hasUnsavedFormObservations; });
-            expect(hasAnyFormUnsaved).toBe(false);
-            expect(scope.consultation.observationForms[0].observations.length).toBe(0);
+            expect(hasAnyFormUnsaved).toBe(true);
+            expect(scope.consultation.observationForms[0].observations.length).toBe(1);
+        });
+    });
+
+    describe('Form Navigation with formUuid', function () {
+        it('should add form to selectedObsTemplate when formUuid is provided in stateParams', function () {
+            inject(function ($timeout) {
+                var mockObsConcept = {
+                    data: {
+                        results: [{
+                            setMembers: [
+                                {
+                                    uuid: 'concept-uuid-1',
+                                    name: {name: 'Template 1', display: 'Template 1'},
+                                    set: true,
+                                    setMembers: [],
+                                    formUuid: 'form-uuid-1'
+                                }
+                            ]
+                        }]
+                    }
+                };
+                var mockFormResponse = {
+                    data: [
+                        {
+                            name: 'Form1',
+                            version: '1',
+                            uuid: 'form-uuid-1',
+                            resources: [{value: '{}'}]
+                        }
+                    ]
+                };
+
+                conceptSetService.getConcept.and.returnValue({then: function (callback) {
+                    callback(mockObsConcept);
+                    return {then: function (next) { return {then: function () {}}; }};
+                }});
+                formService.getFormList.and.returnValue({then: function (callback) {
+                    callback(mockFormResponse);
+                    return {then: function () {}};
+                }});
+
+                stateParams.formUuid = 'form-uuid-1';
+
+                createController();
+                $timeout.flush();
+
+                var isInSelected = _.find(scope.consultation.selectedObsTemplate, function(t) {
+                    return t.formUuid === 'form-uuid-1';
+                });
+                expect(isInSelected).toBeDefined();
+            });
+        });
+
+        it('should show error when formUuid is provided but no matching template is found', function () {
+            inject(function ($timeout) {
+                var mockObsConcept = {
+                    data: {
+                        results: [{
+                            setMembers: [{
+                                uuid: 'concept-uuid-1',
+                                name: {name: 'Template 1', display: 'Template 1'},
+                                set: true,
+                                setMembers: [],
+                                formUuid: 'form-uuid-1'
+                            }]
+                        }]
+                    }
+                };
+                var mockFormResponse = {
+                    data: [{
+                        name: 'Form1',
+                        version: '1',
+                        uuid: 'form-uuid-1',
+                        resources: [{value: '{}'}]
+                    }]
+                };
+
+                conceptSetService.getConcept.and.returnValue({then: function (callback) {
+                    callback(mockObsConcept);
+                    return {then: function (next) { return {then: function () {}}; }};
+                }});
+                formService.getFormList.and.returnValue({then: function (callback) {
+                    callback(mockFormResponse);
+                    return {then: function () {}};
+                }});
+
+                stateParams.formUuid = 'missing-form-uuid';
+
+                createController();
+                $timeout.flush();
+
+                expect(messagingService.showMessage).toHaveBeenCalledWith('error', 'Form not found. Please contact your administrator.');
+            });
+        });
+
+        it('should preserve saved form values when returning to observations page within encounter time', function () {
+            inject(function ($timeout) {
+                var conceptResponseData = {
+                    results: [{setMembers: [{name: {name: "Template 1"}, uuid: 'concept-uuid-1', set: true, setMembers: []}]}]
+                };
+                mockConceptSetService(conceptResponseData);
+                mockformService([]);
+
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                createController();
+
+                scope.consultation.selectedObsTemplate = [{
+                    uuid: 'template-uuid-1',
+                    label: 'Template 1',
+                    observations: [{uuid: 'obs-uuid-1', concept: {uuid: 'concept-1'}, value: 'saved-value'}]
+                }];
+
+                var savedTemplate = _.find(scope.consultation.selectedObsTemplate, function (t) {
+                    return t.uuid === 'template-uuid-1';
+                });
+                expect(savedTemplate.observations[0].value).toEqual('saved-value');
+            });
+        });
+
+        it('should track observations from display control and not duplicate them when saving', function () {
+            inject(function ($timeout) {
+                var conceptResponseData = {
+                    results: [{setMembers: [{name: {name: "Template 1"}, uuid: 'concept-uuid-1', set: true, setMembers: []}]}]
+                };
+                mockConceptSetService(conceptResponseData);
+                mockformService([]);
+
+                rootScope.currentUser = {isFavouriteObsTemplate: function () { return false; }};
+                createController();
+
+                var templateObs = [{uuid: 'obs-uuid-1', concept: {uuid: 'concept-1'}, value: 'template-value'}];
+                var displayControlObs = [{uuid: 'obs-uuid-2', concept: {uuid: 'concept-2'}, value: 'display-value'}];
+
+                scope.consultation.selectedObsTemplate = [{uuid: 'template-uuid-1', label: 'Template 1', observations: templateObs}];
+                scope.consultation.observations = templateObs.concat(displayControlObs);
+
+                expect(scope.consultation.selectedObsTemplate[0].observations[0].uuid).toEqual('obs-uuid-1');
+                expect(scope.consultation.observations.length).toBe(2);
+            });
+
+            it('should set persistent baseline after successful draft save', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-uuid-123'};
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'test-value'}]}];
+
+                scope.saveAsDraft();
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid'}});
+
+                var baseline = formDirtyStateService.getPersistentBaseline('patient-uuid-123');
+                expect(baseline).toBeDefined();
+                expect(baseline.cleanState).toBeDefined();
+                expect(baseline.extraObservations).toBeDefined();
+            });
+
+            it('should clear persistent baseline when event:save-successful is fired', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-uuid-456'};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'test'}]}];
+
+                formDirtyStateService.setPersistentBaseline('patient-uuid-456', '["test"]', '[]');
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-456')).toBeDefined();
+
+                rootScope.$broadcast('event:save-successful');
+
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-456')).toBeNull();
+            });
+
+            it('should clear persistent baseline when draft is discarded', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var discardPromise = specUtil.createServicePromise('discardDraft');
+                formDraftService.discardDraft.and.returnValue(discardPromise);
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-uuid-789'};
+
+                formDirtyStateService.setPersistentBaseline('patient-uuid-789', '["test"]', '[]');
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-789')).toBeDefined();
+
+                scope.discardDraft();
+                discardPromise.callThenCallBack({});
+
+                expect(formDirtyStateService.getPersistentBaseline('patient-uuid-789')).toBeNull();
+            });
+
+            it('should prevent data loss: edits after save not overwritten by stale draft on re-entry', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter();
+                scope.patient = {uuid: 'patient-edit-test'};
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial-value'}]}];
+
+                scope.saveAsDraft();
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid'}});
+
+                scope.consultation.selectedObsTemplate[0].observations[0].value = 'second-edit-value';
+                scope.$digest();
+
+                expect(scope.formDraft.isDirty).toBe(true);
+
+                var baseline = formDirtyStateService.getPersistentBaseline('patient-edit-test');
+                expect(baseline).toBeDefined();
+            });
+
+            it('should keep isDirty true when user edits during post-save stabilization window', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutMock = function (callback, delay) {
+                    return {$$timeoutId: delay};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial'}]}];
+
+                scope.saveAsDraft();
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false}});
+
+                scope.consultation.selectedObsTemplate[0].observations[0].value = 'edited-during-stabilization';
+                scope.$digest();
+
+                expect(scope.formDraft.isDirty).toBe(true);
+                expect(scope.formDraft.isDirty).not.toBe(false);
+            });
+
+            it('should disable save button after draft save with no further edits', function () {
+                var conceptResponseData = {results: [{setMembers: [{name: {name: 'abcd'}, uuid: 123}]}]};
+                mockConceptSetService(conceptResponseData);
+                mockformService({});
+
+                var timeoutCallbacks = [];
+                var timeoutMock = function (callback, delay) {
+                    timeoutCallbacks.push(callback);
+                    return {$$timeoutId: timeoutCallbacks.length};
+                };
+                timeoutMock.cancel = jasmine.createSpy('cancel');
+
+                var saveDraftPromise = specUtil.createServicePromise('saveDraft');
+                formDraftService.saveDraft.and.returnValue(saveDraftPromise);
+
+                createControllerWithTimeoutAndFilter(timeoutMock);
+                scope.visitHistory = {activeVisit: {uuid: 'visit-uuid'}};
+                scope.consultation.selectedObsTemplate = [{uuid: 123, observations: [{value: 'initial-value'}]}];
+
+                expect(scope.formDraft.isDirty).toBe(false);
+
+                scope.saveAsDraft();
+                expect(scope.formDraft.isDirty).toBe(false);
+
+                saveDraftPromise.callThenCallBack({data: {timestamp: Date.now(), uuid: 'draft-uuid', markedAsSaved: false}});
+
+                expect(scope.formDraft.isDirty).toBe(false);
+
+                scope.$digest();
+
+                _.each(timeoutCallbacks, function (callback) {
+                    callback();
+                });
+
+                expect(scope.formDraft.isDirty).toBe(false);
+            });
         });
     });
 });
