@@ -38,4 +38,37 @@ describe('alertOnExit Directive', function () {
         expect(exitAlertService.setIsNavigating).toHaveBeenCalledWith(next, 'currentPatientUuid', 'previousPatientUuid');
         expect(exitAlertService.showExitAlert).toHaveBeenCalledWith(true, true, event, 'spinner');
     });
+
+    it('should not show popup after main save when navigating away', function () {
+        exitAlertService.setIsNavigating.and.returnValue(false);
+        var element = angular.element('<div alert-on-exit></div>');
+        $compile(element)($scope);
+        $scope.$digest();
+
+        $state.justSaved = true;
+        $state.dirtyConsultationForm = true;
+
+        var next = { url: '/other/page', spinnerToken: 'spinner' };
+        var current = { patientUuid: 'currentPatientUuid' };
+        var event = $rootScope.$broadcast('$stateChangeStart', next, current);
+
+        expect($state.dirtyConsultationForm).toBe(false);
+    });
+
+    it('should reset justSaved flag when navigating to a different patient after save', function () {
+        var element = angular.element('<div alert-on-exit></div>');
+        $compile(element)($scope);
+        $scope.$digest();
+
+        $state.justSaved = true;
+        $state.dirtyConsultationForm = true;
+
+        var next = { url: '/patient/123/page', spinnerToken: 'spinner' };
+        var current = { patientUuid: 'differentPatientUuid' };
+        $state.params.patientUuid = 'currentPatientUuid';
+
+        var event = $rootScope.$broadcast('$stateChangeStart', next, current);
+
+        expect($state.justSaved).toBe(false);
+    });
 });

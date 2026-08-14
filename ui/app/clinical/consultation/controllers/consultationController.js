@@ -550,6 +550,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                     return $q.when({});
                 }
                 sessionStorage.setItem('formSaveCompleted', 'true');
+                $state.mainSaveInProgress = true;
                 $rootScope.$broadcast('event:save-started');
                 try {
                     var alerts = angular.copy($rootScope.cdssAlerts) || [];
@@ -580,10 +581,12 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                             params.cachebuster = Math.random();
                             return encounterService.create(encounterData)
                             .then(function (saveResponse) {
+                                $state.mainSaveInProgress = false;
                                 $state.dirtyConsultationForm = false;
                                 $state.orderRemoved = false;
                                 $state.orderCreated = false;
-                                $scope.$parent.$broadcast("event:changes-saved");
+                                $rootScope.$broadcast("event:changes-saved");
+                                $state.justSaved = true;
                                 var messageParams = {
                                     encounterUuid: saveResponse.data.encounterUuid,
                                     encounterType: saveResponse.data.encounterType
