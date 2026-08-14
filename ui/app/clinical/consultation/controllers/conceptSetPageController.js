@@ -126,6 +126,15 @@ angular.module('bahmni.clinical')
                     return t.formUuid || t.uuid || t.id;
                 });
 
+                if ($stateParams.formUuid) {
+                    var matchingForm = _.find($scope.allTemplates, function (t) {
+                        return t.formUuid === $stateParams.formUuid;
+                    });
+                    if (!matchingForm) {
+                        messagingService.showMessage('error', 'Form not found. Please contact your administrator.');
+                    }
+                }
+
                 var currentPatientUuid = $scope.patient ? $scope.patient.uuid : null;
                 var isDraftResumeValid = $rootScope.resumeDraftOnLoad &&
                     $rootScope.draftData &&
