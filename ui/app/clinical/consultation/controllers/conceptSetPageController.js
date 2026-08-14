@@ -23,6 +23,10 @@ angular.module('bahmni.clinical')
                 return $scope.consultation && $scope.consultation.deletedFormIds ? $scope.consultation.deletedFormIds.slice() : [];
             };
 
+            var getFormId = function (form) {
+                return form && (form.uuid || form.formUuid);
+            };
+
             var init = function () {
                 if ($rootScope.draftDiscarded) {
                     var preservedDeletedFormIds = getDeletedFormIds();
@@ -212,9 +216,9 @@ angular.module('bahmni.clinical')
                             var matchingFormObservations = _.filter(form2DraftObservations, function (draftObservation) {
                                 return draftObservation.formFieldPath.split('.')[0] === observationForm.formName;
                             });
-                            if (matchingObs.length > 0 && obsForm.observations.length === 0) {
-                                _.each(matchingObs, function (obs) {
-                                    obsForm.observations.push(obs);
+                            if (matchingFormObservations.length > 0 && observationForm.observations.length === 0) {
+                                _.each(matchingFormObservations, function (obs) {
+                                    observationForm.observations.push(obs);
                                 });
                                 observationForm.isOpen = true;
                                 observationForm.hasUnsavedFormObservations = true;
@@ -557,15 +561,6 @@ angular.module('bahmni.clinical')
                 }
             };
 
-            var startAutoSaveIfDirty = function () {
-                if ($scope.formDraft.isDirty) {
-                    autoSaveService.start(
-                        function () { return $scope.enableFormDraftFeature && $scope.formDraft.isDirty && !dirtyTrackingState.isSaving && $scope.visitHistory && $scope.visitHistory.activeVisit; },
-                        saveFormDraft
-                    );
-                }
-            };
-
             var setupDirtyTracking = function () {
                 if (dirtyTrackingState.initialized) {
                     return;
@@ -582,7 +577,6 @@ angular.module('bahmni.clinical')
                     var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
                     $scope.consultation._draftCleanState = dirtyTrackingState.cleanState;
-                    startAutoSaveIfDirty();
                 } else if ($scope.consultation._draftCleanState !== undefined) {
                     dirtyTrackingState.cleanState = $scope.consultation._draftCleanState;
                     captureTemplateCleanStates();
@@ -590,7 +584,6 @@ angular.module('bahmni.clinical')
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState;
                     var currentExtras = angular.toJson(dirtyTrackingState.extraObservations);
                     $scope.formDraft.isDirty = currentState !== dirtyTrackingState.cleanState || currentExtras !== dirtyTrackingState.cleanStateExtras;
-                    startAutoSaveIfDirty();
                     savePersistentBaseline(dirtyTrackingState.cleanState);
                     dirtyTrackingState.postSaveRefreshPending = true;
                     dirtyTrackingState.postSaveRefreshTimeout = $timeout(function () {
@@ -657,7 +650,6 @@ angular.module('bahmni.clinical')
                                 // Form changed during post-save stabilization - mark as dirty
                                 $scope.formDraft.isDirty = true;
                                 $state.dirtyConsultationForm = true;
-                                startAutoSaveIfDirty();
                                 captureTemplateCleanStates();
                                 if (dirtyTrackingState.postSaveRefreshTimeout) {
                                     $timeout.cancel(dirtyTrackingState.postSaveRefreshTimeout);
