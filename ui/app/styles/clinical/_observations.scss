@@ -664,7 +664,7 @@ concept-set {
       background: $white;
       overflow-y: auto;
       overflow-x: hidden;
-      z-index: 10000;
+      z-index: 950;
 
       @media screen and (min-width: 769px) {
         top: 138px;
