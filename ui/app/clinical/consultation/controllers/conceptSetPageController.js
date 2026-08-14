@@ -857,15 +857,13 @@ angular.module('bahmni.clinical')
                                 return;
                             }
                             $scope.formDraft.isDirty = newTemplateState !== dirtyTrackingState.cleanState || newExtraState !== dirtyTrackingState.cleanStateExtras;
-                            if (!dirtyTrackingState.mainSaveInProgress) {
+                            if (!dirtyTrackingState.mainSaveInProgress && !$state.justSaved) {
                                 if ($scope.formDraft.isDirty) {
                                     $state.dirtyConsultationForm = true;
                                     $state.justSaved = false;
                                     startAutoSaveIfDirty();
                                 } else {
-                                    if (!$state.justSaved) {
-                                        $state.dirtyConsultationForm = false;
-                                    }
+                                    $state.dirtyConsultationForm = false;
                                 }
                             }
                             updateTemplateDirtyIndicators();
