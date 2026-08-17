@@ -254,7 +254,7 @@ angular.module('bahmni.clinical')
                         if (matchingTemplate) {
                             if (!matchingTemplate.observations || matchingTemplate.observations.length === 0) {
                                 matchingTemplate.observations = [stripObservationFlags(draftObservation)];
-                            } else if (!persistentBaseline) {
+                            } else {
                                 var cleanedDraftObservation = stripObservationFlags(draftObservation);
                                 _.each(matchingTemplate.observations, function (templateObservation) {
                                     if (templateObservation.concept && cleanedDraftObservation.concept &&
