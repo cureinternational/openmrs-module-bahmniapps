@@ -671,9 +671,6 @@ angular.module('bahmni.clinical')
                                 return;
                             }
                             $scope.formDraft.isDirty = newVal !== dirtyTrackingState.cleanState;
-                            if ($scope.formDraft.isDirty && $state.justSaved) {
-                                $state.justSaved = false;
-                            }
                             if (!dirtyTrackingState.mainSaveInProgress && !$state.justSaved) {
                                 if ($scope.formDraft.isDirty) {
                                     $state.dirtyConsultationForm = true;
