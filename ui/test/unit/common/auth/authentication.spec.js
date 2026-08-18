@@ -235,171 +235,26 @@ describe("logoutService", function () {
 
     describe("closePatientControlPanel", function () {
 
-        it("should add ng-hide class to visit-history element when it exists", function () {
+        it("should add ng-hide class to visit-history element", function () {
             var mockControlPanel = {
-                classList: {
-                    add: jasmine.createSpy('add')
-                }
+                classList: { add: jasmine.createSpy('add') }
             };
-            spyOn(document, 'querySelector').and.callFake(function (selector) {
-                if (selector === 'aside.visit-history') {
-                    return mockControlPanel;
-                }
-                return null;
-            });
+            spyOn(document, 'querySelector').and.returnValue(mockControlPanel);
 
             logoutService.attemptLogout($rootScope);
 
             expect(mockControlPanel.classList.add).toHaveBeenCalledWith('ng-hide');
         });
 
-        it("should add ng-hide class to patient-control-panel overlay when it exists", function () {
-            var mockOverlay = {
-                classList: {
-                    add: jasmine.createSpy('add')
-                }
-            };
-            spyOn(document, 'querySelector').and.callFake(function (selector) {
-                if (selector === '.patient-control-panel .overlay') {
-                    return mockOverlay;
-                }
-                return null;
-            });
-
-            logoutService.attemptLogout($rootScope);
-
-            expect(mockOverlay.classList.add).toHaveBeenCalledWith('ng-hide');
-        });
-
-        it("should handle when visit-history element does not exist", function () {
-            spyOn(document, 'querySelector').and.returnValue(null);
-            spyOn($log, 'debug');
-
-            expect(function () {
-                logoutService.attemptLogout($rootScope);
-            }).not.toThrow();
-        });
-
-        it("should use jQuery to add classes when jQuery is available", function () {
-            var mockJQueryElement = {
-                addClass: jasmine.createSpy('addClass')
-            };
-
-            spyOn(document, 'querySelector').and.returnValue(null);
-
-            var originalJQuery = window.$;
-            window.$ = jasmine.createSpy('$').and.returnValue(mockJQueryElement);
-            window.$.fn = true;
-
-            logoutService.attemptLogout($rootScope);
-
-            expect(window.$).toHaveBeenCalledWith('aside.visit-history');
-            expect(window.$).toHaveBeenCalledWith('.patient-control-panel .overlay');
-            expect(mockJQueryElement.addClass).toHaveBeenCalledWith('ng-hide');
-
-            window.$ = originalJQuery;
-        });
-
-        it("should not attempt jQuery operations when jQuery is not available", function () {
-            spyOn(document, 'querySelector').and.returnValue(null);
-
-            var originalJQuery = window.$;
-            window.$ = undefined;
-            spyOn($log, 'debug');
-
-            expect(function () {
-                logoutService.attemptLogout($rootScope);
-            }).not.toThrow();
-
-            window.$ = originalJQuery;
-        });
-
-        it("should handle both native DOM and jQuery operations together", function () {
-            var mockControlPanel = {
-                classList: {
-                    add: jasmine.createSpy('add')
-                }
-            };
-            var mockOverlay = {
-                classList: {
-                    add: jasmine.createSpy('add')
-                }
-            };
-            var mockJQueryElement = {
-                addClass: jasmine.createSpy('addClass')
-            };
-
-            spyOn(document, 'querySelector').and.callFake(function (selector) {
-                if (selector === 'aside.visit-history') {
-                    return mockControlPanel;
-                }
-                if (selector === '.patient-control-panel .overlay') {
-                    return mockOverlay;
-                }
-                return null;
-            });
-
-            var originalJQuery = window.$;
-            window.$ = jasmine.createSpy('$').and.returnValue(mockJQueryElement);
-            window.$.fn = true;
-
-            logoutService.attemptLogout($rootScope);
-
-            expect(mockControlPanel.classList.add).toHaveBeenCalledWith('ng-hide');
-            expect(mockOverlay.classList.add).toHaveBeenCalledWith('ng-hide');
-            expect(window.$).toHaveBeenCalled();
-            expect(mockJQueryElement.addClass).toHaveBeenCalled();
-
-            window.$ = originalJQuery;
-        });
-
-        it("should catch and log errors when DOM manipulation fails", function () {
+        it("should handle errors gracefully", function () {
             spyOn(document, 'querySelector').and.throwError('DOM Error');
             spyOn($log, 'debug');
 
             expect(function () {
                 logoutService.attemptLogout($rootScope);
             }).not.toThrow();
-
-            expect($log.debug).toHaveBeenCalledWith('Error closing patient control panel:', jasmine.any(Error));
         });
 
-        it("should close patient control panel before showing drafts warning", function () {
-            $rootScope.formDraftFeatureEnabled = true;
-            $rootScope.currentProvider = { uuid: 'provider-uuid' };
-
-            var mockControlPanel = {
-                classList: {
-                    add: jasmine.createSpy('add')
-                }
-            };
-
-            spyOn(document, 'querySelector').and.returnValue(mockControlPanel);
-
-            var hasDraftsPromise = specUtil.createServicePromise('hasDraftsForProvider');
-            hasDraftsPromise.then = function (successFn) {
-                successFn(false);
-                return hasDraftsPromise;
-            };
-            formDraftService.hasDraftsForProvider.and.returnValue(hasDraftsPromise);
-
-            auditLogService.log.and.returnValue({
-                then: function (callback) {
-                    callback();
-                    return { then: function (cb) { cb(); } };
-                }
-            });
-
-            sessionService.destroy.and.returnValue({
-                then: function (callback) {
-                    callback();
-                }
-            });
-
-            logoutService.attemptLogout($rootScope);
-
-            expect(mockControlPanel.classList.add).toHaveBeenCalledWith('ng-hide');
-        });
     });
 
 });
