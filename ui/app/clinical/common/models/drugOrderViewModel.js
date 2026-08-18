@@ -189,16 +189,22 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
 
     var numberBasedDoseAndFrequency = function () {
         var variableDosingType = self.variableDosingType;
-        var baseDoseStr = morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
-            morphToMixedFraction(variableDosingType.afternoonDose || 0) +
-            "-" + morphToMixedFraction(variableDosingType.eveningDose || 0);
+        var labels = Bahmni.Clinical.Constants.intradaySlotLabels;
+        var doseValues = [
+            morphToMixedFraction(variableDosingType.morningDose || 0),
+            morphToMixedFraction(variableDosingType.afternoonDose || 0),
+            morphToMixedFraction(variableDosingType.eveningDose || 0)
+        ];
         if (variableDosingType.nightDose != null) {
-            baseDoseStr += "-" + morphToMixedFraction(variableDosingType.nightDose || 0);
+            doseValues.push(morphToMixedFraction(variableDosingType.nightDose || 0));
         }
-        var variableDosingString = addDelimiter(baseDoseStr, " ");
+        var doseAndLabel = doseValues.map(function (dose, index) {
+            var doseWithUnit = dose + (self.doseUnits ? ' ' + self.doseUnits : '');
+            return doseWithUnit + ' ' + labels[index];
+        }).join(' | ');
 
         if (!self.isVariableDoseEmpty(variableDosingType)) {
-            return addDelimiter((variableDosingString + blankIfFalsy(self.doseUnits)).trim(), ", ");
+            return addDelimiter(blankIfFalsy(doseAndLabel), ", ");
         }
     };
 
@@ -685,19 +691,25 @@ Bahmni.Clinical.DrugOrderViewModel = function (config, proto, encounterDate) {
             }
             return "";
         }
-        var varDoseStr = morphToMixedFraction(variableDosingType.morningDose || 0) + "-" +
-            morphToMixedFraction(variableDosingType.afternoonDose || 0) + "-" +
-            morphToMixedFraction(variableDosingType.eveningDose || 0);
+        var labels = Bahmni.Clinical.Constants.intradaySlotLabels;
+        var doseValues = [
+            morphToMixedFraction(variableDosingType.morningDose || 0),
+            morphToMixedFraction(variableDosingType.afternoonDose || 0),
+            morphToMixedFraction(variableDosingType.eveningDose || 0)
+        ];
         if (variableDosingType.nightDose != null) {
-            varDoseStr += "-" + morphToMixedFraction(variableDosingType.nightDose || 0);
+            doseValues.push(morphToMixedFraction(variableDosingType.nightDose || 0));
         }
-        var variableDosingString = addDelimiter(varDoseStr, " ");
+        var doseAndLabel = doseValues.map(function (dose, index) {
+            var doseWithUnit = dose + (self.doseUnits ? ' ' + self.doseUnits : '');
+            return doseWithUnit + ' ' + labels[index];
+        }).join(' | ');
 
         if (self.frequencyType === Bahmni.Clinical.Constants.dosingTypes.uniform) {
             var value = morphToMixedFraction(calculateUniformDose());
             return value ? value + " " + blankIfFalsy(self.doseUnits) : "";
         } else {
-            return (variableDosingString + blankIfFalsy(self.doseUnits)).trim();
+            return doseAndLabel.trim();
         }
     };
 

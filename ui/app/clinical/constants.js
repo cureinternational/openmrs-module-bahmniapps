@@ -70,6 +70,7 @@ Bahmni.Clinical.Constants = (function () {
         stageStatus: stageStatus,
         minRequiredDoseBoxes: 2,
         intradayDoseFields: ['morningDose', 'afternoonDose', 'eveningDose', 'nightDose'],
+        intradaySlotLabels: ['Morning', 'Afternoon', 'Evening', 'Night'],
         orderActions: orderActions,
         errorMessages: errorMessages,
         visitTypes: visitTypes,
