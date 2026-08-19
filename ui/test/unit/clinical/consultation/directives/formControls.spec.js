@@ -181,6 +181,35 @@ describe("Form Controls", function () {
         expect(capturedAllowedDomains).toEqual([]);
     });
 
+    it('should pass updated collapse value to renderWithControls when collapseInnerSections changes', function () {
+        var collapseArgs = [];
+        window.renderWithControls = function () {
+            collapseArgs.push(arguments[3]);
+            renderHelper.renderWithControlsCalledTimes += 1;
+        };
+        mockObservationService({ resources: [{ value: '{"name":"Vitals", "controls": [{"type":"obsControl", "controls":[]}] }' }] });
+
+        document.body.innerHTML += '<div id="formUuid"></div>';
+        var formObj = {
+            formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en',
+            collapseInnerSections: {value: false}
+        };
+        element = angular.element("<form-controls patient=\"{ uuid: '123'}\" form=\"formObj\"></form-controls>");
+        scope.formObj = formObj;
+        $compile(element)(scope);
+        scope.$digest();
+
+        var initialCollapseCount = collapseArgs.length;
+        expect(collapseArgs[collapseArgs.length - 1]).toBe(false);
+
+        scope.$apply(function () {
+            formObj.collapseInnerSections = {value: true};
+        });
+
+        expect(collapseArgs.length).toBeGreaterThan(initialCollapseCount);
+        expect(collapseArgs[collapseArgs.length - 1]).toBe(true);
+    });
+
     it('should pass allowedDomains to renderWithControls even when translation fetch fails', function () {
         var capturedAllowedDomains;
         window.renderWithControls = function () {
