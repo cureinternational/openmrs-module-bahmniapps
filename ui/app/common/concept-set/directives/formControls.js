@@ -23,6 +23,7 @@ angular.module('bahmni.common.conceptSet')
                 var allowedDomains = [];
 
                 var renderForm = function (formDetails, formTranslations) {
+                    var collapse = $scope.form.collapseInnerSections && $scope.form.collapseInnerSections.value;
                     $scope.form.component = renderWithControls(formDetails, formObservations,
                         formUuid, collapse, $scope.patient, validateForm, locale, formTranslations,
                         allowedDomains);
@@ -75,7 +76,6 @@ angular.module('bahmni.common.conceptSet')
                     });
 
                 $scope.$watch('form.collapseInnerSections', function () {
-                    var collapse = $scope.form.collapseInnerSections && $scope.form.collapseInnerSections.value;
                     if (loadedFormDetails[formUuid]) {
                         renderForm(loadedFormDetails[formUuid], loadedFormTranslations[formUuid]);
                     }
