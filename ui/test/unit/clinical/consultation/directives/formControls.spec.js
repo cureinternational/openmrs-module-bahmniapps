@@ -44,13 +44,11 @@ describe("Form Controls", function () {
                 provide.value('$translate', translate);
                 provide.value('$state', $state);
             });
-
             inject(function (_$compile_, $rootScope, _$state_) {
                 $compile = _$compile_;
                 scope = $rootScope.$new();
                 $state = _$state_;
             });
-
             renderHelper = {
                 renderWithControlsOriginal: window.renderWithControls,
                 renderWithControlsCalledTimes: 0
@@ -62,7 +60,6 @@ describe("Form Controls", function () {
     afterEach(function () {
         resetReactHelperFunctions();
     });
-
     function fakeRenderHelperFunctions() {
         window.renderWithControls = function () {
             renderHelper.renderWithControlsCalledTimes += 1;
@@ -81,7 +78,6 @@ describe("Form Controls", function () {
                 }
             }
         });
-
         formService.getFormTranslations.and.callFake(function () {
             return {
                 then: function (callback) {
@@ -233,6 +229,110 @@ describe("Form Controls", function () {
         expect(capturedAllowedDomains).toEqual(['*.example.com']);
     });
 
+    describe('re-render when draft observations arrive', function () {
+        var formDetails = { resources: [{ value: '{"name":"Vitals", "controls": [{"type":"obsControl", "controls":[]}] }' }] };
+
+        var createElementWithForm = function (form) {
+            document.body.innerHTML += '<div id="formUuid"></div>';
+            scope.form = form;
+            element = angular.element('<form-controls patient="{ uuid: \'123\'}" form="form"></form-controls>');
+            $compile(element)(scope);
+            scope.$digest();
+        };
+
+        it('should re-render when observations change and a re-render was requested', function () {
+            mockObservationService(formDetails);
+            var form = { formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en', observations: [] };
+            createElementWithForm(form);
+            var rendersAfterLoad = renderHelper.renderWithControlsCalledTimes;
+
+            form.needsReRender = true;
+            form.observations = [{ value: 'from-draft' }];
+            scope.$digest();
+
+            expect(renderHelper.renderWithControlsCalledTimes).toBe(rendersAfterLoad + 1);
+        });
+
+        it('should pass the new observations to the re-render, not the ones captured at load', function () {
+            var capturedObservations;
+            window.renderWithControls = function () {
+                capturedObservations = arguments[1];
+                renderHelper.renderWithControlsCalledTimes += 1;
+            };
+            mockObservationService(formDetails);
+            var form = { formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en', observations: [] };
+            createElementWithForm(form);
+
+            form.needsReRender = true;
+            form.observations = [{ value: 'from-draft' }];
+            scope.$digest();
+
+            expect(capturedObservations).toEqual([{ value: 'from-draft' }]);
+        });
+
+        it('should clear the re-render flag so a single request renders once', function () {
+            mockObservationService(formDetails);
+            var form = { formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en', observations: [] };
+            createElementWithForm(form);
+
+            form.needsReRender = true;
+            form.observations = [{ value: 'from-draft' }];
+            scope.$digest();
+            var rendersAfterDraft = renderHelper.renderWithControlsCalledTimes;
+
+            form.observations = [{ value: 'typed-by-user' }];
+            scope.$digest();
+
+            expect(form.needsReRender).toBe(false);
+            expect(renderHelper.renderWithControlsCalledTimes).toBe(rendersAfterDraft);
+        });
+
+        it('should not re-render on observation changes that did not request one', function () {
+            mockObservationService(formDetails);
+            var form = { formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en', observations: [] };
+            createElementWithForm(form);
+            var rendersAfterLoad = renderHelper.renderWithControlsCalledTimes;
+
+            form.observations = [{ value: 'typed-by-user' }];
+            scope.$digest();
+
+            expect(renderHelper.renderWithControlsCalledTimes).toBe(rendersAfterLoad);
+        });
+
+        it('should unmount the previous React tree before re-rendering', function () {
+            var unmountCalls = 0;
+            var originalUnMount = window.unMountForm;
+            window.unMountForm = function () { unmountCalls += 1; };
+
+            mockObservationService(formDetails);
+            var form = { formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en', observations: [] };
+            createElementWithForm(form);
+            var unmountsAfterLoad = unmountCalls;
+
+            form.needsReRender = true;
+            form.observations = [{ value: 'from-draft' }];
+            scope.$digest();
+
+            expect(unmountCalls).toBe(unmountsAfterLoad + 1);
+            window.unMountForm = originalUnMount;
+        });
+
+        it('should unmount the React tree on scope destroy', function () {
+            var unmountCalls = 0;
+            var originalUnMount = window.unMountForm;
+            window.unMountForm = function () { unmountCalls += 1; };
+
+            mockObservationService(formDetails);
+            var form = { formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en', observations: [] };
+            createElementWithForm(form);
+            var unmountsAfterLoad = unmountCalls;
+
+            scope.$destroy();
+
+            expect(unmountCalls).toBe(unmountsAfterLoad + 1);
+            window.unMountForm = originalUnMount;
+        });
+    });
     var createElement = function () {
         document.body.innerHTML += '<div id="formUuid"></div>';
         element = angular.element("<form-controls patient = \"{ uuid: '123'}\" form=\"{ formName: 'form1', formUuid: 'formUuid', defaultLocale: 'en' }\" ></form-controls>");

@@ -5,26 +5,28 @@ angular.module('bahmni.common.conceptSet')
         function (formService, spinner, $timeout, $translate, $state, messagingService, appService, $http, configurationService) {
             var loadedFormDetails = {};
             var loadedFormTranslations = {};
-            var unMountReactContainer = function (formUuid) {
-                var reactContainerElement = angular.element(document.getElementById(formUuid));
-                reactContainerElement.on('$destroy', function () {
-                    unMountForm(document.getElementById(formUuid));
-                });
-            };
 
             var controller = function ($scope) {
                 var formUuid = $scope.form.formUuid;
                 var formVersion = $scope.form.formVersion;
                 var formName = $scope.form.formName;
-                var formObservations = $scope.form.observations;
                 var collapse = $scope.form.collapseInnerSections && $scope.form.collapseInnerSections.value;
                 var validateForm = $scope.validateForm || false;
                 var locale = $translate.use();
                 var allowedDomains = [];
 
+                var unmountExistingForm = function () {
+                    var containerEl = document.getElementById(formUuid);
+                    if (containerEl && typeof unMountForm === 'function') {
+                        unMountForm(containerEl);
+                    }
+                };
+
                 var renderForm = function (formDetails, formTranslations) {
+                    $scope.form.needsReRender = false;
+                    unmountExistingForm();
                     var collapse = $scope.form.collapseInnerSections && $scope.form.collapseInnerSections.value;
-                    $scope.form.component = renderWithControls(formDetails, formObservations,
+                    $scope.form.component = renderWithControls(formDetails, $scope.form.observations,
                         formUuid, collapse, $scope.patient, validateForm, locale, formTranslations,
                         allowedDomains);
                 };
@@ -52,14 +54,12 @@ angular.module('bahmni.common.conceptSet')
                                         })
                                     );
                                 }
-                                unMountReactContainer($scope.form.formUuid);
                             })
                         );
                     } else {
                         $timeout(function () {
                             $scope.form.events = loadedFormDetails[formUuid].events;
                             renderForm(loadedFormDetails[formUuid], loadedFormTranslations[formUuid]);
-                            unMountReactContainer($scope.form.formUuid);
                         }, 0, false);
                     }
                 };
@@ -79,14 +79,21 @@ angular.module('bahmni.common.conceptSet')
                     if (loadedFormDetails[formUuid]) {
                         renderForm(loadedFormDetails[formUuid], loadedFormTranslations[formUuid]);
                     }
+                }, true);
+
+                $scope.$watch('form.observations', function (newVal, oldVal) {
+                    if (newVal !== oldVal && loadedFormDetails[formUuid] && $scope.form.needsReRender) {
+                        renderForm(loadedFormDetails[formUuid], loadedFormTranslations[formUuid]);
+                    }
                 });
 
                 $scope.$on('$destroy', function () {
+                    $scope.form.needsReRender = false;
+                    unmountExistingForm();
                     if ($scope.$parent.consultation && $scope.$parent.consultation.observationForms) {
                         if ($scope.form.component) {
                             var formObservations = $scope.form.component.getValue();
                             $scope.form.observations = formObservations.observations;
-
                             var hasError = formObservations.errors;
                             if (!_.isEmpty(hasError)) {
                                 $scope.form.isValid = false;
