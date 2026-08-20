@@ -363,5 +363,27 @@ describe("ensure that the directive edit-observation works properly", function (
 
         expect(messageServiceMock.showMessage).toHaveBeenCalledWith('info', "{{'CLINICAL_SAVE_SUCCESS_MESSAGE_KEY' | translate}}");
     });
+
+    it("should set dirtyConsultationForm and justSaved flags after successful save", function () {
+        scope = rootScope.$new();
+        scope.observation = observation;
+
+        httpBackend.expectGET("../common/obs/views/editObservation.html").respond("<div>dummy</div>");
+
+        var compiledEle = compile(html)(scope);
+
+        scope.$digest();
+        httpBackend.flush();
+
+        var compiledScope = compiledEle.isolateScope();
+        scope.$digest();
+
+        compiledScope.save();
+        scope.$digest();
+
+        expect(rootScope.hasVisitedConsultation).toBe(false);
+        expect(state.dirtyConsultationForm).toBe(false);
+        expect(state.justSaved).toBe(true);
+    });
 });
 

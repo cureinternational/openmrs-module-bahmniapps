@@ -144,6 +144,8 @@ angular.module('bahmni.common.obs')
                         };
                         auditLogService.log($scope.patient.uuid, "EDIT_ENCOUNTER", messageParams, "MODULE_LABEL_CLINICAL_KEY");
                         $rootScope.hasVisitedConsultation = false;
+                        $state.dirtyConsultationForm = false;
+                        $state.justSaved = true;
                         $state.go($state.current, {}, {reload: true});
                         ngDialog.close();
                         messagingService.showMessage('info', "{{'CLINICAL_SAVE_SUCCESS_MESSAGE_KEY' | translate}}");
