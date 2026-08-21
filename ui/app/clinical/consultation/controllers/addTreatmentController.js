@@ -1123,7 +1123,9 @@ angular.module('bahmni.clinical')
                     };
 
                     var vdpDrugFormFor = function (data) {
-                        return (!data.isNonCodedDrug && data.drug && data.drug.dosageForm) ? data.drug.dosageForm.display : '';
+                        if (data.isNonCodedDrug || !data.drug) { return ''; }
+                        return (data.drug.dosageForm && data.drug.dosageForm.display) ||
+                            data.drug.form || data.drugForm || '';
                     };
 
                     var buildPendingVdpDrugOrder = function (data) {
@@ -1305,7 +1307,7 @@ angular.module('bahmni.clinical')
                                         drugNonCoded: data.isNonCodedDrug ? data.drugNonCoded : null,
                                         concept: data.isNonCodedDrug ? treatmentConfig.nonCodedDrugconcept : null,
                                         drugName: extractDrugName(data),
-                                        drugForm: (!data.isNonCodedDrug && data.drug && data.drug.dosageForm) ? data.drug.dosageForm.display : '',
+                                        drugForm: vdpDrugFormFor(data),
                                         units: unit,
                                         route: data.route || '',
                                         routeObject: getRouteObject(data.route),
