@@ -2826,6 +2826,34 @@ describe("AddTreatmentController", function () {
                 expect(scope.consultation.variableDoseTreatments[0].drugNonCoded).toBe('Herbal Mixture 500mg');
             });
 
+            it("should block revising a saved VDP onto an overlapping unsaved VDP when the saved drug uses form", function () {
+                scope.consultation.variableDoseTreatments = [{
+                    drug: { uuid: 'drug-uuid', name: 'Prednisolone', dosageForm: { display: 'Tablet' } },
+                    drugName: 'Prednisolone',
+                    drugForm: 'Tablet',
+                    careSetting: Bahmni.Clinical.Constants.careSetting.outPatient,
+                    startDate: new Date('2026-08-08'),
+                    totalDays: 1
+                }];
+                var savedOrder = savedOrderFor({
+                    uuid: 'aug-10-order',
+                    drug: { uuid: 'drug-uuid', name: 'Prednisolone', form: 'Tablet' },
+                    effectiveStartDate: DateUtil.parse('2026-08-10'),
+                    effectiveStopDate: DateUtil.parse('2026-08-11')
+                });
+                scope.consultation.activeAndScheduledDrugOrders = [savedOrder];
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', savedOrder);
+                var conflict = scope.variableDoseHostApi.checkVdpConflict(buildSaveData({
+                    drug: savedOrder.drug,
+                    startDate: new Date('2026-08-08')
+                }));
+
+                expect(conflict).not.toBeNull();
+                expect(conflict.drugName).toBe('Prednisolone');
+                expect(conflict.startDate.getTime()).toBe(new Date('2026-08-08').getTime());
+            });
+
             it("should still block a new VDP that duplicates an active regular prescription", function () {
                 scope.consultation.activeAndScheduledDrugOrders = [
                     savedOrderFor({ uuid: 'active-regular-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-12') })
