@@ -1,6 +1,6 @@
 fileignoreconfig:
 - filename: micro-frontends/yarn.lock
-  checksum: 1d449c53ad53c71a2ee0cf73def747a2af4a1ba48b4b41554118760f9d3de51e
+  checksum: 8141dacd91ecee13101431d1b39b34c28f57417471ff5a0548eb75dea8c10334
 - filename: ui/yarn.lock
-  checksum: ca61acf199e0602eedf57295ca23688351ed289fc07cf99f0cc5cfd9f87360d9
+  checksum: c36fa6253f21a271388b7c5948c5b7282d009c794cb3498f2b1be662536aaeae
 version: "1.0"
