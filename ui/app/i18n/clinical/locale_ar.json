@@ -389,5 +389,9 @@
     "CDSS_ALERT_SAVE_ERROR": "يجب معالجة تنبيه حرج من نظام دعم اتخاذ القرار السريري (CDSS) في تبويب الادوية قبل متابعة عملية الحفظ",
     "CDSS_ACTION": "يرجى النقر على تبويب الادوية لاتخاذ اجرائات اضافية",
     "MEDICATION_PRINT": "طباعة",
-    "DAYS_ADMITTED_MESSAGE": "عدد الايام في المستشفى"
+    "DAYS_ADMITTED_MESSAGE": "عدد الايام في المستشفى",
+    "INTRADAY_SLOT_MORNING": "صباح",
+    "INTRADAY_SLOT_AFTERNOON": "ظهر",
+    "INTRADAY_SLOT_EVENING": "مساء",
+    "INTRADAY_SLOT_NIGHT": "ليل"
 }

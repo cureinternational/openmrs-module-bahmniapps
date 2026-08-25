@@ -457,6 +457,9 @@
   "LMP_WARNING_DAYS_UNIT": "days",
   "AGO_LABEL": "ago",
   "LMP_DATE_RECORDED": "Date recorded: ",
-
-  "VARIABLE_DOSAGE_HEADER": "Variable Dosage"
+  "VARIABLE_DOSAGE_HEADER": "Variable Dosage",
+  "INTRADAY_SLOT_MORNING": "Morning",
+  "INTRADAY_SLOT_AFTERNOON": "Afternoon",
+  "INTRADAY_SLOT_EVENING": "Evening",
+  "INTRADAY_SLOT_NIGHT": "Night"
 }

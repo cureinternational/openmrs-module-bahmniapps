@@ -299,6 +299,67 @@ describe("drugOrderViewModel", function () {
         expect(treatment.getDescription()).toBe("2 Tablet Morning | 2 Tablet Afternoon | 2 Tablet Evening | 0 Tablet Night, Before Meals, Orally - 10 Days");
     });
 
+    describe("getDoseAndUnits for variable dosing type", function () {
+        it("should display 3-box intraday dose M-A-E when nightDose is absent (backward compat)", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 1,
+                afternoonDose: 1,
+                eveningDose: 1,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening");
+        });
+
+        it("should display 4-box intraday dose M-A-E-N when nightDose is defined", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 1,
+                afternoonDose: 0,
+                eveningDose: 2,
+                nightDose: 1,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("1 Tablet Morning | 0 Tablet Afternoon | 2 Tablet Evening | 1 Tablet Night");
+        });
+
+        it("should display 3-box format when nightDose is null (API returns null for legacy orders)", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 1,
+                afternoonDose: 1,
+                eveningDose: 1,
+                nightDose: null,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening");
+        });
+
+        it("should include nightDose 0 in display when nightDose is explicitly 0", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 2,
+                afternoonDose: 2,
+                eveningDose: 2,
+                nightDose: 0,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("2 Tablet Morning | 2 Tablet Afternoon | 2 Tablet Evening | 0 Tablet Night");
+        });
+    });
+
     it("should get the text to be displayed in the treatment list without route", function () {
         var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
         treatment.durationUnit = "Days";
