@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { OrdersDisplayControl } from "./OrdersDisplayControl";
 import axios from "axios";
+import { FHIR_URL, FHIR_SERVICE_REQUEST_URL } from "../../constants";
 
 jest.mock("axios");
 
@@ -46,72 +47,55 @@ describe("OrdersDisplayControl", () => {
       entry: [
         {
           resource: {
+            id: "order-1",
             code: { text: "Lab Order 1" },
             requester: { display: "Dr. Smith" },
             authoredOn: "2024-01-15T10:00:00.000Z",
             status: "active",
-            extension: [
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-created-on",
-                valueDateTime: "2024-01-20T11:00:00.000Z",
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-status",
-                valueString: "REQUESTED",
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-owner",
-                valueReference: { display: "Dr. David" },
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-note",
-                valueAnnotation: { text: "Test notes" },
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/created-by",
-                valueReference: { display: "Admin User" },
-              },
-            ],
           },
         },
         {
           resource: {
+            id: "order-2",
             code: { text: "Lab Order 2" },
             requester: { display: "Dr. Johnson" },
             authoredOn: "2024-01-10T10:00:00.000Z",
             status: "active",
-            extension: [
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-created-on",
-                valueDateTime: "2024-01-18T11:00:00.000Z",
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-status",
-                valueString: "ACCEPTED",
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-owner",
-                valueReference: { display: "Dr. John" },
-              },
-              {
-                url: "http://example.com/fhir/StructureDefinition/created-by",
-                valueReference: { display: "Nurse User" },
-              },
-            ],
           },
         },
         {
           resource: {
+            id: "order-3",
             code: { text: "Lab Order 3" },
             requester: { display: "Dr. Brown" },
             authoredOn: "2024-01-05T10:00:00.000Z",
             status: "active",
-            extension: [
-              {
-                url: "http://example.com/fhir/StructureDefinition/task-created-on",
-                valueDateTime: "2024-01-22T11:00:00.000Z",
-              },
-            ],
+          },
+        },
+      ],
+    },
+  };
+
+  const mockTaskResponse = {
+    data: {
+      entry: [
+        {
+          resource: {
+            id: "task-1",
+            basedOn: [{ reference: "ServiceRequest/order-1" }],
+            status: "accepted",
+            owner: { display: "Dr. David" },
+            note: [{ text: "Test notes" }],
+            meta: { lastUpdated: "2024-01-20T11:00:00.000Z" },
+          },
+        },
+        {
+          resource: {
+            id: "task-2",
+            basedOn: [{ reference: "ServiceRequest/order-2" }],
+            status: "requested",
+            owner: { display: "Dr. John" },
+            meta: { lastUpdated: "2024-01-18T11:00:00.000Z" },
           },
         },
       ],
@@ -124,6 +108,7 @@ describe("OrdersDisplayControl", () => {
 
   it("should render the component", async () => {
     axios.get.mockResolvedValueOnce(mockServiceRequestResponse);
+    axios.get.mockResolvedValueOnce(mockTaskResponse);
 
     const { container } = render(
       <OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />
@@ -139,12 +124,13 @@ describe("OrdersDisplayControl", () => {
 
   it("should make API call with correct parameters", async () => {
     axios.get.mockResolvedValueOnce(mockServiceRequestResponse);
+    axios.get.mockResolvedValueOnce(mockTaskResponse);
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
     await waitFor(() => {
       expect(axios.get).toHaveBeenCalledWith(
-        "/openmrs/ws/fhir2/R4/ServiceRequest",
+        FHIR_SERVICE_REQUEST_URL,
         {
           params: {
             _count: 100,
@@ -158,6 +144,7 @@ describe("OrdersDisplayControl", () => {
 
   it("should render section title with translation key", async () => {
     axios.get.mockResolvedValueOnce(mockServiceRequestResponse);
+    axios.get.mockResolvedValueOnce(mockTaskResponse);
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi}/>);
 
@@ -417,6 +404,7 @@ describe("OrdersDisplayControl", () => {
 
   it("should call ViewOrders with transformed orders", async () => {
     axios.get.mockResolvedValueOnce(mockServiceRequestResponse);
+    axios.get.mockResolvedValueOnce(mockTaskResponse);
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -461,6 +449,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithReplacementOrder);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -514,6 +503,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithCancelledOrder);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -544,6 +534,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithEmptyReplaces);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -601,6 +592,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithMalformedReference);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -670,6 +662,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithReplacementChain);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -730,6 +723,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithMultipleReplacements);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -765,6 +759,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithShortName);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
@@ -802,6 +797,7 @@ describe("OrdersDisplayControl", () => {
     };
 
     axios.get.mockResolvedValueOnce(responseWithMissingId);
+    axios.get.mockResolvedValueOnce({ data: { entry: [] } });
 
     render(<OrdersDisplayControl hostData={mockHostData} hostApi={mockHostApi} />);
 
