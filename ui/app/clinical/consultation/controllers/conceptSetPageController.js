@@ -228,11 +228,16 @@ angular.module('bahmni.clinical')
                 parsedDraftObs = parsedDraftObs.length > 0 ? parsedDraftObs : null;
 
                 if (parsedDraftObs && parsedDraftObs.length > 0) {
+                    var isNewEncounter = !$scope.consultation.encounterUuid;
                     var stripObservationFlags = function (obs) {
                         if (!obs) { return obs; }
                         var copy = angular.copy(obs);
                         delete copy.isObservation;
                         delete copy.isObservationNode;
+                        if (isNewEncounter) {
+                            delete copy.uuid;
+                            delete copy.observationDateTime;
+                        }
                         if (copy.groupMembers && copy.groupMembers.length > 0) {
                             copy.groupMembers = _.map(copy.groupMembers, stripObservationFlags);
                         }
@@ -262,7 +267,7 @@ angular.module('bahmni.clinical')
                                 return draftObservation.formFieldPath.split('.')[0] === observationForm.formName;
                             });
                             if (matchingFormObservations.length > 0) {
-                                observationForm.observations = matchingFormObservations;
+                                observationForm.observations = _.map(matchingFormObservations, stripObservationFlags);
                                 observationForm._needsReRender = true;
                                 observationForm.isOpen = true;
                                 observationForm.hasUnsavedFormObservations = true;
