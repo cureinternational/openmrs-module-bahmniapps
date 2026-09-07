@@ -122,6 +122,29 @@ describe("DrugOrderUtil", function () {
             expect(continuousTreatments.length).toBe(2);
         });
 
+        it("should not merge a refilled discharge medication into a continuous non-discharge order", function () {
+            var treatment1 = sampleTreatment("drug.uuid", "instructions", 1, "doseUnits", "frequency", "route", 1420088400000, 1420261200000, 3, "Day(s)");
+            var treatment2 = sampleTreatment("drug.uuid", "instructions", 1, "doseUnits", "frequency", "route", 1420347600000, 1420520400000, 3, "Day(s)");
+            treatment1.isDischargeMedication = false;
+            treatment2.isDischargeMedication = true;
+
+            var continuousTreatments = Bahmni.Clinical.DrugOrder.Util.mergeContinuousTreatments([treatment1, treatment2]);
+            expect(continuousTreatments.length).toBe(2);
+            expect(_.filter(continuousTreatments, {isDischargeMedication: true}).length).toBe(1);
+        });
+
+        it("should merge continuous treatments when both are discharge medications", function () {
+            var treatment1 = sampleTreatment("drug.uuid", "instructions", 1, "doseUnits", "frequency", "route", 1420088400000, 1420261200000, 3, "Day(s)");
+            var treatment2 = sampleTreatment("drug.uuid", "instructions", 1, "doseUnits", "frequency", "route", 1420347600000, 1420520400000, 3, "Day(s)");
+            treatment1.isDischargeMedication = true;
+            treatment2.isDischargeMedication = true;
+
+            var continuousTreatments = Bahmni.Clinical.DrugOrder.Util.mergeContinuousTreatments([treatment1, treatment2]);
+            expect(continuousTreatments.length).toBe(1);
+            expect(continuousTreatments[0].isDischargeMedication).toBe(true);
+            expect(continuousTreatments[0].span['Day(s)']).toBe(6);
+        });
+
     });
 
     describe("sortDrugOrders", function () {
