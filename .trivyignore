@@ -145,3 +145,6 @@ CVE-2026-67214
 CVE-2026-73646
 CVE-2026-73650
 CVE-2026-73566 # tar: node-tar DoS via crafted long-path archive; build-time only dep via terser-webpack-plugin->cacache https://avd.aquasec.com/nvd/cve-2026-73566
+CVE-2026-73088
+CVE-2026-73089
+CVE-2026-73086
