@@ -24,6 +24,7 @@ Bahmni.Clinical.DrugOrder.Util = {
                     areValuesEqual(existingOrder.route, drugOrder.route) &&
                     areValuesEqual(existingOrder.additionalInstructions, drugOrder.additionalInstructions) &&
                     areValuesEqual(existingOrder.asNeeded, drugOrder.asNeeded) &&
+                    areValuesEqual(existingOrder.isDischargeMedication, drugOrder.isDischargeMedication) &&
                     areValuesEqual(existingOrder.isDiscontinuedOrStopped(), drugOrder.isDiscontinuedOrStopped()) &&
                     Bahmni.Common.Util.DateUtil.diffInDaysRegardlessOfTime(new Date(existingOrder.lastStopDate), new Date(drugOrder.scheduledDate)) <= 1;
             });
