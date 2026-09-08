@@ -305,6 +305,29 @@ describe("VariableDoseProtocolModal", () => {
         });
     });
 
+    it("should not call searchDrugs again with the drug's full name after selecting it", async () => {
+        const drug = { uuid: "uuid-1", name: "Furosemide & Spironolactone 20mg + 50mg (Tablet)", dosageForm: null };
+        mockSearchDrugs.mockResolvedValue([drug]);
+        renderModal();
+
+        await waitFor(() => screen.getByText("Order Drug - Variable Dosage Protocol"));
+
+        const comboInput = screen.getByPlaceholderText("Type to Search a Drug");
+        fireEvent.change(comboInput, { target: { value: "Furo" } });
+        await waitFor(() => expect(mockSearchDrugs).toHaveBeenCalledWith("Furo"));
+
+        await act(async () => {
+            const option = await screen.findByText("Furosemide & Spironolactone 20mg + 50mg (Tablet)");
+            fireEvent.click(option);
+        });
+
+        await waitFor(() => {
+            expect(comboInput.value).toBe("Furosemide & Spironolactone 20mg + 50mg (Tablet)");
+        });
+
+        expect(mockSearchDrugs).not.toHaveBeenCalledWith("Furosemide & Spironolactone 20mg + 50mg (Tablet)");
+    });
+
     it("should pre-select unit and route from drugFormDefaults when a matching drug is selected", async () => {
         const drug = {
             uuid: "uuid-2",
