@@ -288,6 +288,8 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
 
     const debouncedSearch = useDebounce(performSearch, DEBOUNCE_DELAY_MS);
 
+    const selectedDrugNameRef = useRef(null);
+
     const handleDrugInputChange = ({ value }) => {
         setDrugConflict(null);
         setInputValue(value || "");
@@ -295,6 +297,10 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
             setIsNonCodedDrug(false);
             setDrugNonCoded("");
         }
+        if (selectedDrugNameRef.current && value === selectedDrugNameRef.current) {
+            return;
+        }
+        selectedDrugNameRef.current = null;
         debouncedSearch(value);
     };
 
@@ -304,6 +310,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
             setSelectedDrug(selectedItem);
             setIsNonCodedDrug(false);
             setDrugNonCoded("");
+            selectedDrugNameRef.current = selectedItem.name || "";
             setInputValue(selectedItem.name || "");
             const dosageForm = selectedItem.dosageForm?.display;
             const defaults = dosageForm ? drugFormDefaults[dosageForm] : null;
@@ -315,6 +322,7 @@ export function VariableDoseProtocolModalInner({ hostData, hostApi }) {
                 setRoute({ label: defaults.route, value: defaults.route });
             }
         } else if (!selectedItem) {
+            selectedDrugNameRef.current = null;
             setSelectedDrug(null);
             setInputValue("");
         }
