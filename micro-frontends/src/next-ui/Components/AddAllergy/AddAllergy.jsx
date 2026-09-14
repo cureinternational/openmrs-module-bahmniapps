@@ -47,6 +47,7 @@
 
     const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
     const [isSaveSuccess, setIsSaveSuccess] = React.useState(null);
+    const [saveError, setSaveError] = React.useState(null);
 
     const clearForm = () => {
       setAllergen({});
@@ -73,17 +74,19 @@
       if (response.status === 201) {
         setIsSaveSuccess(true);
       } else {
+        setSaveError(response.message);
         setIsSaveSuccess(false);
       }
     };
     useEffect(() => {
-      onSave(isSaveSuccess);
+      if (isSaveSuccess !== null) onSave(isSaveSuccess, saveError);
     }, [isSaveSuccess]);
 
     const handleKnownAllergyChange = (value) => {
       const isYes = value === "yes";
       setPatientHasAllergies(isYes);
       if (!isYes) {
+        if (!noKnownAllergyUuid) return;
         const noKnownAllergyValue = allergens.find(allergen => allergen?.uuid === noKnownAllergyUuid);
         setAllergen(noKnownAllergyValue ?? {});
         setReactions([]);
@@ -158,10 +161,7 @@
                               <span className={"red-text"}>&nbsp;*</span>
                             </div>
                             <RadioButtonGroup
-                                name={<FormattedMessage
-                                    id={"SEVERITY"}
-                                    defaultMessage={"Severity"}
-                                />}
+                                name="severity"
                                 key={"Severity"}
                                 onChange={(e) => {
                                   setSeverity(e);
