@@ -190,7 +190,9 @@ angular.module('bahmni.clinical')
             }));
 
             medications = medications.filter(function (medication) {
-                return angular.isDefined(medication.include) && medication.include || medication.include === undefined;
+                var isCodedDrug = !!medication.drug;
+                var isIncluded = angular.isDefined(medication.include) && medication.include || medication.include === undefined;
+                return isCodedDrug && isIncluded;
             });
 
             return Promise.all(medications.map(function (medication) {
@@ -229,6 +231,8 @@ angular.module('bahmni.clinical')
                         var alerts = response.data;
                         var existingAlerts = $rootScope.cdssAlerts || [];
                         $rootScope.cdssAlerts = addNewAlerts(alerts, existingAlerts, bundle);
+                    }).catch(function (error) {
+                        console.error('CDSS getAlerts request failed:', error && error.status, error && error.data);
                     });
                 });
             }
