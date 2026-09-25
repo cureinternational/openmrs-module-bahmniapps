@@ -133,6 +133,47 @@ describe('cdssService', function () {
         });
     });
 
+    it('Should extract clean SNOMED code from conceptReferenceTerm.code when display contains an embedded description', function () {
+        var draftDrugWithMalformedDisplay = [
+            {
+                uuid: 'medication_uuid_2',
+                drug: {
+                    uuid: 'drug_uuid_2',
+                    name: 'Drug Name 2',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                code: '1173984006',
+                                display: 'SNOMED CT: 1173984006 (Light liquid paraffin-containing product)'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Take once a day',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: {
+                    frequency: 'Once daily',
+                    dose: 1
+                },
+                doseUnits: 'mg'
+            }
+        ];
+
+        cdssService.createFhirBundle(consultationDataMock.patient, consultationDataMock.conditions, draftDrugWithMalformedDisplay, consultationDataMock.newlyAddedDiagnoses, 'http://example.com').then(function (bundle) {
+            var medicationRequest = bundle.entry.filter(function (entry) {
+                return entry.resource.resourceType === 'MedicationRequest';
+            })[0].resource;
+            var snomedCoding = medicationRequest.medicationCodeableConcept.coding.filter(function (coding) {
+                return coding.system === 'http://example.com';
+            })[0];
+            expect(snomedCoding.code).toEqual('1173984006');
+        });
+        rootScope.$apply();
+    });
+
     it('Should return an array of alerts sorted by status', function () {
         var alerts = [
             {

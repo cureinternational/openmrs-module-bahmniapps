@@ -77,6 +77,13 @@ angular.module('bahmni.clinical')
             };
         };
 
+        var extractSnomedCode = function (conceptReferenceTerm) {
+            if (conceptReferenceTerm && conceptReferenceTerm.code) {
+                return conceptReferenceTerm.code;
+            }
+            return conceptReferenceTerm && conceptReferenceTerm.display && conceptReferenceTerm.display.split(':')[1] && conceptReferenceTerm.display.split(':')[1].trim();
+        };
+
         var extractCodeInfo = function (medication, conceptSource) {
             if (!(medication.drug.drugReferenceMaps && medication.drug.drugReferenceMaps.length > 0)) {
                 return Promise.resolve([{
@@ -98,7 +105,7 @@ angular.module('bahmni.clinical')
                             conceptSource = conceptCode.system;
                             return [{
                                 system: conceptSource,
-                                code: drugReferenceMap.conceptReferenceTerm && drugReferenceMap.conceptReferenceTerm.display && drugReferenceMap.conceptReferenceTerm.display.split(':')[1].trim(),
+                                code: extractSnomedCode(drugReferenceMap.conceptReferenceTerm),
                                 display: medication.drug.name
                             }, {
                                 code: medication.drug.uuid,
@@ -116,7 +123,7 @@ angular.module('bahmni.clinical')
                 } else {
                     return Promise.resolve([{
                         system: conceptSource,
-                        code: drugReferenceMap.conceptReferenceTerm && drugReferenceMap.conceptReferenceTerm.display && drugReferenceMap.conceptReferenceTerm.display.split(':')[1].trim(),
+                        code: extractSnomedCode(drugReferenceMap.conceptReferenceTerm),
                         display: medication.drug.name
                     }, {
                         code: medication.drug.uuid,
