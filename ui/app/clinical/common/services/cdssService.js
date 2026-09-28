@@ -77,7 +77,7 @@ angular.module('bahmni.clinical')
             };
         };
 
-        var getConceptReferenceTermCode = function (drugReferenceMap) {
+        var getReferenceTermCode = function (drugReferenceMap) {
             var conceptReferenceTerm = drugReferenceMap && drugReferenceMap.conceptReferenceTerm;
             if (!conceptReferenceTerm) {
                 return '';
@@ -89,8 +89,8 @@ angular.module('bahmni.clinical')
                 return '';
             }
             var parts = String(conceptReferenceTerm.display).split(':');
-            var code = parts.length > 1 ? parts[1].trim() : String(conceptReferenceTerm.display).trim();
-            return code.split(' (')[0].trim();
+            var code = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+            return code.split(/\s|\(/)[0].trim();
         };
 
         var extractCodeInfo = function (medication, conceptSource) {
@@ -114,7 +114,7 @@ angular.module('bahmni.clinical')
                             conceptSource = conceptCode.system;
                             return [{
                                 system: conceptSource,
-                                code: getConceptReferenceTermCode(drugReferenceMap),
+                                code: getReferenceTermCode(drugReferenceMap),
                                 display: medication.drug.name
                             }, {
                                 code: medication.drug.uuid,
@@ -132,7 +132,7 @@ angular.module('bahmni.clinical')
                 } else {
                     return Promise.resolve([{
                         system: conceptSource,
-                        code: getConceptReferenceTermCode(drugReferenceMap),
+                        code: getReferenceTermCode(drugReferenceMap),
                         display: medication.drug.name
                     }, {
                         code: medication.drug.uuid,
@@ -143,26 +143,16 @@ angular.module('bahmni.clinical')
             }
         };
 
-        var SNOMED_SYSTEM = 'http://snomed.info/sct';
-
-        var isSnomedMapping = function (mapping) {
-            var source = mapping && mapping.source ? String(mapping.source) : '';
-            return source.toUpperCase().indexOf('SNOMED') !== -1;
+        var getConceptSource = function () {
+            return localStorage.getItem("conceptSource") || '';
         };
 
-        var getSnomedCoding = function (codedAnswer) {
-            if (!codedAnswer || !codedAnswer.mappings) {
-                return null;
-            }
-            var snomedMapping = codedAnswer.mappings.filter(isSnomedMapping)[0];
-            if (!snomedMapping || !snomedMapping.code) {
-                return null;
-            }
-            return {
-                system: SNOMED_SYSTEM,
-                code: snomedMapping.code,
-                display: codedAnswer.name || snomedMapping.name
-            };
+        var getMappedCode = function (codedAnswer) {
+            var mappings = codedAnswer && codedAnswer.mappings;
+            var mapping = mappings && mappings.filter(function (eachMapping) {
+                return eachMapping && eachMapping.code;
+            })[0];
+            return mapping ? String(mapping.code).trim() : '';
         };
 
         var createConditionResource = function (condition, patientUuid, isDiagnosis) {
@@ -171,11 +161,14 @@ angular.module('bahmni.clinical')
             var activeConditions = ['CONFIRMED', 'PRESUMED', 'ACTIVE'];
             var status = (!conditionStatus || activeConditions.indexOf(conditionStatus) > -1) ? 'active' : 'inactive';
             var conditionCodings = [];
-            if (isDiagnosis) {
-                var snomedCoding = getSnomedCoding(condition.codedAnswer);
-                if (snomedCoding) {
-                    conditionCodings.push(snomedCoding);
-                }
+            var mappedCode = isDiagnosis ? getMappedCode(condition.codedAnswer) : '';
+            var mappedSystem = isDiagnosis ? getConceptSource() : '';
+            if (mappedCode && mappedSystem) {
+                conditionCodings.push({
+                    system: mappedSystem,
+                    code: mappedCode,
+                    display: condition.codedAnswer.name
+                });
             }
             var conditionCoding = condition.concept ? extractConditionInfo(condition) : {
                 system: isDiagnosis ? condition.codedAnswer.conceptSystem : (conceptLimitIndex > -1 ? (condition.concept.uuid.substring(0, conceptLimitIndex) || '') : ''),
@@ -226,15 +219,6 @@ angular.module('bahmni.clinical')
         }
 
         var createFhirBundle = function (patient, conditions, medications, diagnosis, conceptSource) {
-            var encounterResource = conditions.filter(function (condition) {
-                return !condition.uuid;
-            }).map(function (condition) {
-                return createConditionResource(condition, patient.uuid, false);
-            });
-            encounterResource = encounterResource.concat(diagnosis.map(function (condition) {
-                return createConditionResource(condition, patient.uuid, true);
-            }));
-
             medications = medications.filter(function (medication) {
                 return angular.isDefined(medication.include) && medication.include || medication.include === undefined;
             });
@@ -244,6 +228,15 @@ angular.module('bahmni.clinical')
                     return medicationResource;
                 });
             })).then(function (medicationResources) {
+                var encounterResource = conditions.filter(function (condition) {
+                    return !condition.uuid;
+                }).map(function (condition) {
+                    return createConditionResource(condition, patient.uuid, false);
+                });
+                encounterResource = encounterResource.concat(diagnosis.map(function (condition) {
+                    return createConditionResource(condition, patient.uuid, true);
+                }));
+
                 var bundleResource = {
                     resourceType: 'Bundle',
                     type: 'collection',

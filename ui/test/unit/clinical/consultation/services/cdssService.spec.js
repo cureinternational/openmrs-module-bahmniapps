@@ -102,6 +102,7 @@ describe('cdssService', function () {
     });
 
     beforeEach(function () {
+        localStorage.removeItem('conceptSource');
         module('bahmni.clinical');
 
         module(function ($provide) {
@@ -162,7 +163,8 @@ describe('cdssService', function () {
         });
     });
 
-    it('Should add SNOMED coding for a diagnosis without conceptSystem but with a SNOMED mapping', function () {
+    it('Should add a coding from the resolved concept source for a diagnosis that only carries mappings', function (done) {
+        localStorage.setItem('conceptSource', 'http://example.com');
         var diagnoses = [
             {
                 uuid: 'saved_diagnosis_uuid_1',
@@ -171,8 +173,8 @@ describe('cdssService', function () {
                     uuid: 'saved_coded_answer_uuid_1',
                     name: 'Asthma',
                     mappings: [
-                        { source: 'SNOMED CT', code: '195967001', name: 'Asthma' },
-                        { source: 'ICD 10 - WHO', code: 'J45.9', name: 'Asthma' }
+                        { source: 'External Source One', code: '195967001', name: 'Asthma' },
+                        { source: 'External Source Two', code: 'J45.9', name: 'Asthma' }
                     ]
                 }
             }
@@ -182,7 +184,7 @@ describe('cdssService', function () {
             expect(conditionResource.resourceType).toEqual('Condition');
             expect(conditionResource.code.coding.length).toEqual(2);
             expect(conditionResource.code.coding[0]).toEqual({
-                system: 'http://snomed.info/sct',
+                system: 'http://example.com',
                 code: '195967001',
                 display: 'Asthma'
             });
@@ -191,10 +193,12 @@ describe('cdssService', function () {
                 code: 'saved_coded_answer_uuid_1',
                 display: 'Asthma'
             });
+            done();
         });
     });
 
-    it('Should keep single uuid coding for a diagnosis without any SNOMED mapping', function () {
+    it('Should keep single uuid coding for a diagnosis without mappings', function (done) {
+        localStorage.removeItem('conceptSource');
         var diagnoses = [
             {
                 uuid: 'diagnosis_uuid_1',
@@ -213,10 +217,32 @@ describe('cdssService', function () {
                 code: 'coded_answer_uuid_1',
                 display: 'Diagnosis Name 1'
             });
+            done();
         });
     });
 
-    it('Should extract a clean SNOMED code from a polluted reference term display', function () {
+    it('Should not add a mapped coding for a diagnosis when no concept source has been resolved yet', function (done) {
+        localStorage.removeItem('conceptSource');
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [], diagnoses, 'http://example.com').then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.code.coding.length).toEqual(1);
+            expect(conditionResource.code.coding[0].code).toEqual('saved_coded_answer_uuid_1');
+            done();
+        });
+    });
+
+    it('Should prefer the reference term code over a polluted display', function (done) {
         var medications = [
             {
                 uuid: 'medication_uuid_1',
@@ -225,9 +251,9 @@ describe('cdssService', function () {
                     name: 'Propranolol',
                     drugReferenceMaps: [
                         {
-                            concept: { uuid: 'concept_uuid_1' },
                             conceptReferenceTerm: {
-                                display: 'SNOMED CT:55745002 (Propranolol)'
+                                code: '55745002',
+                                display: 'External Source: 55745002 (Propranolol)'
                             }
                         }
                     ]
@@ -249,6 +275,77 @@ describe('cdssService', function () {
                 code: '55745002',
                 display: 'Propranolol'
             });
+            done();
+        });
+    });
+
+    it('Should fall back to the reference term display convention when no code is returned', function (done) {
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Sample Drug',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                display: 'External Source: 12345'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, [], 'http://example.com').then(function (bundle) {
+            var medicationRequest = bundle.entry[0].resource;
+            expect(medicationRequest.medicationCodeableConcept.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '12345',
+                display: 'Sample Drug'
+            });
+            done();
+        });
+    });
+
+    it('Should strip a trailing parenthetical from the display when no code is returned', function (done) {
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                display: 'External Source: 55745002 (Propranolol)'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, [], 'http://example.com').then(function (bundle) {
+            var medicationRequest = bundle.entry[0].resource;
+            expect(medicationRequest.medicationCodeableConcept.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '55745002',
+                display: 'Propranolol'
+            });
+            done();
         });
     });
 
