@@ -242,6 +242,55 @@ describe('cdssService', function () {
         });
     });
 
+    it('Should resolve the concept source from a newly added medication and use it for diagnoses', function (done) {
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                code: '55745002',
+                                display: 'External Source: 55745002 (Propranolol)'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        expect(localStorage.getItem('conceptSource')).toBeNull();
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, diagnoses).then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.resourceType).toEqual('Condition');
+            expect(conditionResource.code.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '195967001',
+                display: 'Asthma'
+            });
+            done();
+        });
+    });
+
     it('Should prefer the reference term code over a polluted display', function (done) {
         var medications = [
             {
