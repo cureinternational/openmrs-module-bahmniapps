@@ -148,3 +148,6 @@ CVE-2026-73566 # tar: node-tar DoS via crafted long-path archive; build-time onl
 CVE-2026-73088
 CVE-2026-73089
 CVE-2026-73086
+CVE-2026-102276
+CVE-2026-102278
+CVE-2026-76844
