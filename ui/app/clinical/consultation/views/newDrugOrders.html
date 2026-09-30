@@ -77,7 +77,7 @@
                 <div ng-if="newTreatment.getQuantityWithUnit()"><span ng-if="newTreatment.route || newTreatment.instructions"> | </span>{{newTreatment.getQuantityWithUnit()}}</div>
                 <div ng-show="newTreatment.isDischargeMedication"> | {{ ::'DISCH_LABEL' | translate }}</div>
             </div>
-            <cdss-alert-row alerts="newTreatment.alerts"></cdss-alert-row>
+            <cdss-alert-row alerts="newTreatment.alerts" drug-order="newTreatment"></cdss-alert-row>
         </li>
     </ul>
 </section>

@@ -190,7 +190,9 @@ angular.module('bahmni.clinical')
             }));
 
             medications = medications.filter(function (medication) {
-                return angular.isDefined(medication.include) && medication.include || medication.include === undefined;
+                var isCodedDrug = !!medication.drug;
+                var isIncluded = angular.isDefined(medication.include) && medication.include || medication.include === undefined;
+                return isCodedDrug && isIncluded;
             });
 
             return Promise.all(medications.map(function (medication) {
