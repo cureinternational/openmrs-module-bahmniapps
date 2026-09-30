@@ -82,15 +82,24 @@ describe('cdssService', function () {
     };
 
     var cdssService;
-    var drugService = jasmine.createSpyObj('drugService', ['getDrugConceptSourceMapping']);
-    drugService.getDrugConceptSourceMapping.and.callFake(function () {
+    var drugService = jasmine.createSpyObj('drugService', ['getDrugConceptSourceMapping', 'sendDiagnosisDrugBundle']);
+    drugService.sendDiagnosisDrugBundle.and.callFake(function () {
+        return specUtil.respondWith({ data: [] });
+    });
+    drugService.getDrugConceptSourceMapping.and.callFake(function (drugUuid) {
+        var system = 'http://example.com';
+        if (drugUuid === 'drug_source_one_uuid') {
+            system = 'http://source-one.example.org';
+        } else if (drugUuid === 'drug_source_two_uuid') {
+            system = 'http://source-two.example.org';
+        }
         return specUtil.respondWith({
             data: {
                 entry: [{
                     resource: {
                         code: {
                             coding: [{
-                                system: 'http://example.com',
+                                system: system,
                                 code: '12345',
                                 display: 'Sample Drug'
                             }]
@@ -102,6 +111,7 @@ describe('cdssService', function () {
     });
 
     beforeEach(function () {
+        localStorage.removeItem('conceptSource');
         module('bahmni.clinical');
 
         module(function ($provide) {
@@ -122,6 +132,35 @@ describe('cdssService', function () {
         expect(params.medications).toEqual(consultationDataMock.draftDrug);
     });
 
+    it('Should return saved diagnoses from current encounter in params for cdss request', function () {
+        consultationDataMock.savedDiagnosesFromCurrentEncounter = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Saved Diagnosis Name 1'
+                }
+            }
+        ];
+        var params = cdssService.createParams(consultationDataMock);
+        expect(params.diagnosis.length).toEqual(3);
+        expect(params.diagnosis[2]).toEqual(consultationDataMock.savedDiagnosesFromCurrentEncounter[0]);
+        expect(params.medications).toEqual(consultationDataMock.draftDrug);
+    });
+
+    it('Should return condition from singular consultation.condition in params for cdss request', function () {
+        consultationDataMock.condition = {
+            concept: {
+                uuid: 'singular_condition_concept_uuid_1',
+                name: 'Singular Condition Name 1'
+            }
+        };
+        var params = cdssService.createParams(consultationDataMock);
+        expect(params.conditions.length).toEqual(2);
+        expect(params.conditions[1]).toEqual(consultationDataMock.condition);
+    });
+
     it('Should return a bundle of resources', function () {
         cdssService.createFhirBundle(consultationDataMock.patient, consultationDataMock.conditions, consultationDataMock.draftDrug, consultationDataMock.newlyAddedDiagnoses, 'http://example.com').then(function (bundle) {
 
@@ -130,6 +169,322 @@ describe('cdssService', function () {
             expect(bundle.entry.length).toEqual(3);
             expect(bundle.entry[0].resource.resourceType).toEqual('Condition');
             expect(bundle.entry[2].resource.resourceType).toEqual('MedicationRequest');
+        });
+    });
+
+    it('Should add a coding from the resolved concept source for a diagnosis that only carries mappings', function (done) {
+        localStorage.setItem('conceptSource', 'http://example.com');
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [
+                        { source: 'External Source One', code: '195967001', name: 'Asthma' },
+                        { source: 'External Source Two', code: 'J45.9', name: 'Asthma' }
+                    ]
+                }
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [], diagnoses, 'http://example.com').then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.resourceType).toEqual('Condition');
+            expect(conditionResource.code.coding.length).toEqual(2);
+            expect(conditionResource.code.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '195967001',
+                display: 'Asthma'
+            });
+            expect(conditionResource.code.coding[1]).toEqual({
+                system: undefined,
+                code: 'saved_coded_answer_uuid_1',
+                display: 'Asthma'
+            });
+            done();
+        });
+    });
+
+    it('Should keep single uuid coding for a diagnosis without mappings', function (done) {
+        localStorage.removeItem('conceptSource');
+        var diagnoses = [
+            {
+                uuid: 'diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'coded_answer_uuid_1',
+                    name: 'Diagnosis Name 1'
+                }
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [], diagnoses, 'http://example.com').then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.code.coding.length).toEqual(1);
+            expect(conditionResource.code.coding[0]).toEqual({
+                system: undefined,
+                code: 'coded_answer_uuid_1',
+                display: 'Diagnosis Name 1'
+            });
+            done();
+        });
+    });
+
+    it('Should not add a mapped coding for a diagnosis when no concept source has been resolved yet', function (done) {
+        localStorage.removeItem('conceptSource');
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [], diagnoses, 'http://example.com').then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.code.coding.length).toEqual(1);
+            expect(conditionResource.code.coding[0].code).toEqual('saved_coded_answer_uuid_1');
+            done();
+        });
+    });
+
+    it('Should resolve the concept source from a newly added medication and use it for diagnoses', function (done) {
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                code: '55745002',
+                                display: 'External Source: 55745002 (Propranolol)'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        expect(localStorage.getItem('conceptSource')).toBeNull();
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, diagnoses).then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.resourceType).toEqual('Condition');
+            expect(conditionResource.code.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '195967001',
+                display: 'Asthma'
+            });
+            done();
+        });
+    });
+
+    it('Should use the first resolved concept source when several medications map to different systems', function (done) {
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_source_one_uuid',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [{ conceptReferenceTerm: { code: '55745002', display: 'Source One: 55745002 (Propranolol)' } }]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            },
+            {
+                uuid: 'medication_uuid_2',
+                drug: {
+                    uuid: 'drug_source_two_uuid',
+                    name: 'Salbutamol',
+                    drugReferenceMaps: [{ conceptReferenceTerm: { code: 'J45.9', display: 'Source Two: J45.9 (Salbutamol)' } }]
+                },
+                instructions: 'When required',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: true,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, diagnoses).then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.code.coding[0]).toEqual({
+                system: 'http://source-one.example.org',
+                code: '195967001',
+                display: 'Asthma'
+            });
+            expect(localStorage.getItem('conceptSource')).toEqual('http://source-one.example.org');
+            done();
+        });
+    });
+
+    it('Should discard a concept source left over from a previous patient', function (done) {
+        localStorage.setItem('conceptSource', 'http://stale-previous-patient.example.org');
+        var consultation = angular.copy(consultationDataMock);
+        consultation.patient = { uuid: 'patient_uuid_here' };
+        consultation.conditions = [];
+        consultation.newlyAddedDiagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        consultation.savedDiagnosesFromCurrentEncounter = [];
+        consultation.newlyAddedTabTreatments = { allMedicationTabConfig: { treatments: [], orderSetTreatments: [] } };
+        cdssService.getAlerts(true, consultation, consultation.patient);
+        setTimeout(function () {
+            expect(localStorage.getItem('conceptSource')).toBeNull();
+            done();
+        }, 0);
+    });
+
+    it('Should prefer the reference term code over a polluted display', function (done) {
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                code: '55745002',
+                                display: 'External Source: 55745002 (Propranolol)'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, [], 'http://example.com').then(function (bundle) {
+            var medicationRequest = bundle.entry[0].resource;
+            expect(medicationRequest.resourceType).toEqual('MedicationRequest');
+            expect(medicationRequest.medicationCodeableConcept.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '55745002',
+                display: 'Propranolol'
+            });
+            done();
+        });
+    });
+
+    it('Should fall back to the reference term display convention when no code is returned', function (done) {
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Sample Drug',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                display: 'External Source: 12345'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, [], 'http://example.com').then(function (bundle) {
+            var medicationRequest = bundle.entry[0].resource;
+            expect(medicationRequest.medicationCodeableConcept.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '12345',
+                display: 'Sample Drug'
+            });
+            done();
+        });
+    });
+
+    it('Should strip a trailing parenthetical from the display when no code is returned', function (done) {
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_uuid_1',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                display: 'External Source: 55745002 (Propranolol)'
+                            }
+                        }
+                    ]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, [], 'http://example.com').then(function (bundle) {
+            var medicationRequest = bundle.entry[0].resource;
+            expect(medicationRequest.medicationCodeableConcept.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '55745002',
+                display: 'Propranolol'
+            });
+            done();
         });
     });
 

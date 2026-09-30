@@ -77,6 +77,22 @@ angular.module('bahmni.clinical')
             };
         };
 
+        var getReferenceTermCode = function (drugReferenceMap) {
+            var conceptReferenceTerm = drugReferenceMap && drugReferenceMap.conceptReferenceTerm;
+            if (!conceptReferenceTerm) {
+                return '';
+            }
+            if (conceptReferenceTerm.code) {
+                return String(conceptReferenceTerm.code).trim();
+            }
+            if (!conceptReferenceTerm.display) {
+                return '';
+            }
+            var parts = String(conceptReferenceTerm.display).split(':');
+            var code = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+            return code.split(/\s|\(/)[0].trim();
+        };
+
         var extractCodeInfo = function (medication, conceptSource) {
             if (!(medication.drug.drugReferenceMaps && medication.drug.drugReferenceMaps.length > 0)) {
                 return Promise.resolve([{
@@ -94,11 +110,13 @@ angular.module('bahmni.clinical')
                             return coding.system;
                         });
                         if (conceptCode) {
-                            localStorage.setItem("conceptSource", conceptCode.system);
+                            if (!localStorage.getItem("conceptSource")) {
+                                localStorage.setItem("conceptSource", conceptCode.system);
+                            }
                             conceptSource = conceptCode.system;
                             return [{
                                 system: conceptSource,
-                                code: drugReferenceMap.conceptReferenceTerm && drugReferenceMap.conceptReferenceTerm.display && drugReferenceMap.conceptReferenceTerm.display.split(':')[1].trim(),
+                                code: getReferenceTermCode(drugReferenceMap),
                                 display: medication.drug.name
                             }, {
                                 code: medication.drug.uuid,
@@ -116,7 +134,7 @@ angular.module('bahmni.clinical')
                 } else {
                     return Promise.resolve([{
                         system: conceptSource,
-                        code: drugReferenceMap.conceptReferenceTerm && drugReferenceMap.conceptReferenceTerm.display && drugReferenceMap.conceptReferenceTerm.display.split(':')[1].trim(),
+                        code: getReferenceTermCode(drugReferenceMap),
                         display: medication.drug.name
                     }, {
                         code: medication.drug.uuid,
@@ -127,16 +145,39 @@ angular.module('bahmni.clinical')
             }
         };
 
+        var getConceptSource = function () {
+            return localStorage.getItem("conceptSource") || '';
+        };
+
+        var getMappedCode = function (codedAnswer) {
+            var mappings = codedAnswer && codedAnswer.mappings;
+            var mapping = mappings && mappings.filter(function (eachMapping) {
+                return eachMapping && eachMapping.code;
+            })[0];
+            return mapping ? String(mapping.code).trim() : '';
+        };
+
         var createConditionResource = function (condition, patientUuid, isDiagnosis) {
             var conceptLimitIndex = isDiagnosis ? -1 : condition.concept.uuid.lastIndexOf('/');
             var conditionStatus = condition.status || condition.diagnosisStatus || condition.certainty;
             var activeConditions = ['CONFIRMED', 'PRESUMED', 'ACTIVE'];
             var status = (!conditionStatus || activeConditions.indexOf(conditionStatus) > -1) ? 'active' : 'inactive';
+            var conditionCodings = [];
+            var mappedCode = isDiagnosis ? getMappedCode(condition.codedAnswer) : '';
+            var mappedSystem = isDiagnosis ? getConceptSource() : '';
+            if (mappedCode && mappedSystem) {
+                conditionCodings.push({
+                    system: mappedSystem,
+                    code: mappedCode,
+                    display: condition.codedAnswer.name
+                });
+            }
             var conditionCoding = condition.concept ? extractConditionInfo(condition) : {
                 system: isDiagnosis ? condition.codedAnswer.conceptSystem : (conceptLimitIndex > -1 ? (condition.concept.uuid.substring(0, conceptLimitIndex) || '') : ''),
                 code: isDiagnosis ? condition.codedAnswer.uuid : (conceptLimitIndex > -1 ? condition.concept.uuid.substring(conceptLimitIndex + 1) : condition.concept.uuid),
                 display: isDiagnosis ? condition.codedAnswer.name : condition.concept.name
             };
+            conditionCodings.push(conditionCoding);
 
             var conditionResource = {
                 resourceType: 'Condition',
@@ -151,7 +192,7 @@ angular.module('bahmni.clinical')
                     ]
                 },
                 code: {
-                    coding: [ conditionCoding ],
+                    coding: conditionCodings,
                     text: isDiagnosis ? condition.codedAnswer.name : condition.concept.name
                 },
                 subject: {
@@ -180,15 +221,6 @@ angular.module('bahmni.clinical')
         }
 
         var createFhirBundle = function (patient, conditions, medications, diagnosis, conceptSource) {
-            var encounterResource = conditions.filter(function (condition) {
-                return !condition.uuid;
-            }).map(function (condition) {
-                return createConditionResource(condition, patient.uuid, false);
-            });
-            encounterResource = encounterResource.concat(diagnosis.map(function (condition) {
-                return createConditionResource(condition, patient.uuid, true);
-            }));
-
             medications = medications.filter(function (medication) {
                 return angular.isDefined(medication.include) && medication.include || medication.include === undefined;
             });
@@ -198,6 +230,15 @@ angular.module('bahmni.clinical')
                     return medicationResource;
                 });
             })).then(function (medicationResources) {
+                var encounterResource = conditions.filter(function (condition) {
+                    return !condition.uuid;
+                }).map(function (condition) {
+                    return createConditionResource(condition, patient.uuid, false);
+                });
+                encounterResource = encounterResource.concat(diagnosis.map(function (condition) {
+                    return createConditionResource(condition, patient.uuid, true);
+                }));
+
                 var bundleResource = {
                     resourceType: 'Bundle',
                     type: 'collection',
@@ -215,6 +256,7 @@ angular.module('bahmni.clinical')
 
         var getAlerts = function (cdssEnabled, consultation, patient) {
             if (cdssEnabled) {
+                localStorage.removeItem("conceptSource");
                 var consultationData = angular.copy(consultation);
                 consultationData.patient = patient;
 
@@ -236,10 +278,14 @@ angular.module('bahmni.clinical')
 
         var createParams = function (consultationData) {
             var patient = consultationData.patient;
-            var conditions = consultationData.condition && consultationData.condition.concept.uuid ? consultationData.conditions.concat(consultationData.condition) : consultationData.conditions;
-            var diagnosis = consultationData.newlyAddedDiagnoses && consultationData.newlyAddedDiagnoses.filter(function (diagnosis) {
+            var newDiagnoses = consultationData.newlyAddedDiagnoses && consultationData.newlyAddedDiagnoses.filter(function (diagnosis) {
                 return diagnosis.codedAnswer && diagnosis.codedAnswer.name;
             }) || [];
+            var savedDiagnoses = consultationData.savedDiagnosesFromCurrentEncounter && consultationData.savedDiagnosesFromCurrentEncounter.filter(function (diagnosis) {
+                return diagnosis.codedAnswer && diagnosis.codedAnswer.name;
+            }) || [];
+            var conditions = consultationData.condition && consultationData.condition.concept.uuid ? consultationData.conditions.concat(consultationData.condition) : consultationData.conditions;
+            var diagnosis = newDiagnoses.concat(savedDiagnoses);
             var medications = consultationData.draftDrug;
             return {
                 patient: patient,
