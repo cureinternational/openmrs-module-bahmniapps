@@ -82,15 +82,24 @@ describe('cdssService', function () {
     };
 
     var cdssService;
-    var drugService = jasmine.createSpyObj('drugService', ['getDrugConceptSourceMapping']);
-    drugService.getDrugConceptSourceMapping.and.callFake(function () {
+    var drugService = jasmine.createSpyObj('drugService', ['getDrugConceptSourceMapping', 'sendDiagnosisDrugBundle']);
+    drugService.sendDiagnosisDrugBundle.and.callFake(function () {
+        return specUtil.respondWith({ data: [] });
+    });
+    drugService.getDrugConceptSourceMapping.and.callFake(function (drugUuid) {
+        var system = 'http://example.com';
+        if (drugUuid === 'drug_source_one_uuid') {
+            system = 'http://source-one.example.org';
+        } else if (drugUuid === 'drug_source_two_uuid') {
+            system = 'http://source-two.example.org';
+        }
         return specUtil.respondWith({
             data: {
                 entry: [{
                     resource: {
                         code: {
                             coding: [{
-                                system: 'http://example.com',
+                                system: system,
                                 code: '12345',
                                 display: 'Sample Drug'
                             }]
@@ -289,6 +298,87 @@ describe('cdssService', function () {
             });
             done();
         });
+    });
+
+    it('Should use the first resolved concept source when several medications map to different systems', function (done) {
+        var diagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        var medications = [
+            {
+                uuid: 'medication_uuid_1',
+                drug: {
+                    uuid: 'drug_source_one_uuid',
+                    name: 'Propranolol',
+                    drugReferenceMaps: [{ conceptReferenceTerm: { code: '55745002', display: 'Source One: 55745002 (Propranolol)' } }]
+                },
+                instructions: 'Before meals',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: false,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            },
+            {
+                uuid: 'medication_uuid_2',
+                drug: {
+                    uuid: 'drug_source_two_uuid',
+                    name: 'Salbutamol',
+                    drugReferenceMaps: [{ conceptReferenceTerm: { code: 'J45.9', display: 'Source Two: J45.9 (Salbutamol)' } }]
+                },
+                instructions: 'When required',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                durationInDays: 7,
+                durationUnit: 'DAYS',
+                asNeeded: true,
+                uniformDosingType: { frequency: 'Once a day', dose: 1 },
+                doseUnits: 'mg'
+            }
+        ];
+        cdssService.createFhirBundle(consultationDataMock.patient, [], medications, diagnoses).then(function (bundle) {
+            var conditionResource = bundle.entry[0].resource;
+            expect(conditionResource.code.coding[0]).toEqual({
+                system: 'http://source-one.example.org',
+                code: '195967001',
+                display: 'Asthma'
+            });
+            expect(localStorage.getItem('conceptSource')).toEqual('http://source-one.example.org');
+            done();
+        });
+    });
+
+    it('Should discard a concept source left over from a previous patient', function (done) {
+        localStorage.setItem('conceptSource', 'http://stale-previous-patient.example.org');
+        var consultation = angular.copy(consultationDataMock);
+        consultation.patient = { uuid: 'patient_uuid_here' };
+        consultation.conditions = [];
+        consultation.newlyAddedDiagnoses = [
+            {
+                uuid: 'saved_diagnosis_uuid_1',
+                certainty: 'CONFIRMED',
+                codedAnswer: {
+                    uuid: 'saved_coded_answer_uuid_1',
+                    name: 'Asthma',
+                    mappings: [{ source: 'External Source One', code: '195967001', name: 'Asthma' }]
+                }
+            }
+        ];
+        consultation.savedDiagnosesFromCurrentEncounter = [];
+        consultation.newlyAddedTabTreatments = { allMedicationTabConfig: { treatments: [], orderSetTreatments: [] } };
+        cdssService.getAlerts(true, consultation, consultation.patient);
+        setTimeout(function () {
+            expect(localStorage.getItem('conceptSource')).toBeNull();
+            done();
+        }, 0);
     });
 
     it('Should prefer the reference term code over a polluted display', function (done) {

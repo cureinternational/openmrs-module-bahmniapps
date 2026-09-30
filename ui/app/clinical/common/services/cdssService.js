@@ -110,7 +110,9 @@ angular.module('bahmni.clinical')
                             return coding.system;
                         });
                         if (conceptCode) {
-                            localStorage.setItem("conceptSource", conceptCode.system);
+                            if (!localStorage.getItem("conceptSource")) {
+                                localStorage.setItem("conceptSource", conceptCode.system);
+                            }
                             conceptSource = conceptCode.system;
                             return [{
                                 system: conceptSource,
@@ -254,6 +256,7 @@ angular.module('bahmni.clinical')
 
         var getAlerts = function (cdssEnabled, consultation, patient) {
             if (cdssEnabled) {
+                localStorage.removeItem("conceptSource");
                 var consultationData = angular.copy(consultation);
                 consultationData.patient = patient;
 
