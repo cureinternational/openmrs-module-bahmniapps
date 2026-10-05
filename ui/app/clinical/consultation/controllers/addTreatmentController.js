@@ -21,7 +21,6 @@ angular.module('bahmni.clinical')
             $scope.isSearchDisabled = false;
             $scope.cdssEnabled = false;
             $scope.clearButtonClicked = false;
-            $scope.conceptSource = localStorage.getItem("conceptSource") || "";
             $scope.prescribeMedicationPrivilege = Bahmni.Clinical.Constants.prescribeMedicationPrivilege;
             var currentVisitType;
             visitService.search(
