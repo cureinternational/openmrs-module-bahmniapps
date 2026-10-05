@@ -24,7 +24,6 @@ angular.module('bahmni.clinical')
             $scope.hasAnswers = false;
 
             $scope.cdssEnabled = false;
-            $scope.conceptSource = localStorage.getItem('conceptSource') || '';
 
             $scope.orderOptions = {
                 'CLINICAL_DIAGNOSIS_ORDER_PRIMARY': 'PRIMARY',
