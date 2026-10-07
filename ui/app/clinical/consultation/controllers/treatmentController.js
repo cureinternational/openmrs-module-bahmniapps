@@ -39,7 +39,7 @@ angular.module('bahmni.clinical')
                         var cdssAlerts = angular.copy($rootScope.cdssAlerts);
                         if (!cdssAlerts) return;
                         drugOrder.alerts = cdssAlerts.filter(function (cdssAlert) {
-                            return cdssAlert.referenceMedications.some(function (
+                            return !!drug && cdssAlert.referenceMedications.some(function (
                             referenceMedication
                         ) {
                                 return referenceMedication.coding.some(function (
