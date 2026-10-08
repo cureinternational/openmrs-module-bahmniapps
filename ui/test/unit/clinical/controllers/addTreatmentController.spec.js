@@ -2532,6 +2532,99 @@ describe("AddTreatmentController", function () {
         });
     });
 
+    describe("patient weight validation on init", function () {
+        var messagingService;
+        var weightObs = function (conceptName, observationDateTime) {
+            return { concept: { name: conceptName }, conceptNameToDisplay: conceptName, observationDateTime: observationDateTime };
+        };
+
+        var initControllerWithWeightConfig = function (observations) {
+            inject(function ($controller, $rootScope, _$q_) {
+                $q = _$q_;
+                scope = $rootScope.$new();
+                rootScope = $rootScope;
+                scope.consultation = { preSaveHandler: new Bahmni.Clinical.Notifier(), encounterDateTime: moment("2026-01-01").toDate() };
+                scope.currentBoard = { extension: {}, extensionParams: {} };
+                scope.addForm = { $invalid: false, $valid: true };
+                scope.patient = { uuid: "patient.uuid" };
+                messagingService = jasmine.createSpyObj('messagingService', ['showMessage']);
+                observationsService = jasmine.createSpyObj('observationsService', ['getByEncounterAndConcept', 'fetch']);
+                observationsService.fetch.and.returnValue($q.resolve({ data: observations }));
+                appDescriptor.getConfigValue.and.callFake(function (key) {
+                    if (key === 'addTreatmentWithPatientWeight') {
+                        return { duration: 2592000, conceptNames: ["Weight"] };
+                    }
+                    return null;
+                });
+                $controller('AddTreatmentController', {
+                    $scope: scope,
+                    $stateParams: stateParams,
+                    $rootScope: rootScope,
+                    treatmentService: null,
+                    activeDrugOrders: [],
+                    contextChangeHandler: contextChangeHandler,
+                    clinicalAppConfigService: clinicalAppConfigService,
+                    ngDialog: ngDialog,
+                    appService: appService,
+                    appDescriptor: appDescriptor,
+                    locationService: locationService,
+                    drugService: drugService,
+                    treatmentConfig: treatmentConfig,
+                    orderSetService: orderSetService,
+                    $state: $state,
+                    cdssService: cdssService,
+                    diagnosisService: diagnosisService,
+                    visitService: visitService,
+                    observationsService: observationsService,
+                    messagingService: messagingService
+                });
+                rootScope.$apply();
+            });
+        };
+
+        it("should show weight error when only a similarly named concept like 'Weight Loss' is returned", function () {
+            initControllerWithWeightConfig([weightObs("Weight Loss", new Date().getTime())]);
+
+            expect(scope.obs).toEqual([]);
+            expect(scope.patientWeightError).toBe(true);
+            expect(messagingService.showMessage).toHaveBeenCalledWith("error", jasmine.any(String));
+        });
+
+        it("should not show weight error when a recent exact 'Weight' obs is returned", function () {
+            initControllerWithWeightConfig([weightObs("Weight", new Date().getTime())]);
+
+            expect(scope.obs.length).toBe(1);
+            expect(scope.patientWeightError).toBe(false);
+            expect(messagingService.showMessage).not.toHaveBeenCalled();
+        });
+
+        it("should ignore 'Weight Loss' obs and keep only 'Weight' obs, matching case-insensitively", function () {
+            var now = new Date().getTime();
+            initControllerWithWeightConfig([weightObs("Weight Loss", now), weightObs("WEIGHT", now - 1000)]);
+
+            expect(scope.obs.length).toBe(1);
+            expect(scope.obs[0].concept.name).toBe("WEIGHT");
+            expect(scope.patientWeightError).toBe(false);
+        });
+
+        it("should show weight error when exact 'Weight' obs is older than configured duration", function () {
+            var thirtyOneDaysAgo = new Date().getTime() - 31 * 24 * 60 * 60 * 1000;
+            initControllerWithWeightConfig([weightObs("Weight", thirtyOneDaysAgo)]);
+
+            expect(scope.patientWeightError).toBe(true);
+            expect(messagingService.showMessage).toHaveBeenCalledWith("error", jasmine.any(String));
+        });
+
+        it("should not add treatment when only 'Weight Loss' obs exists", function () {
+            initControllerWithWeightConfig([weightObs("Weight Loss", new Date().getTime())]);
+            scope.treatments = [];
+            scope.treatment = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, { drug: { name: true } });
+            scope.add();
+
+            expect(scope.treatments.length).toBe(0);
+        });
+    });
+
     describe("VDP non-coded drug entry in variableDoseHostApi.onSave", function () {
         var $timeout;
         var vdpTreatmentConfig;

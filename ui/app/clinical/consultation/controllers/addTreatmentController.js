@@ -1016,7 +1016,16 @@ angular.module('bahmni.clinical')
                 if ($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
                     patientWeightPromise = observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, false, null).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
-                        $scope.obs = response.data;
+                        var configuredNames = ($scope.addTreatmentWithPatientWeight.conceptNames || []).map(function (name) {
+                            return name.toLowerCase();
+                        });
+                        $scope.obs = (response.data || []).filter(function (observation) {
+                            var concept = observation.concept || {};
+                            var names = [concept.name, concept.shortName, observation.conceptNameToDisplay];
+                            return names.some(function (name) {
+                                return name && configuredNames.indexOf(name.toLowerCase()) !== -1;
+                            });
+                        });
 
                         $scope.patientWeightError = !$scope.obs || $scope.obs.length === 0 ||
                             (($scope.currentEpoch - (($scope.obs[0] && $scope.obs[0].observationDateTime) || 0)) / 1000 > $scope.addTreatmentWithPatientWeight.duration);
