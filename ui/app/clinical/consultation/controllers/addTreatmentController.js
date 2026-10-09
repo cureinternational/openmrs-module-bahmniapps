@@ -1021,7 +1021,7 @@ angular.module('bahmni.clinical')
                         });
                         $scope.obs = (response.data || []).filter(function (observation) {
                             var concept = observation.concept || {};
-                            var names = [concept.name, concept.shortName, observation.conceptNameToDisplay];
+                            var names = [concept.name, observation.conceptNameToDisplay];
                             return names.some(function (name) {
                                 return name && configuredNames.indexOf(name.toLowerCase()) !== -1;
                             });
