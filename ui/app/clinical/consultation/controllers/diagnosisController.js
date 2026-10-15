@@ -155,7 +155,10 @@ angular.module('bahmni.clinical')
                         diagnosis.alerts = alerts.filter(function (cdssAlert) {
                             return cdssAlert.referenceConditions && cdssAlert.referenceConditions.some(function (referenceCondition) {
                                 return referenceCondition.coding.some(function (coding) {
-                                    return diagnosis.codedAnswer.uuid === coding.code;
+                                    var mappings = diagnosis.codedAnswer.mappings || [];
+                                    return diagnosis.codedAnswer.uuid === coding.code || mappings.some(function (mapping) {
+                                        return mapping.code === coding.code;
+                                    });
                                 });
                             });
                         });
@@ -226,7 +229,7 @@ angular.module('bahmni.clinical')
             });
 
             var postSave = $rootScope.$on('event:save-successful', function () {
-                getAlerts();
+                cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient, true);
             });
 
             $scope.$on('$destroy', function () {

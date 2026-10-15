@@ -18,6 +18,15 @@ angular.module('bahmni.common.services')
             });
         };
 
+        var getDrugById = function (drugUuid) {
+            return $http.get(Bahmni.Common.Constants.drugUrl + "/" + drugUuid, {
+                params: {v: v},
+                withCredentials: true
+            }).then(function (response) {
+                return response.data;
+            });
+        };
+
         var getSetMembersOfConcept = function (conceptSetFullySpecifiedName, searchTerm) {
             return $http.get(Bahmni.Common.Constants.drugUrl, {
                 method: "GET",
@@ -87,6 +96,7 @@ angular.module('bahmni.common.services')
 
         return {
             search: search,
+            getDrugById: getDrugById,
             getRegimen: getRegimen,
             getSetMembersOfConcept: getSetMembersOfConcept,
             sendDiagnosisDrugBundle: sendDiagnosisDrugBundle,
