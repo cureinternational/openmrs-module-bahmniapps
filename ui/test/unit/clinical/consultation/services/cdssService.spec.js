@@ -944,5 +944,89 @@ describe('cdssService', function () {
         expect(updatedAlerts.length).toEqual(1);
         expect(updatedAlerts[0].isActive).toEqual(true);
     });
-});
 
+    describe('getAlerts after save', function () {
+        var savedOrder = {
+            uuid: 'saved_order_uuid',
+            drug: {uuid: 'drug_uuid_1', name: 'Drug Name 1'},
+            drugNameDisplay: 'Drug Name 1',
+            instructions: 'Take once a day',
+            effectiveStartDate: '2023-10-03T08:00:00Z',
+            durationInDays: 7,
+            asNeeded: false,
+            uniformDosingType: {frequency: 'Once daily', dose: 1},
+            doseUnits: 'mg'
+        };
+        var existing = [{uuid: 'a1', isActive: true, detail: 'x', summary: 'x', indicator: 'critical'}];
+        var consultationWithSavedOrder = function (orders) {
+            return {
+                conditions: [],
+                newlyAddedDiagnoses: [],
+                newlyAddedTabTreatments: {allMedicationTabConfig: {treatments: [], orderSetTreatments: []}},
+                activeAndScheduledDrugOrders: orders
+            };
+        };
+
+        beforeEach(function () {
+            drugService.sendDiagnosisDrugBundle.calls.reset();
+            rootScope.cdssAlerts = existing;
+        });
+
+        it('should send saved orders as MedicationRequest', function (done) {
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: [{uuid: 'a2', detail: 'y', summary: 'y'}]}));
+            cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}, true).then(function () {
+                var bundle = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0];
+                expect(bundle.entry.length).toBe(1);
+                expect(bundle.entry[0].resource.resourceType).toBe('MedicationRequest');
+                expect(bundle.entry[0].resource.id).toBe('saved_order_uuid');
+                done();
+            });
+        });
+
+        it('should not call CDSS or clear alerts when nothing but the patient is available', function (done) {
+            cdssService.getAlerts(true, consultationWithSavedOrder([]), {uuid: 'p1'}, true).then(function () {
+                expect(drugService.sendDiagnosisDrugBundle).not.toHaveBeenCalled();
+                expect(rootScope.cdssAlerts).toBe(existing);
+                done();
+            });
+        });
+
+        it('should keep existing alerts when post-save response is empty', function (done) {
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}, true).then(function () {
+                expect(rootScope.cdssAlerts).toBe(existing);
+                done();
+            });
+        });
+
+        it('should ignore discontinued and voided saved orders', function (done) {
+            var orders = [angular.extend({}, savedOrder, {action: 'DISCONTINUE'}), angular.extend({}, savedOrder, {uuid: 'v', voided: true})];
+            cdssService.getAlerts(true, consultationWithSavedOrder(orders), {uuid: 'p1'}, true).then(function () {
+                expect(drugService.sendDiagnosisDrugBundle).not.toHaveBeenCalled();
+                done();
+            });
+        });
+
+        it('should include saved orders before save so a new diagnosis is checked against them', function (done) {
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            var consultation = consultationWithSavedOrder([savedOrder]);
+            consultation.newlyAddedDiagnoses = [{codedAnswer: {uuid: 'd1', name: 'Glaucoma', mappings: [{code: '23986001'}]}}];
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                var types = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry.map(function (e) {
+                    return e.resource.resourceType;
+                });
+                expect(types).toContain('MedicationRequest');
+                expect(types).toContain('Condition');
+                done();
+            });
+        });
+
+        it('should still replace alerts with an empty response before save', function (done) {
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}).then(function () {
+                expect(rootScope.cdssAlerts).toEqual([]);
+                done();
+            });
+        });
+    });
+});
