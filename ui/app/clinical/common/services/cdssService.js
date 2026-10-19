@@ -2,7 +2,32 @@
 
 angular.module('bahmni.clinical')
     .service('cdssService', ['drugService', '$rootScope', function (drugService, $rootScope) {
+        var isVdpTreatment = function (medication) {
+            return !medication.uniformDosingType && angular.isArray(medication.stages);
+        };
+
+        var normalizeVdpMedication = function (medication) {
+            var stages = medication.stages || [];
+            var stage = stages.filter(function (s) { return !s.isLoadingDose; })[0] || stages[0] || {};
+            var dose = parseFloat(stage.dose);
+            return angular.extend({}, medication, {
+                drugNameDisplay: medication.drugNameDisplay || medication.drugName,
+                durationInDays: medication.durationInDays || medication.totalDays,
+                effectiveStartDate: medication.effectiveStartDate || medication.startDate,
+                doseUnits: medication.doseUnits || stage.unit || medication.units,
+                instructions: angular.isDefined(medication.instructions) ? medication.instructions : stage.instructions,
+                asNeeded: angular.isDefined(medication.asNeeded) ? medication.asNeeded : false,
+                uniformDosingType: {
+                    dose: isNaN(dose) ? stage.dose : dose,
+                    frequency: stage.frequency
+                }
+            });
+        };
+
         var createMedicationRequest = function (medication, patientUuid, conceptSource) {
+            if (isVdpTreatment(medication)) {
+                medication = normalizeVdpMedication(medication);
+            }
             return extractCodeInfo(medication, conceptSource).then(function (extracted) {
                 var coding = extracted.coding;
                 var medicationRequest = {
@@ -97,13 +122,38 @@ angular.module('bahmni.clinical')
 
         var extractCodeInfo = function (medication, conceptSource) {
             if (!(medication.drug.drugReferenceMaps && medication.drug.drugReferenceMaps.length > 0)) {
-                return Promise.resolve({
+                var openmrsOnly = {
                     coding: [{
                         code: medication.drug.uuid,
                         display: medication.drug.name,
                         system: 'https://fhir.openmrs.org'
                     }],
                     conceptSource: ''
+                };
+                return drugService.getDrugConceptSourceMapping(medication.drug.uuid).then(function (response) {
+                    var bundle = response && response.data;
+                    var resource = bundle && bundle.entry && bundle.entry.length > 0 && bundle.entry[0].resource;
+                    var codings = (resource && resource.code && resource.code.coding) || [];
+                    var conceptCode = codings.find(function (coding) {
+                        return coding && coding.system && coding.code;
+                    });
+                    if (conceptCode) {
+                        return {
+                            coding: [{
+                                system: conceptCode.system,
+                                code: conceptCode.code,
+                                display: medication.drug.name
+                            }, {
+                                code: medication.drug.uuid,
+                                display: medication.drug.name,
+                                system: 'https://fhir.openmrs.org'
+                            }],
+                            conceptSource: conceptCode.system
+                        };
+                    }
+                    return openmrsOnly;
+                }).catch(function () {
+                    return openmrsOnly;
                 });
             } else {
                 var drugReferenceMap = medication.drug.drugReferenceMaps[0];
@@ -286,7 +336,8 @@ angular.module('bahmni.clinical')
 
                 var orderSetTreatments = consultationData.newlyAddedTabTreatments ? consultationData.newlyAddedTabTreatments.allMedicationTabConfig.orderSetTreatments : [];
                 var drafts = consultationData.newlyAddedTabTreatments ? consultationData.newlyAddedTabTreatments.allMedicationTabConfig.treatments : [];
-                consultationData.draftDrug = drafts.concat(orderSetTreatments);
+                var vdpTreatments = consultationData.variableDoseTreatments || [];
+                consultationData.draftDrug = drafts.concat(orderSetTreatments).concat(vdpTreatments);
                 var params = createParams(consultationData);
                 createFhirBundle(params.patient, params.conditions, params.medications, params.diagnosis)
                 .then(function (fhirResult) {
