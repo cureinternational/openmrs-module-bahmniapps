@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .service('cdssService', ['drugService', '$rootScope', 'treatmentService', function (drugService, $rootScope, treatmentService) {
+    .service('cdssService', ['drugService', '$rootScope', 'treatmentService', '$log', function (drugService, $rootScope, treatmentService, $log) {
         var isVdpTreatment = function (medication) {
             return !medication.uniformDosingType && angular.isArray(medication.stages);
         };
@@ -325,9 +325,9 @@ angular.module('bahmni.clinical')
         };
 
         // The medication tab populates activeAndScheduledDrugOrders; on other tabs (e.g. diagnosis)
-        // it is missing, so fetch the active orders from the server.
+        // it is missing or empty, so fetch the active orders from the server.
         var loadActiveOrders = function (consultation, patient) {
-            if (consultation.activeAndScheduledDrugOrders) {
+            if (consultation.activeAndScheduledDrugOrders && consultation.activeAndScheduledDrugOrders.length > 0) {
                 return Promise.resolve(consultation.activeAndScheduledDrugOrders);
             }
             if (!patient || !patient.uuid) {
@@ -337,8 +337,10 @@ angular.module('bahmni.clinical')
                 return (orders || []).map(function (order) {
                     return Bahmni.Clinical.DrugOrderViewModel.createFromContract(order);
                 });
-            }).catch(function () {
-                return [];
+            }).catch(function (error) {
+                // null (not []) marks a failed fetch, so it is not mistaken for "no active orders"
+                $log.warn('CDSS: could not load active drug orders, skipping alert update', error);
+                return null;
             });
         };
 
@@ -361,6 +363,9 @@ angular.module('bahmni.clinical')
         var getAlerts = function (cdssEnabled, consultation, patient, afterSave) {
             if (cdssEnabled) {
                 return loadActiveOrders(consultation, patient).then(function (activeOrders) {
+                    if (activeOrders === null) {
+                        return null;
+                    }
                     var consultationData = angular.copy(consultation);
                     consultationData.patient = patient;
                     consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
@@ -368,6 +373,9 @@ angular.module('bahmni.clinical')
                         return consultationData;
                     });
                 }).then(function (consultationData) {
+                    if (!consultationData) {
+                        return;
+                    }
                     var newlyAdded = consultationData.newlyAddedTabTreatments;
                     var orderSetTreatments = newlyAdded ? newlyAdded.allMedicationTabConfig.orderSetTreatments : [];
                     var drafts = newlyAdded ? newlyAdded.allMedicationTabConfig.treatments : [];
