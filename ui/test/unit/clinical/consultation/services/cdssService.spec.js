@@ -95,6 +95,23 @@ describe('cdssService', function () {
         } else if (drugUuid === 'drug_source_two_uuid') {
             system = 'http://source-two.example.org';
         }
+        if (drugUuid === 'vdp_drug_uuid') {
+            return Promise.resolve({
+                data: {
+                    entry: [{
+                        resource: {
+                            code: {
+                                coding: [{
+                                    system: 'http://snomed.info/sct',
+                                    code: '372687004',
+                                    display: 'Prednisolone'
+                                }]
+                            }
+                        }
+                    }]
+                }
+            });
+        }
         return specUtil.respondWith({
             data: {
                 entry: [{
@@ -943,6 +960,143 @@ describe('cdssService', function () {
         var updatedAlerts = cdssService.addNewAlerts(newAlerts, currentAlert, mockBundle);
         expect(updatedAlerts.length).toEqual(1);
         expect(updatedAlerts[0].isActive).toEqual(true);
+    });
+
+    it('Should build a MedicationRequest from the first non-loading stage of a variable dose treatment', function (done) {
+        var vdpMedication = {
+            uuid: 'vdp_medication_uuid_1',
+            drug: {
+                uuid: 'drug_source_one_uuid',
+                name: 'Prednisolone',
+                drugReferenceMaps: [
+                    {
+                        conceptReferenceTerm: {
+                            code: '55745002',
+                            display: 'Source One: 55745002 (Prednisolone)'
+                        }
+                    }
+                ]
+            },
+            drugName: 'Prednisolone',
+            startDate: '2023-10-03T08:00:00Z',
+            totalDays: 5,
+            route: 'Oral',
+            stages: [
+                { stageName: 'Loading', isLoadingDose: true, dose: '20', unit: 'mg', frequency: 'Once a day', instructions: 'Loading instructions' },
+                { stageName: 'Maintenance', isLoadingDose: false, dose: '10', unit: 'mg', frequency: 'Twice a day', instructions: 'Maintenance instructions' }
+            ]
+        };
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [vdpMedication], [], 'http://example.com').then(function (fhirResult) {
+            var medicationRequest = fhirResult.bundle.entry[0].resource;
+            expect(medicationRequest.resourceType).toEqual('MedicationRequest');
+            expect(medicationRequest.medicationCodeableConcept.coding[0]).toEqual({
+                system: 'http://example.com',
+                code: '55745002',
+                display: 'Prednisolone'
+            });
+            var dosage = medicationRequest.dosageInstruction[0];
+            expect(dosage.doseAndRate[0].doseQuantity.value).toEqual(10);
+            expect(dosage.doseAndRate[0].doseQuantity.unit).toEqual('mg');
+            expect(dosage.timing.repeat.duration).toEqual(5);
+            expect(dosage.timing.code.text).toEqual('Twice a day');
+            expect(dosage.asNeededBoolean).toBe(false);
+            done();
+        });
+    });
+
+    it('Should fall back to the first stage when every stage is a loading dose', function (done) {
+        var vdpMedication = {
+            uuid: 'vdp_medication_uuid_1',
+            drug: {
+                uuid: 'drug_source_one_uuid',
+                name: 'Prednisolone',
+                drugReferenceMaps: [
+                    {
+                        conceptReferenceTerm: {
+                            code: '55745002',
+                            display: 'Source One: 55745002 (Prednisolone)'
+                        }
+                    }
+                ]
+            },
+            drugName: 'Prednisolone',
+            startDate: '2023-10-03T08:00:00Z',
+            totalDays: 1,
+            stages: [
+                { stageName: 'Loading', isLoadingDose: true, dose: '20', unit: 'mg', frequency: 'Once a day', instructions: '' }
+            ]
+        };
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [vdpMedication], [], 'http://example.com').then(function (fhirResult) {
+            var dosage = fhirResult.bundle.entry[0].resource.dosageInstruction[0];
+            expect(dosage.doseAndRate[0].doseQuantity.value).toEqual(20);
+            expect(dosage.timing.repeat.duration).toEqual(1);
+            done();
+        });
+    });
+
+    it('Should exclude a non-coded variable dose treatment from the bundle', function (done) {
+        var vdpMedication = {
+            uuid: 'vdp_medication_uuid_1',
+            drug: null,
+            drugNonCoded: 'Herbal Mixture 500mg',
+            drugName: 'Herbal Mixture 500mg',
+            startDate: '2023-10-03T08:00:00Z',
+            totalDays: 5,
+            stages: [
+                { stageName: 'Maintenance', isLoadingDose: false, dose: '10', unit: 'mg', frequency: 'Twice a day', instructions: '' }
+            ]
+        };
+        cdssService.createFhirBundle(consultationDataMock.patient, [], [vdpMedication], []).then(function (fhirResult) {
+            var medicationRequests = fhirResult.bundle.entry.filter(function (entry) {
+                return entry.resource.resourceType === 'MedicationRequest';
+            });
+            expect(medicationRequests.length).toEqual(0);
+            done();
+        });
+    });
+
+    it('Should include variable dose treatments in the bundle sent to CDSS', function (done) {
+        var consultation = angular.copy(consultationDataMock);
+        consultation.patient = { uuid: 'patient_uuid_here' };
+        consultation.conditions = [];
+        consultation.newlyAddedDiagnoses = [];
+        consultation.savedDiagnosesFromCurrentEncounter = [];
+        consultation.condition = null;
+        consultation.newlyAddedTabTreatments = { allMedicationTabConfig: { treatments: [], orderSetTreatments: [] } };
+        consultation.variableDoseTreatments = [
+            {
+                uuid: 'vdp_medication_uuid_1',
+                drug: {
+                    uuid: 'vdp_drug_uuid',
+                    name: 'Prednisolone',
+                    drugReferenceMaps: [
+                        {
+                            conceptReferenceTerm: {
+                                code: '372687004',
+                                display: 'SNOMED: 372687004 (Prednisolone)'
+                            }
+                        }
+                    ]
+                },
+                drugName: 'Prednisolone',
+                startDate: '2023-10-03T08:00:00Z',
+                totalDays: 5,
+                stages: [
+                    { stageName: 'Maintenance', isLoadingDose: false, dose: '10', unit: 'mg', frequency: 'Twice a day', instructions: '' }
+                ]
+            }
+        ];
+        cdssService.getAlerts(true, consultation, consultation.patient);
+        setTimeout(function () {
+            var sentBundle = sentBundles[sentBundles.length - 1];
+            var medicationRequests = sentBundle.entry.filter(function (entry) {
+                return entry.resource.resourceType === 'MedicationRequest';
+            });
+            expect(medicationRequests.length).toEqual(1);
+            expect(medicationRequests[0].resource.medicationCodeableConcept.coding[0].code).toEqual('372687004');
+            expect(medicationRequests[0].resource.dosageInstruction[0].doseAndRate[0].doseQuantity.value).toEqual(10);
+            done();
+        }, 0);
     });
 });
 
