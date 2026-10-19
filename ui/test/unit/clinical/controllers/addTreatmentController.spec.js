@@ -2779,6 +2779,30 @@ describe("AddTreatmentController", function () {
             expect(entry.drugName).toBe('Prednisolone');
         });
 
+        it("should request CDSS alerts after saving a VDP entry", function () {
+            cdssService.getAlerts.calls.reset();
+
+            var saveData = {
+                drug: { uuid: 'drug-uuid', name: 'Prednisolone', dosageForm: { display: 'Tablet' } },
+                isNonCodedDrug: false,
+                drugNonCoded: null,
+                units: 'mg',
+                route: 'Oral',
+                startDate: new Date('2026-01-01'),
+                dosingRule: '',
+                loadingDose: null,
+                stages: [
+                    { stageName: 'Stage 1', sequence: 1, isLoadingDose: false, dose: '5', unit: 'mg', frequency: 'Twice a day', frequencyPerDay: 2, duration: '3', durationUnit: 'Day(s)', instructions: '', rate: '', additives: '', additionalInstructions: '', startDate: new Date('2026-01-01') }
+                ]
+            };
+
+            scope.variableDoseHostApi.onSave(saveData, false);
+            $timeout.flush();
+            rootScope.$apply();
+
+            expect(cdssService.getAlerts).toHaveBeenCalled();
+        });
+
         describe("VDP duplicate validation on create and edit", function () {
             beforeEach(function () {
                 scope.variableDoseHostApi.openModal = jasmine.createSpy('openModal');
@@ -2843,6 +2867,20 @@ describe("AddTreatmentController", function () {
                 expect(ngDialog.open).not.toHaveBeenCalled();
                 expect(scope.consultation.variableDoseTreatments.length).toBe(1);
                 expect(scope.consultation.variableDoseTreatments[0].action).toBe(Bahmni.Clinical.Constants.orderActions.revise);
+            });
+
+            it("should request CDSS alerts after revising a saved VDP order", function () {
+                scope.consultation.activeAndScheduledDrugOrders = [
+                    savedOrderFor({ uuid: 'aug-8-order', effectiveStartDate: DateUtil.parse('2026-08-08'), effectiveStopDate: DateUtil.parse('2026-08-09') })
+                ];
+
+                rootScope.$broadcast('event:reviseVariableDoseOrder', scope.consultation.activeAndScheduledDrugOrders[0]);
+                cdssService.getAlerts.calls.reset();
+                scope.variableDoseHostApi.onSave(buildSaveData(), true);
+                $timeout.flush();
+                rootScope.$apply();
+
+                expect(cdssService.getAlerts).toHaveBeenCalled();
             });
 
             it("should allow creating two non-overlapping VDPs for the same drug", function () {

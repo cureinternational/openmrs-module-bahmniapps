@@ -84,4 +84,33 @@ describe('TreatmentController', function () {
         expect($scope.newOrderSet).toEqual("new order");
     });
 
+    describe('CDSS alerts on drug orders', function () {
+        it('should attach matched alerts to treatments and variable dose treatments when alerts arrive', function () {
+            cdssService.sortInteractionsByStatus.and.callFake(function (alerts) { return alerts; });
+            createController();
+            $scope.consultation = {
+                newlyAddedTabTreatments: {
+                    allMedicationTabConfig: {
+                        treatments: [{ drug: { uuid: 'drug-1', name: 'Drug One' } }],
+                        orderSetTreatments: [],
+                        newOrderSet: {}
+                    }
+                },
+                variableDoseTreatments: [{ drug: { uuid: 'drug-2', name: 'Drug Two' } }]
+            };
+            $rootScope.$apply();
+
+            $rootScope.cdssAlerts = [
+                { uuid: 'alert-1', indicator: 'critical', referenceMedications: [{ coding: [{ code: 'drug-1', display: 'Drug One' }] }] },
+                { uuid: 'alert-2', indicator: 'warning', referenceMedications: [{ coding: [{ code: 'drug-2', display: 'Drug Two' }] }] }
+            ];
+            $rootScope.$apply();
+
+            expect($scope.treatments[0].alerts.length).toBe(1);
+            expect($scope.treatments[0].alerts[0].uuid).toBe('alert-1');
+            expect($scope.variableDoseTreatments[0].alerts.length).toBe(1);
+            expect($scope.variableDoseTreatments[0].alerts[0].uuid).toBe('alert-2');
+        });
+    });
+
 });
