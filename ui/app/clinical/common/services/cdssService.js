@@ -291,6 +291,9 @@ angular.module('bahmni.clinical')
         };
 
         var isPatientOnlyBundle = function (bundle) {
+            if (!bundle.entry || bundle.entry.length === 0) {
+                return true;
+            }
             return bundle.entry.every(function (entry) {
                 return entry.resource.resourceType === 'Patient';
             });
