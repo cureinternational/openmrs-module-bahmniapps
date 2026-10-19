@@ -117,7 +117,7 @@ angular.module('bahmni.clinical')
             });
 
             var postSave = $rootScope.$on('event:save-successful', function () {
-                getAlerts();
+                cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient, true);
             });
 
             $scope.$on('$destroy', function () {
