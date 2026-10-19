@@ -83,7 +83,10 @@ describe('cdssService', function () {
 
     var cdssService;
     var sentBundles = [];
-    var drugService = jasmine.createSpyObj('drugService', ['getDrugConceptSourceMapping', 'sendDiagnosisDrugBundle']);
+    var treatmentService = jasmine.createSpyObj('treatmentService', ['getActiveDrugOrders']);
+    treatmentService.getActiveDrugOrders.and.returnValue(Promise.resolve([]));
+    var drugService = jasmine.createSpyObj('drugService', ['getDrugConceptSourceMapping', 'sendDiagnosisDrugBundle', 'getDrugById']);
+    drugService.getDrugById.and.returnValue(Promise.resolve({}));
     drugService.sendDiagnosisDrugBundle.and.callFake(function (bundle) {
         sentBundles.push(bundle);
         return specUtil.respondWith({ data: [] });
@@ -135,6 +138,7 @@ describe('cdssService', function () {
 
         module(function ($provide) {
             $provide.value('drugService', drugService);
+            $provide.value('treatmentService', treatmentService);
         });
 
         inject(['cdssService', '$rootScope', function (cdssServiceInjected, $rootScopeInjected) {
@@ -1124,7 +1128,92 @@ describe('cdssService', function () {
 
         beforeEach(function () {
             drugService.sendDiagnosisDrugBundle.calls.reset();
+            treatmentService.getActiveDrugOrders.calls.reset();
+            treatmentService.getActiveDrugOrders.and.returnValue(Promise.resolve([]));
             rootScope.cdssAlerts = existing;
+        });
+
+        it('should fetch active orders from the server when the consultation has none', function (done) {
+            var contract = {uuid: 'srv_order', drug: {uuid: 'drug_uuid_1', name: 'Drug Name 1'}, dosingInstructions: {dose: 1, doseUnits: 'mg', frequency: 'Once a day'}};
+            treatmentService.getActiveDrugOrders.and.returnValue(Promise.resolve([contract]));
+            spyOn(Bahmni.Clinical.DrugOrderViewModel, 'createFromContract').and.returnValue(savedOrder);
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: [{uuid: 'a2', detail: 'y', summary: 'y'}]}));
+            var consultation = consultationWithSavedOrder(undefined);
+            delete consultation.activeAndScheduledDrugOrders;
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                expect(treatmentService.getActiveDrugOrders).toHaveBeenCalledWith('p1');
+                var bundle = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0];
+                expect(bundle.entry.some(function (e) { return e.resource.resourceType === 'MedicationRequest'; })).toBe(true);
+                done();
+            });
+        });
+
+        it('should add SNOMED reference maps to saved orders that lack them', function (done) {
+            drugService.getDrugById.and.returnValue(Promise.resolve({drugReferenceMaps: [{conceptReferenceTerm: {code: '12345'}}]}));
+            drugService.getDrugConceptSourceMapping.and.returnValue(Promise.resolve({data: {entry: [{resource: {code: {coding: [{system: 'http://snomed.info/sct'}]}}}]}}));
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}).then(function () {
+                expect(drugService.getDrugById).toHaveBeenCalledWith('drug_uuid_1');
+                var bundle = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0];
+                var request = bundle.entry.filter(function (e) { return e.resource.resourceType === 'MedicationRequest'; })[0].resource;
+                expect(request.medicationCodeableConcept.coding[0]).toEqual({system: 'http://snomed.info/sct', code: '12345', display: 'Drug Name 1'});
+                done();
+            });
+        });
+
+        it('should not fetch active orders when the consultation already has them', function (done) {
+            treatmentService.getActiveDrugOrders.calls.reset();
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}).then(function () {
+                expect(treatmentService.getActiveDrugOrders).not.toHaveBeenCalled();
+                done();
+            });
+        });
+
+        it('should fetch active orders from the server when the consultation has an empty list', function (done) {
+            var contract = {uuid: 'srv_order', drug: {uuid: 'drug_uuid_1', name: 'Drug Name 1'}, dosingInstructions: {dose: 1, doseUnits: 'mg', frequency: 'Once a day'}};
+            treatmentService.getActiveDrugOrders.and.returnValue(Promise.resolve([contract]));
+            spyOn(Bahmni.Clinical.DrugOrderViewModel, 'createFromContract').and.returnValue(savedOrder);
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            cdssService.getAlerts(true, consultationWithSavedOrder([]), {uuid: 'p1'}).then(function () {
+                expect(treatmentService.getActiveDrugOrders).toHaveBeenCalledWith('p1');
+                var bundle = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0];
+                expect(bundle.entry.some(function (e) { return e.resource.resourceType === 'MedicationRequest'; })).toBe(true);
+                done();
+            });
+        });
+
+        it('should skip CDSS and keep existing alerts when fetching active orders fails', function (done) {
+            treatmentService.getActiveDrugOrders.and.returnValue(Promise.reject(new Error('network')));
+            var consultation = consultationWithSavedOrder(undefined);
+            delete consultation.activeAndScheduledDrugOrders;
+            consultation.newlyAddedDiagnoses = [{codedAnswer: {uuid: 'd1', name: 'Glaucoma', mappings: [{code: '23986001'}]}}];
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                expect(drugService.sendDiagnosisDrugBundle).not.toHaveBeenCalled();
+                expect(rootScope.cdssAlerts).toBe(existing);
+                done();
+            });
+        });
+
+        it('should skip CDSS and keep existing alerts when fetching active orders fails after save', function (done) {
+            treatmentService.getActiveDrugOrders.and.returnValue(Promise.reject(new Error('network')));
+            var consultation = consultationWithSavedOrder(undefined);
+            delete consultation.activeAndScheduledDrugOrders;
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}, true).then(function () {
+                expect(drugService.sendDiagnosisDrugBundle).not.toHaveBeenCalled();
+                expect(rootScope.cdssAlerts).toBe(existing);
+                done();
+            });
+        });
+
+        it('should still send the diagnosis when the fetch succeeds but the patient has no active orders', function (done) {
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            var consultation = consultationWithSavedOrder([]);
+            consultation.newlyAddedDiagnoses = [{codedAnswer: {uuid: 'd1', name: 'Glaucoma', mappings: [{code: '23986001'}]}}];
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                expect(drugService.sendDiagnosisDrugBundle).toHaveBeenCalled();
+                done();
+            });
         });
 
         it('should send saved orders as MedicationRequest', function (done) {
