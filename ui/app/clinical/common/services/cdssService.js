@@ -2,32 +2,7 @@
 
 angular.module('bahmni.clinical')
     .service('cdssService', ['drugService', '$rootScope', 'treatmentService', '$log', function (drugService, $rootScope, treatmentService, $log) {
-        var isVdpTreatment = function (medication) {
-            return !medication.uniformDosingType && angular.isArray(medication.stages);
-        };
-
-        var normalizeVdpMedication = function (medication) {
-            var stages = medication.stages || [];
-            var stage = stages.filter(function (s) { return !s.isLoadingDose; })[0] || stages[0] || {};
-            var dose = parseFloat(stage.dose);
-            return angular.extend({}, medication, {
-                drugNameDisplay: medication.drugNameDisplay || medication.drugName,
-                durationInDays: medication.durationInDays || medication.totalDays,
-                effectiveStartDate: medication.effectiveStartDate || medication.startDate,
-                doseUnits: medication.doseUnits || stage.unit || medication.units,
-                instructions: angular.isDefined(medication.instructions) ? medication.instructions : stage.instructions,
-                asNeeded: angular.isDefined(medication.asNeeded) ? medication.asNeeded : false,
-                uniformDosingType: {
-                    dose: isNaN(dose) ? stage.dose : dose,
-                    frequency: stage.frequency
-                }
-            });
-        };
-
         var createMedicationRequest = function (medication, patientUuid, conceptSource) {
-            if (isVdpTreatment(medication)) {
-                medication = normalizeVdpMedication(medication);
-            }
             return extractCodeInfo(medication, conceptSource).then(function (extracted) {
                 var coding = extracted.coding;
                 var medicationRequest = {
@@ -379,8 +354,7 @@ angular.module('bahmni.clinical')
                     var newlyAdded = consultationData.newlyAddedTabTreatments;
                     var orderSetTreatments = newlyAdded ? newlyAdded.allMedicationTabConfig.orderSetTreatments : [];
                     var drafts = newlyAdded ? newlyAdded.allMedicationTabConfig.treatments : [];
-                    var vdpTreatments = consultationData.variableDoseTreatments || [];
-                    consultationData.draftDrug = drafts.concat(orderSetTreatments).concat(vdpTreatments);
+                    consultationData.draftDrug = drafts.concat(orderSetTreatments);
                     consultationData.draftDrug = consultationData.draftDrug.concat(getSavedOrdersForCdss(consultationData, consultationData.draftDrug));
                     var params = createParams(consultationData);
                     return createFhirBundle(params.patient, params.conditions, params.medications, params.diagnosis)
