@@ -1342,7 +1342,6 @@ angular.module('bahmni.clinical')
                                     } else {
                                         $scope.consultation.variableDoseTreatments.push(entry);
                                     }
-                                    getAlerts();
                                     $scope.variableDoseHostData = buildVariableDoseHostData();
                                 });
                             });

@@ -33,7 +33,7 @@ angular.module('bahmni.clinical')
                 };
 
                 var getPreviousDrugAlerts = function () {
-                    var treatments = ($scope.treatments || []).concat($scope.variableDoseTreatments || []);
+                    var treatments = $scope.treatments;
                     treatments && treatments.forEach(function (drugOrder) {
                         var drug = drugOrder.drug;
                         var cdssAlerts = angular.copy($rootScope.cdssAlerts);
