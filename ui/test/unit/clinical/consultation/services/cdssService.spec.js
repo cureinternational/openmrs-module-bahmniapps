@@ -966,7 +966,7 @@ describe('cdssService', function () {
         expect(updatedAlerts[0].isActive).toEqual(true);
     });
 
-    it('Should build a MedicationRequest from the first non-loading stage of a variable dose treatment', function (done) {
+    it('Should build a MedicationRequest with one dosageInstruction per stage of a variable dose treatment', function (done) {
         var vdpMedication = {
             uuid: 'vdp_medication_uuid_1',
             drug: {
@@ -998,17 +998,26 @@ describe('cdssService', function () {
                 code: '55745002',
                 display: 'Prednisolone'
             });
-            var dosage = medicationRequest.dosageInstruction[0];
-            expect(dosage.doseAndRate[0].doseQuantity.value).toEqual(10);
-            expect(dosage.doseAndRate[0].doseQuantity.unit).toEqual('mg');
-            expect(dosage.timing.repeat.duration).toEqual(5);
-            expect(dosage.timing.code.text).toEqual('Twice a day');
-            expect(dosage.asNeededBoolean).toBe(false);
+            // every stage is sent as its own dosageInstruction, none collapsed
+            expect(medicationRequest.dosageInstruction.length).toEqual(2);
+
+            var loadingStage = medicationRequest.dosageInstruction[0];
+            expect(loadingStage.sequence).toEqual(1);
+            expect(loadingStage.text).toEqual('Loading');
+            expect(loadingStage.doseAndRate[0].doseQuantity.value).toEqual(20);
+            expect(loadingStage.doseAndRate[0].doseQuantity.unit).toEqual('mg');
+
+            var maintenanceStage = medicationRequest.dosageInstruction[1];
+            expect(maintenanceStage.sequence).toEqual(2);
+            expect(maintenanceStage.text).toEqual('Maintenance');
+            expect(maintenanceStage.doseAndRate[0].doseQuantity.value).toEqual(10);
+            expect(maintenanceStage.doseAndRate[0].doseQuantity.unit).toEqual('mg');
+            expect(maintenanceStage.timing.code.text).toEqual('Twice a day');
             done();
         });
     });
 
-    it('Should fall back to the first stage when every stage is a loading dose', function (done) {
+    it('Should send the single loading stage when every stage is a loading dose', function (done) {
         var vdpMedication = {
             uuid: 'vdp_medication_uuid_1',
             drug: {
@@ -1031,9 +1040,10 @@ describe('cdssService', function () {
             ]
         };
         cdssService.createFhirBundle(consultationDataMock.patient, [], [vdpMedication], [], 'http://example.com').then(function (fhirResult) {
-            var dosage = fhirResult.bundle.entry[0].resource.dosageInstruction[0];
+            var dosageInstruction = fhirResult.bundle.entry[0].resource.dosageInstruction;
+            expect(dosageInstruction.length).toEqual(1);
+            var dosage = dosageInstruction[0];
             expect(dosage.doseAndRate[0].doseQuantity.value).toEqual(20);
-            expect(dosage.timing.repeat.duration).toEqual(1);
             done();
         });
     });
