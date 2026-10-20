@@ -24,12 +24,73 @@ angular.module('bahmni.clinical')
             });
         };
 
+        var createUniformDosageInstruction = function (medication, conceptSource) {
+            return {
+                "text": angular.toJson({ "instructions": medication.instructions }),
+                "timing": {
+                    "event": [medication.effectiveStartDate],
+                    "repeat": {
+                        "duration": medication.durationInDays,
+                        "durationUnit": 'd'
+                    },
+                    "code": {
+                        "coding": [
+                            {
+                                "code": medication.drug.uuid,
+                                "display": medication.uniformDosingType.frequency
+                            }
+                        ],
+                        "text": medication.uniformDosingType.frequency
+                    }
+                },
+                "asNeededBoolean": medication.asNeeded,
+                "doseAndRate": [
+                    {
+                        "doseQuantity": {
+                            "value": medication.uniformDosingType.dose,
+                            "unit": medication.doseUnits,
+                            "code": medication.drug.uuid
+                        }
+                    }
+                ],
+                "route": {
+                    "coding": [{
+                        "system": conceptSource,
+                        "code": "",
+                        "display": medication.route
+                    }
+                    ],
+                    "text": medication.route
+                }
+            };
+        };
+
+        var resolveVdpUnits = function (medication, stages) {
+            if (medication.units) {
+                return medication.units;
+            }
+            var stageWithUnit = stages.filter(function (s) {
+                return s.unit;
+            })[0];
+            return stageWithUnit ? stageWithUnit.unit : '';
+        };
+
         var createMedicationRequest = function (medication, patientUuid, conceptSource) {
-            if (isVdpTreatment(medication)) {
+            var isVdp = isVdpTreatment(medication);
+            var vdpStages = isVdp ? (medication.stages || []) : [];
+            var vdpUnits = isVdp ? resolveVdpUnits(medication, vdpStages) : '';
+            var vdpRoute = isVdp ? (medication.routeObject || medication.route) : '';
+            if (isVdp) {
                 medication = normalizeVdpMedication(medication);
             }
             return extractCodeInfo(medication, conceptSource).then(function (extracted) {
                 var coding = extracted.coding;
+                // Variable dose protocols carry one dose per stage. Send every stage as its own
+                // dosageInstruction (same shape the order is saved with) instead of collapsing to
+                // a single stage, so the CDS rules engine sees the loading and maintenance doses.
+                var dosageInstruction = isVdp
+                    ? Bahmni.Clinical.FhirDosingUtils.buildFhirDosageArray(vdpStages, vdpUnits, vdpRoute)
+                    : [createUniformDosageInstruction(medication, conceptSource)];
                 var medicationRequest = {
                     resourceType: 'MedicationRequest',
                     id: medication.uuid,
@@ -43,47 +104,7 @@ angular.module('bahmni.clinical')
                         coding: coding,
                         text: medication.drugNameDisplay
                     },
-                    "dosageInstruction": [
-                        {
-                            "text": angular.toJson({ "instructions": medication.instructions }),
-                            "timing": {
-                                "event": [medication.effectiveStartDate],
-                                "repeat": {
-                                    "duration": medication.durationInDays,
-                                    "durationUnit": 'd'
-                                },
-                                "code": {
-                                    "coding": [
-                                        {
-                                            "code": medication.drug.uuid,
-                                            "display": medication.uniformDosingType.frequency
-                                        }
-                                    ],
-                                    "text": medication.uniformDosingType.frequency
-                                }
-                            },
-                            "asNeededBoolean": medication.asNeeded,
-                            "doseAndRate": [
-                                {
-                                    "doseQuantity": {
-                                        "value": medication.uniformDosingType.dose,
-                                        "unit": medication.doseUnits,
-                                        "code": medication.drug.uuid
-                                    }
-                                }
-                            ],
-                            "route": {
-                                "coding": [{
-                                    "system": conceptSource,
-                                    "code": "",
-                                    "display": medication.route
-                                }
-                                ],
-                                "text": medication.route
-                            }
-                        }
-                    ]
-
+                    "dosageInstruction": dosageInstruction
                 };
                 return {
                     resource: medicationRequest,
