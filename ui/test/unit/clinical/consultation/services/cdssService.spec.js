@@ -1006,6 +1006,16 @@ describe('cdssService', function () {
             });
         });
 
+        it('should not send variable-dose orders (no uniform frequency) to CDSS', function (done) {
+            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+            var variableOrder = angular.extend({}, savedOrder, {uuid: 'vdp_order', uniformDosingType: {}});
+            cdssService.getAlerts(true, consultationWithSavedOrder([variableOrder]), {uuid: 'p1'}).then(function () {
+                var bundle = drugService.sendDiagnosisDrugBundle.calls.count() ? drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0] : {entry: []};
+                expect(bundle.entry.some(function (e) { return e.resource.resourceType === 'MedicationRequest'; })).toBe(false);
+                done();
+            });
+        });
+
         it('should not fetch active orders when the consultation already has them', function (done) {
             treatmentService.getActiveDrugOrders.calls.reset();
             drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));

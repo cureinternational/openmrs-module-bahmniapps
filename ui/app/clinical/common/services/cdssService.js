@@ -356,6 +356,10 @@ angular.module('bahmni.clinical')
                     var drafts = newlyAdded ? newlyAdded.allMedicationTabConfig.treatments : [];
                     consultationData.draftDrug = drafts.concat(orderSetTreatments);
                     consultationData.draftDrug = consultationData.draftDrug.concat(getSavedOrdersForCdss(consultationData, consultationData.draftDrug));
+                    // variable-dose orders have no uniform frequency; CDSS cannot compute a period for them
+                    consultationData.draftDrug = consultationData.draftDrug.filter(function (medication) {
+                        return medication.uniformDosingType && medication.uniformDosingType.frequency;
+                    });
                     var params = createParams(consultationData);
                     return createFhirBundle(params.patient, params.conditions, params.medications, params.diagnosis)
                     .then(function (fhirResult) {
