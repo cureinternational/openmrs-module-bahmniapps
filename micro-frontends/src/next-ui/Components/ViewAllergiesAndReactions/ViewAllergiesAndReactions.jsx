@@ -36,7 +36,7 @@ export const ViewAllergiesAndReactions = (props) => {
                         <div className={"capitalize"}>{allergy.severity}</div>
                     </div>
                     return (<Accordion key={index}>
-                        <AccordionItem title={title}>
+                        <AccordionItem title={title} open={Boolean(allergy.note)}>
                             <div className={"allergies-accordion-item"}>
                                 <div>
                                     {allergy.note &&

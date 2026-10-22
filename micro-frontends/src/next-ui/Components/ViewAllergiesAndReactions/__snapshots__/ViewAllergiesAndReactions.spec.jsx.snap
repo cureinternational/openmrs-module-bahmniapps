@@ -88,11 +88,11 @@ exports[`ViewAllergiesAndReactions should render ViewAllergiesAndReactions compo
         class="bx--accordion bx--accordion--end bx--accordion--md"
       >
         <li
-          class="bx--accordion__item"
+          class="bx--accordion__item bx--accordion__item--active"
         >
           <button
             aria-controls="accordion-item-2"
-            aria-expanded="false"
+            aria-expanded="true"
             class="bx--accordion__heading"
             type="button"
           >
