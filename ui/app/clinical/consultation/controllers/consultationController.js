@@ -510,12 +510,9 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                         $scope.isErrorPresentInObsTab = false;
                     }
                 } else if ($scope.isSave) {
-                    if ($scope.isErrorPresentInObsTab && !shouldAllow) {
+                    if ($scope.isErrorPresentInObsTab) {
                         var errorMessage = contxChange["errorMessage"] ? contxChange["errorMessage"] : "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}";
                         messagingService.showMessage('error', errorMessage);
-                    } else if (shouldAllow) {
-                        errorBoardId = null;
-                        $scope.isErrorPresentInObsTab = false;
                     }
                 }
                 return shouldAllow;

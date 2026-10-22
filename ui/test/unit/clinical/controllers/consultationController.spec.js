@@ -462,7 +462,7 @@ describe("ConsultationController", function () {
             expect(scope.currentBoard.label).toBe('Treatment');
         });
 
-        it("should block save when concept-set mandatory errors are still present", function (done) {
+        it("should block save when concept-set mandatory errors were present during tab switch", function (done) {
             scope.consultation = {
                 discontinuedDrugs: [{dateStopped: new Date()}],
                 preSaveHandler: new Bahmni.Clinical.Notifier(),
@@ -471,30 +471,10 @@ describe("ConsultationController", function () {
             };
             scope.currentBoard = scope.availableBoards[0];
             scope.isErrorPresentInObsTab = true;
-            contextChangeHandler.execute = function () { return {allow: false, errorMessage: "Mandatory field missing"}; };
             scope.$parent = {$parent: {$broadcast: function () { return {}; }}};
             spyOn(scope.$parent.$parent, '$broadcast');
             scope.save({toState: {}}).then(function () {
-                expect(scope.isErrorPresentInObsTab).toBeTruthy();
                 expect(scope.$parent.$parent.$broadcast).toHaveBeenCalledWith('event:errorsOnForm');
-                done();
-            });
-        });
-
-        it("should allow save when stale observation tab error is resolved by current validation", function (done) {
-            scope.consultation = {
-                discontinuedDrugs: [{dateStopped: new Date()}],
-                preSaveHandler: new Bahmni.Clinical.Notifier(),
-                postSaveHandler: new Bahmni.Clinical.Notifier(),
-                observations: [], conditions: []
-            };
-            scope.currentBoard = scope.availableBoards[0];
-            scope.isErrorPresentInObsTab = true;
-            scope.$parent = {$parent: {$broadcast: function () { return {}; }}};
-            spyOn(scope.$parent.$parent, '$broadcast');
-            scope.save({toState: {}}).then(function () {
-                expect(scope.isErrorPresentInObsTab).toBeFalsy();
-                expect(scope.$parent.$parent.$broadcast).not.toHaveBeenCalledWith('event:errorsOnForm');
                 done();
             });
         });
@@ -557,17 +537,7 @@ describe("ConsultationController", function () {
                 });
             });
 
-            it("should not clear the error just because Observations tab is reached; only the originating tab clears it", function () {
-                scope.showBoard(treatmentIdx);
-                contextChangeHandler.execute = function () { return {allow: false, errorMessage: "Treatment invalid"}; };
-                scope.showBoard(diagnosisIdx);
-                contextChangeHandler.execute = function () { return {allow: true}; };
-                scope.showBoard(observationsIdx);
-
-                expect(scope.isErrorPresentInObsTab).toBeTruthy();
-            });
-
-            it("should clear a stale tab error on save when current validation allows save", function (done) {
+            it("should not clear the error just because Observations tab is reached; only the originating tab clears it", function (done) {
                 scope.showBoard(treatmentIdx);
                 contextChangeHandler.execute = function () { return {allow: false, errorMessage: "Treatment invalid"}; };
                 scope.showBoard(diagnosisIdx);
@@ -577,8 +547,7 @@ describe("ConsultationController", function () {
                 expect(scope.isErrorPresentInObsTab).toBeTruthy();
                 spyOn(scope.$parent.$parent, '$broadcast');
                 scope.save({toState: {}}).then(function () {
-                    expect(scope.isErrorPresentInObsTab).toBeFalsy();
-                    expect(scope.$parent.$parent.$broadcast).not.toHaveBeenCalledWith('event:errorsOnForm');
+                    expect(scope.$parent.$parent.$broadcast).toHaveBeenCalledWith('event:errorsOnForm');
                     done();
                 });
             });
