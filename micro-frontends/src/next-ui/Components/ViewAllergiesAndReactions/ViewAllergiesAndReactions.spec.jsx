@@ -50,4 +50,18 @@ describe("ViewAllergiesAndReactions", () => {
         expect(getAllByRole('button').map((button) => button.getAttribute('aria-expanded')))
             .toEqual(['false', 'true', 'false']);
     });
+
+    it.each([
+        [false, ['false', 'false', 'false']],
+        [null, ['false', 'true', 'false']],
+    ])('should handle expandAllergyNotesByDefault=%s', (expandAllergyNotesByDefault, expected) => {
+        const { getAllByRole } = render(
+            <IntlProvider locale="en">
+                <ViewAllergiesAndReactions allergies={allergiesMock} noKnownAllergyUuid={NO_KNOWN_ALLERGY_CODE}
+                                           expandAllergyNotesByDefault={expandAllergyNotesByDefault}/>
+            </IntlProvider>
+        );
+
+        expect(getAllByRole('button').map((button) => button.getAttribute('aria-expanded'))).toEqual(expected);
+    });
 });

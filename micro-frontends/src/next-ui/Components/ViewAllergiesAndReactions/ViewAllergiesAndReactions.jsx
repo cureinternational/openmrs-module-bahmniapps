@@ -6,7 +6,7 @@ import { Accordion, AccordionItem } from "carbon-components-react";
 import { Document } from "@carbon/icons-react/next";
 import PropTypes from "prop-types";
 export const ViewAllergiesAndReactions = (props) => {
-    const { allergies, showTextAsAbnormal, noKnownAllergyUuid } = props;
+    const { allergies, showTextAsAbnormal, noKnownAllergyUuid, expandAllergyNotesByDefault } = props;
 
     const hasMultipleAllergies = allergies.length > 1;
     const hasNoKnownAllergy = allergies.some(
@@ -36,7 +36,7 @@ export const ViewAllergiesAndReactions = (props) => {
                         <div className={"capitalize"}>{allergy.severity}</div>
                     </div>
                     return (<Accordion key={index}>
-                        <AccordionItem title={title} open={Boolean(allergy.note)}>
+                        <AccordionItem title={title} open={expandAllergyNotesByDefault !== false && Boolean(allergy.note)}>
                             <div className={"allergies-accordion-item"}>
                                 <div>
                                     {allergy.note &&
@@ -58,4 +58,5 @@ ViewAllergiesAndReactions.propTypes = {
     allergies: PropTypes.array.isRequired,
     showTextAsAbnormal: PropTypes.bool,
     noKnownAllergyUuid: PropTypes.string.isRequired,
+    expandAllergyNotesByDefault: PropTypes.bool,
 }
