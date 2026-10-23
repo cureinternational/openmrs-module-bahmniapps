@@ -179,7 +179,13 @@ angular.module('bahmni.clinical')
                                     return false;
                                 }
                                 return referenceCondition.coding.some(function (coding) {
-                                    return !!(coding && coding.code) && diagnosis.codedAnswer.uuid === coding.code;
+                                    if (!coding || !coding.code) {
+                                        return false;
+                                    }
+                                    var mappings = diagnosis.codedAnswer.mappings || [];
+                                    return diagnosis.codedAnswer.uuid === coding.code || mappings.some(function (mapping) {
+                                        return mapping && mapping.code === coding.code;
+                                    });
                                 });
                             });
                         });
@@ -274,7 +280,7 @@ angular.module('bahmni.clinical')
             });
 
             var postSave = $rootScope.$on('event:save-successful', function () {
-                getAlerts();
+                cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient, true);
             });
 
             $scope.$on('$destroy', function () {

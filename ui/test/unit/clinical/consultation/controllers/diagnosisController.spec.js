@@ -270,6 +270,40 @@ describe("Diagnosis Controller", function () {
         });
     });
 
+    describe("cdss alerts for newly added diagnoses", function () {
+        var snomedAlert = {uuid: 'a1', referenceConditions: [{coding: [{code: '23986001'}]}]};
+
+        beforeEach(function () {
+            cdssService.sortInteractionsByStatus.and.callFake(function (alerts) {
+                return alerts;
+            });
+        });
+
+        it("should match an alert on the SNOMED mapping of the coded answer", function () {
+            $scope.consultation.newlyAddedDiagnoses = [{codedAnswer: {uuid: 'u1', name: 'Glaucoma', mappings: [{code: '23986001'}]}}];
+            rootScope.cdssAlerts = [snomedAlert];
+            rootScope.$digest();
+
+            expect($scope.consultation.newlyAddedDiagnoses[0].alerts.length).toBe(1);
+        });
+
+        it("should still match an alert on the concept uuid", function () {
+            $scope.consultation.newlyAddedDiagnoses = [{codedAnswer: {uuid: '23986001', name: 'Glaucoma'}}];
+            rootScope.cdssAlerts = [snomedAlert];
+            rootScope.$digest();
+
+            expect($scope.consultation.newlyAddedDiagnoses[0].alerts.length).toBe(1);
+        });
+
+        it("should not match an unrelated diagnosis", function () {
+            $scope.consultation.newlyAddedDiagnoses = [{codedAnswer: {uuid: 'u2', name: 'Fever', mappings: [{code: '386661006'}]}}];
+            rootScope.cdssAlerts = [snomedAlert];
+            rootScope.$digest();
+
+            expect($scope.consultation.newlyAddedDiagnoses[0].alerts.length).toBe(0);
+        });
+    });
+
     describe("should validate the diagnosis", function(){
         it("should throw error message for duplicate diagnosis", function(){
             $scope.consultation.newlyAddedDiagnoses = [{codedAnswer:{name:"abc"}},{codedAnswer:{name:"abc"}}];
