@@ -306,11 +306,17 @@ angular.module('bahmni.clinical')
                 });
             };
 
+            var alertsRemovedForDiscontinuedOrders = {};
+
+            var removeAlertsForDrugOrder = function (drugOrder) {
+                return cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug);
+            };
+
             $scope.$on("event:sectionUpdated", function (event, drugOrder) {
                 _.remove($scope.consultation.activeAndScheduledDrugOrders, function (activeOrder) {
                     return activeOrder.uuid === drugOrder.uuid;
                 });
-                getAlerts();
+                removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.$on("event:refillDrugOrders", function (event, drugOrders) {
@@ -329,7 +335,7 @@ angular.module('bahmni.clinical')
                 drugOrder.dateStopped = DateUtil.now();
                 $scope.consultation.discontinuedDrugs.push(drugOrder);
                 $scope.minDateStopped = DateUtil.getDateWithoutTime(drugOrder.effectiveStartDate < DateUtil.now() ? drugOrder.effectiveStartDate : DateUtil.now());
-                getAlerts();
+                alertsRemovedForDiscontinuedOrders[drugOrder.uuid] = removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.$on("event:undoDiscontinueDrugOrder", function (event, drugOrder) {
@@ -344,7 +350,8 @@ angular.module('bahmni.clinical')
                 drugOrder.orderReasonText = null;
                 drugOrder.isMarkedForDiscontinue = false;
                 drugOrder.isEditAllowed = true;
-                getAlerts();
+                cdssService.restoreAlerts(alertsRemovedForDiscontinuedOrders[drugOrder.uuid]);
+                delete alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
             });
 
             var selectDrugFromDropdown = function (drug_) {
@@ -618,8 +625,9 @@ angular.module('bahmni.clinical')
             });
 
             $scope.$on("event:removeDrugOrder", function (event, index) {
+                var drugOrder = $scope.treatments[index];
                 $scope.treatments.splice(index, 1);
-                getAlerts();
+                removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.incompleteDrugOrders = function () {
