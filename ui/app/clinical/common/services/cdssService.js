@@ -97,13 +97,38 @@ angular.module('bahmni.clinical')
 
         var extractCodeInfo = function (medication, conceptSource) {
             if (!(medication.drug.drugReferenceMaps && medication.drug.drugReferenceMaps.length > 0)) {
-                return Promise.resolve({
+                var openmrsOnly = {
                     coding: [{
                         code: medication.drug.uuid,
                         display: medication.drug.name,
                         system: 'https://fhir.openmrs.org'
                     }],
                     conceptSource: ''
+                };
+                return drugService.getDrugConceptSourceMapping(medication.drug.uuid).then(function (response) {
+                    var bundle = response && response.data;
+                    var resource = bundle && bundle.entry && bundle.entry.length > 0 && bundle.entry[0].resource;
+                    var codings = (resource && resource.code && resource.code.coding) || [];
+                    var conceptCode = codings.find(function (coding) {
+                        return coding && coding.system && coding.code;
+                    });
+                    if (conceptCode) {
+                        return {
+                            coding: [{
+                                system: conceptCode.system,
+                                code: conceptCode.code,
+                                display: medication.drug.name
+                            }, {
+                                code: medication.drug.uuid,
+                                display: medication.drug.name,
+                                system: 'https://fhir.openmrs.org'
+                            }],
+                            conceptSource: conceptCode.system
+                        };
+                    }
+                    return openmrsOnly;
+                }).catch(function () {
+                    return openmrsOnly;
                 });
             } else {
                 var drugReferenceMap = medication.drug.drugReferenceMaps[0];
