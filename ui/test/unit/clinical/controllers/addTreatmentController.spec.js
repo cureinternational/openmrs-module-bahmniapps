@@ -2065,6 +2065,35 @@ describe("AddTreatmentController", function () {
             rootScope.$broadcast("event:sectionUpdated", drugOrder);
             expect(scope.consultation.activeAndScheduledDrugOrders.length).toBe(length);
         });
+
+        it("should refresh cdss alerts", function () {
+            var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
+            scope.consultation.activeAndScheduledDrugOrders.push(drugOrder);
+            rootScope.$broadcast("event:sectionUpdated", drugOrder);
+            expect(cdssService.getAlerts).toHaveBeenCalled();
+        });
+    });
+
+    describe("cdss alert refresh on medication changes", function () {
+        it("should refresh alerts when a draft drug order is removed", function () {
+            scope.treatments.push(Bahmni.Tests.drugOrderViewModelMother.build({}, []));
+            rootScope.$broadcast("event:removeDrugOrder", 0);
+            expect(cdssService.getAlerts).toHaveBeenCalled();
+        });
+
+        it("should refresh alerts when a drug order is discontinued", function () {
+            var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            expect(cdssService.getAlerts).toHaveBeenCalled();
+        });
+
+        it("should refresh alerts when a discontinuation is undone", function () {
+            var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            cdssService.getAlerts.calls.reset();
+            rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
+            expect(cdssService.getAlerts).toHaveBeenCalled();
+        });
     });
 
     describe("saveTreatment()", function () {
