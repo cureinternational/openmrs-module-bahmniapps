@@ -510,6 +510,10 @@ angular.module('bahmni.clinical').controller('ConsultationController',
                         $scope.isErrorPresentInObsTab = false;
                     }
                 } else if ($scope.isSave) {
+                    if ($scope.isErrorPresentInObsTab && shouldAllow && errorBoardId && errorBoardId === fromBoardId) {
+                        errorBoardId = null;
+                        $scope.isErrorPresentInObsTab = false;
+                    }
                     if ($scope.isErrorPresentInObsTab) {
                         var errorMessage = contxChange["errorMessage"] ? contxChange["errorMessage"] : "{{'CLINICAL_FORM_ERRORS_MESSAGE_KEY' | translate }}";
                         messagingService.showMessage('error', errorMessage);
@@ -570,7 +574,7 @@ angular.module('bahmni.clinical').controller('ConsultationController',
 
             $scope.save = function (toStateConfig) {
                 $scope.isSave = true;
-                if (!isFormValid() || !isObservationFormValid() || $scope.isErrorPresentInObsTab) {
+                if (!isFormValid($scope.currentBoard && $scope.currentBoard.id) || !isObservationFormValid() || $scope.isErrorPresentInObsTab) {
                     $scope.$parent.$parent.$broadcast("event:errorsOnForm");
                     return $q.when({});
                 }

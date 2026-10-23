@@ -537,6 +537,21 @@ describe("ConsultationController", function () {
                 });
             });
 
+            it("should clear the originating tab's stale error when saving from that tab after it is fixed", function (done) {
+                scope.showBoard(diagnosisIdx);
+                contextChangeHandler.execute = function () { return {allow: false, errorMessage: "Diagnosis invalid"}; };
+                scope.showBoard(treatmentIdx);
+
+                contextChangeHandler.execute = function () { return {allow: true}; };
+                scope.showBoard(diagnosisIdx);
+                spyOn(scope.$parent.$parent, '$broadcast');
+                scope.save({toState: {}}).then(function () {
+                    expect(scope.isErrorPresentInObsTab).toBeFalsy();
+                    expect(scope.$parent.$parent.$broadcast).not.toHaveBeenCalledWith('event:errorsOnForm');
+                    done();
+                });
+            });
+
             it("should not clear the error just because Observations tab is reached; only the originating tab clears it", function (done) {
                 scope.showBoard(treatmentIdx);
                 contextChangeHandler.execute = function () { return {allow: false, errorMessage: "Treatment invalid"}; };
