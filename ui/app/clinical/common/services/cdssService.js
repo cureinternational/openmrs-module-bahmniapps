@@ -503,6 +503,47 @@ angular.module('bahmni.clinical')
             });
         };
 
+        var alertReferencesDrug = function (alert, drug) {
+            if (!alert || !drug) {
+                return false;
+            }
+            return (alert.referenceMedications || []).some(function (referenceMedication) {
+                return (referenceMedication.coding || []).some(function (coding) {
+                    return drug.uuid === coding.code || drug.name === coding.display;
+                });
+            });
+        };
+
+        // Removing a drug resolves its alerts, so drop them from the shared state instead of
+        // re-running the CDSS request for every medication change.
+        var removeAlertsForDrug = function (drug) {
+            if (!drug || !$rootScope.cdssAlerts) {
+                return [];
+            }
+            var removedAlerts = [];
+            $rootScope.cdssAlerts = $rootScope.cdssAlerts.filter(function (alert) {
+                if (alertReferencesDrug(alert, drug)) {
+                    removedAlerts.push(alert);
+                    return false;
+                }
+                return true;
+            });
+            return removedAlerts;
+        };
+
+        var restoreAlerts = function (alerts) {
+            if (!alerts || alerts.length === 0) {
+                return;
+            }
+            var currentAlerts = $rootScope.cdssAlerts || [];
+            var alertsToRestore = alerts.filter(function (alert) {
+                return !currentAlerts.some(function (currentAlert) {
+                    return currentAlert === alert || (alert.uuid && currentAlert.uuid === alert.uuid);
+                });
+            });
+            $rootScope.cdssAlerts = currentAlerts.concat(alertsToRestore);
+        };
+
         var sortInteractionsByStatus = function (alerts) {
             var order = { "critical": 0, "warning": 1, "info": 2 };
             return alerts.sort(function (a, b) {
@@ -514,6 +555,8 @@ angular.module('bahmni.clinical')
             createFhirBundle: createFhirBundle,
             createParams: createParams,
             addNewAlerts: addNewAlerts,
+            removeAlertsForDrug: removeAlertsForDrug,
+            restoreAlerts: restoreAlerts,
             sortInteractionsByStatus: sortInteractionsByStatus,
             getAlerts: getAlerts
         };
