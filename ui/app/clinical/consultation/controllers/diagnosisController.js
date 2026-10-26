@@ -101,6 +101,23 @@ angular.module('bahmni.clinical')
                 });
             };
 
+            var hasReferenceConditionCode = function (cdssAlert, matchesCode) {
+                if (!cdssAlert.referenceConditions) {
+                    return false;
+                }
+                return cdssAlert.referenceConditions.some(function (referenceCondition) {
+                    if (!referenceCondition || !referenceCondition.coding) {
+                        return false;
+                    }
+                    return referenceCondition.coding.some(function (coding) {
+                        if (!coding || !coding.code) {
+                            return false;
+                        }
+                        return matchesCode(coding.code);
+                    });
+                });
+            };
+
             var isPastDiagnosisFlagged = function () {
                 var pastDiagnoses = $scope.consultation.pastDiagnoses;
                 var alerts = $rootScope.cdssAlerts;
@@ -108,20 +125,12 @@ angular.module('bahmni.clinical')
                 if (pastDiagnoses && pastDiagnoses.length > 0 && alerts) {
                     pastDiagnoses.forEach(function (diagnosis) {
                         diagnosis.alerts = alerts.filter(function (cdssAlert) {
-                            if (!cdssAlert.referenceConditions || !diagnosis.codedAnswer || !diagnosis.codedAnswer.mappings) {
-                                return false;
-                            }
-                            return cdssAlert.referenceConditions.some(function (referenceCondition) {
-                                if (!referenceCondition || !referenceCondition.coding) {
+                            return hasReferenceConditionCode(cdssAlert, function (code) {
+                                if (!diagnosis.codedAnswer || !diagnosis.codedAnswer.mappings) {
                                     return false;
                                 }
-                                return referenceCondition.coding.some(function (coding) {
-                                    if (!coding || !coding.code) {
-                                        return false;
-                                    }
-                                    return diagnosis.codedAnswer.mappings.some(function (mapping) {
-                                        return mapping && mapping.code === coding.code;
-                                    });
+                                return diagnosis.codedAnswer.mappings.some(function (mapping) {
+                                    return mapping && mapping.code === code;
                                 });
                             });
                         });
@@ -140,20 +149,12 @@ angular.module('bahmni.clinical')
                 if (diagnoses && diagnoses.length > 0 && alerts) {
                     diagnoses.forEach(function (diagnosis) {
                         diagnosis.alerts = alerts.filter(function (cdssAlert) {
-                            if (!cdssAlert.referenceConditions || !diagnosis.codedAnswer || !diagnosis.codedAnswer.mappings) {
-                                return false;
-                            }
-                            return cdssAlert.referenceConditions.some(function (referenceCondition) {
-                                if (!referenceCondition || !referenceCondition.coding) {
+                            return hasReferenceConditionCode(cdssAlert, function (code) {
+                                if (!diagnosis.codedAnswer || !diagnosis.codedAnswer.mappings) {
                                     return false;
                                 }
-                                return referenceCondition.coding.some(function (coding) {
-                                    if (!coding || !coding.code) {
-                                        return false;
-                                    }
-                                    return diagnosis.codedAnswer.mappings.some(function (mapping) {
-                                        return mapping && mapping.code === coding.code;
-                                    });
+                                return diagnosis.codedAnswer.mappings.some(function (mapping) {
+                                    return mapping && mapping.code === code;
                                 });
                             });
                         });
@@ -171,21 +172,13 @@ angular.module('bahmni.clinical')
                 if (diagnoses && diagnoses.length > 0 && alerts) {
                     diagnoses.forEach(function (diagnosis) {
                         diagnosis.alerts = alerts.filter(function (cdssAlert) {
-                            if (!cdssAlert.referenceConditions || !diagnosis.codedAnswer || !diagnosis.codedAnswer.uuid) {
-                                return false;
-                            }
-                            return cdssAlert.referenceConditions.some(function (referenceCondition) {
-                                if (!referenceCondition || !referenceCondition.coding) {
+                            return hasReferenceConditionCode(cdssAlert, function (code) {
+                                if (!diagnosis.codedAnswer || !diagnosis.codedAnswer.uuid) {
                                     return false;
                                 }
-                                return referenceCondition.coding.some(function (coding) {
-                                    if (!coding || !coding.code) {
-                                        return false;
-                                    }
-                                    var mappings = diagnosis.codedAnswer.mappings || [];
-                                    return diagnosis.codedAnswer.uuid === coding.code || mappings.some(function (mapping) {
-                                        return mapping && mapping.code === coding.code;
-                                    });
+                                var mappings = diagnosis.codedAnswer.mappings || [];
+                                return diagnosis.codedAnswer.uuid === code || mappings.some(function (mapping) {
+                                    return mapping && mapping.code === code;
                                 });
                             });
                         });
