@@ -306,7 +306,9 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            var alertsRemovedForDiscontinuedOrders = {};
+            $scope.consultation.alertsRemovedForDiscontinuedOrders =
+                $scope.consultation.alertsRemovedForDiscontinuedOrders || {};
+            var alertsRemovedForDiscontinuedOrders = $scope.consultation.alertsRemovedForDiscontinuedOrders;
 
             var removeAlertsForDrugOrder = function (drugOrder) {
                 return cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug);
