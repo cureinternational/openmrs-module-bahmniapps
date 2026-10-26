@@ -39,18 +39,7 @@ angular.module('bahmni.clinical')
                         var cdssAlerts = angular.copy($rootScope.cdssAlerts);
                         if (!cdssAlerts) return;
                         drugOrder.alerts = cdssAlerts.filter(function (cdssAlert) {
-                            return !!drug && cdssAlert.referenceMedications.some(function (
-                            referenceMedication
-                        ) {
-                                return referenceMedication.coding.some(function (
-                            coding
-                            ) {
-                                    return (
-                                drug.uuid === coding.code ||
-                                drug.name === coding.display
-                                    );
-                                });
-                            });
+                            return Bahmni.Clinical.CdssAlertUtil.matchesMedication(cdssAlert, drug);
                         });
                         drugOrder.alerts = cdssService.sortInteractionsByStatus(drugOrder.alerts);
                     });

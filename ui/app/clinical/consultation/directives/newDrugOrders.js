@@ -99,9 +99,7 @@ angular.module('bahmni.clinical')
             };
 
             $scope.hasActiveAlerts = function (alerts) {
-                return alerts.some(function (alert) {
-                    return alert.isActive;
-                });
+                return Bahmni.Clinical.CdssAlertUtil.hasActiveAlerts(alerts);
             };
         };
         return {

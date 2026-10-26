@@ -532,5 +532,76 @@ describe("Diagnosis Controller", function () {
         });
     });
 
+    describe("cdss alerts with non coded diagnosis and conditions", function () {
+        var nonCodedCondition, codedCondition;
+
+        beforeEach(function () {
+            cdssService.sortInteractionsByStatus.and.callFake(function (alerts) {
+                return alerts;
+            });
+            nonCodedCondition = new Bahmni.Common.Domain.Condition({
+                display: "Non coded condition",
+                condition: {nonCoded: "Non coded condition"},
+                clinicalStatus: "ACTIVE"
+            });
+            codedCondition = new Bahmni.Common.Domain.Condition({
+                condition: {coded: {uuid: "123456789", name: {name: "Placeholder Condition"}, display: "Placeholder Condition"}},
+                clinicalStatus: "ACTIVE"
+            });
+        });
+
+        it("should not throw when a non coded condition is present along with cdss alerts", function () {
+            $scope.consultation.conditions = [nonCodedCondition];
+            rootScope.cdssAlerts = cdssResponse;
+
+            expect(function () {
+                rootScope.$digest();
+            }).not.toThrow();
+            expect(nonCodedCondition.alerts).toEqual([]);
+        });
+
+        it("should not throw when a non coded diagnosis is added along with cdss alerts", function () {
+            $scope.consultation.newlyAddedDiagnoses = [{freeTextAnswer: "Non coded diagnosis", codedAnswer: undefined}];
+            rootScope.cdssAlerts = cdssResponse;
+
+            expect(function () {
+                rootScope.$digest();
+            }).not.toThrow();
+        });
+
+        it("should not throw when a past or saved diagnosis has no coded mappings", function () {
+            $scope.consultation.pastDiagnoses = [{codedAnswer: {name: "Non coded diagnosis"}, freeTextAnswer: "Non coded diagnosis"}];
+            $scope.consultation.savedDiagnosesFromCurrentEncounter = [{codedAnswer: {name: "Non coded diagnosis"}, freeTextAnswer: "Non coded diagnosis"}];
+            rootScope.cdssAlerts = cdssResponse;
+
+            expect(function () {
+                rootScope.$digest();
+            }).not.toThrow();
+        });
+
+        it("should not throw when a cdss alert has reference conditions without coding", function () {
+            rootScope.cdssAlerts = [{uuid: "alert-uuid", indicator: "warning", referenceConditions: [{}]}];
+            $scope.consultation.conditions = [codedCondition];
+
+            expect(function () {
+                rootScope.$digest();
+            }).not.toThrow();
+            expect(codedCondition.alerts).toEqual([]);
+        });
+
+        it("should flag cdss alerts for a coded condition matching the alert", function () {
+            $scope.consultation.conditions = [codedCondition];
+            rootScope.cdssAlerts = cdssResponse;
+
+            rootScope.$digest();
+
+            expect(codedCondition.alerts.length).toBe(1);
+        });
+
+        it("should return false from hasActiveAlerts when alerts are not available", function () {
+            expect($scope.hasActiveAlerts(undefined)).toBe(false);
+            expect($scope.hasActiveAlerts([])).toBe(false);
+        });
+    });
 
 });
