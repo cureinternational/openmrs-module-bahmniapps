@@ -1128,4 +1128,42 @@ describe('cdssService', function () {
             });
         });
     });
+
+    describe('removeAlertsForDrug', function () {
+        var drugAlert = {
+            uuid: 'alert_1',
+            referenceMedications: [{
+                coding: [{code: 'drug_uuid_1', display: 'Drug Name 1'}]
+            }]
+        };
+        var otherAlert = {
+            uuid: 'alert_2',
+            referenceMedications: [{
+                coding: [{code: 'drug_uuid_2', display: 'Drug Name 2'}]
+            }]
+        };
+
+        beforeEach(function () {
+            rootScope.cdssAlerts = [drugAlert, otherAlert];
+        });
+
+        it('removes alerts that reference the drug by uuid', function () {
+            var removed = cdssService.removeAlertsForDrug({uuid: 'drug_uuid_1', name: 'Some other name'});
+            expect(removed).toEqual([drugAlert]);
+            expect(rootScope.cdssAlerts).toEqual([otherAlert]);
+        });
+
+        it('removes alerts that reference the drug by display name', function () {
+            var removed = cdssService.removeAlertsForDrug({name: 'Drug Name 1'});
+            expect(removed).toEqual([drugAlert]);
+            expect(rootScope.cdssAlerts).toEqual([otherAlert]);
+        });
+
+        it('restores removed alerts without duplicating existing ones', function () {
+            var removed = cdssService.removeAlertsForDrug({uuid: 'drug_uuid_1'});
+            cdssService.restoreAlerts(removed);
+            cdssService.restoreAlerts(removed);
+            expect(rootScope.cdssAlerts).toEqual([otherAlert, drugAlert]);
+        });
+    });
 });
