@@ -21,6 +21,7 @@ angular.module('bahmni.clinical')
             $scope.isSearchDisabled = false;
             $scope.cdssEnabled = false;
             $scope.clearButtonClicked = false;
+            $scope.conceptSource = localStorage.getItem("conceptSource") || "";
             $scope.prescribeMedicationPrivilege = Bahmni.Clinical.Constants.prescribeMedicationPrivilege;
             var currentVisitType;
             visitService.search(
@@ -117,7 +118,7 @@ angular.module('bahmni.clinical')
             });
 
             var postSave = $rootScope.$on('event:save-successful', function () {
-                cdssService.getAlerts($scope.cdssEnabled, $scope.consultation, $scope.patient, true);
+                getAlerts();
             });
 
             $scope.$on('$destroy', function () {
@@ -306,19 +307,10 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            $scope.consultation.alertsRemovedForDiscontinuedOrders =
-                $scope.consultation.alertsRemovedForDiscontinuedOrders || {};
-            var alertsRemovedForDiscontinuedOrders = $scope.consultation.alertsRemovedForDiscontinuedOrders;
-
-            var removeAlertsForDrugOrder = function (drugOrder) {
-                return cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug);
-            };
-
             $scope.$on("event:sectionUpdated", function (event, drugOrder) {
                 _.remove($scope.consultation.activeAndScheduledDrugOrders, function (activeOrder) {
                     return activeOrder.uuid === drugOrder.uuid;
                 });
-                removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.$on("event:refillDrugOrders", function (event, drugOrders) {
@@ -337,7 +329,6 @@ angular.module('bahmni.clinical')
                 drugOrder.dateStopped = DateUtil.now();
                 $scope.consultation.discontinuedDrugs.push(drugOrder);
                 $scope.minDateStopped = DateUtil.getDateWithoutTime(drugOrder.effectiveStartDate < DateUtil.now() ? drugOrder.effectiveStartDate : DateUtil.now());
-                alertsRemovedForDiscontinuedOrders[drugOrder.uuid] = removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.$on("event:undoDiscontinueDrugOrder", function (event, drugOrder) {
@@ -352,8 +343,6 @@ angular.module('bahmni.clinical')
                 drugOrder.orderReasonText = null;
                 drugOrder.isMarkedForDiscontinue = false;
                 drugOrder.isEditAllowed = true;
-                cdssService.restoreAlerts(alertsRemovedForDiscontinuedOrders[drugOrder.uuid]);
-                delete alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
             });
 
             var selectDrugFromDropdown = function (drug_) {
@@ -627,9 +616,7 @@ angular.module('bahmni.clinical')
             });
 
             $scope.$on("event:removeDrugOrder", function (event, index) {
-                var drugOrder = $scope.treatments[index];
                 $scope.treatments.splice(index, 1);
-                removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.incompleteDrugOrders = function () {
@@ -1030,7 +1017,16 @@ angular.module('bahmni.clinical')
                 if ($scope.addTreatmentWithPatientWeight.hasOwnProperty('duration')) {
                     patientWeightPromise = observationsService.fetch($scope.patient.uuid, $scope.addTreatmentWithPatientWeight.conceptNames, null, 10, null, null, false, null).then(function (response) {
                         $scope.currentEpoch = Math.floor(new Date().getTime() / 1000) * 1000;
-                        $scope.obs = response.data;
+                        var configuredNames = ($scope.addTreatmentWithPatientWeight.conceptNames || []).map(function (name) {
+                            return name.toLowerCase();
+                        });
+                        $scope.obs = (response.data || []).filter(function (observation) {
+                            var concept = observation.concept || {};
+                            var names = [concept.name, observation.conceptNameToDisplay];
+                            return names.some(function (name) {
+                                return name && configuredNames.indexOf(name.toLowerCase()) !== -1;
+                            });
+                        });
 
                         $scope.patientWeightError = !$scope.obs || $scope.obs.length === 0 ||
                             (($scope.currentEpoch - (($scope.obs[0] && $scope.obs[0].observationDateTime) || 0)) / 1000 > $scope.addTreatmentWithPatientWeight.duration);

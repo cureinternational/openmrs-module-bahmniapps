@@ -239,7 +239,7 @@ export function PatientAlergiesControl(props) {
             )}
           </h2>
             {allergiesAndReactions.length === 0 ?<div className={"placeholder-text"}>{noAllergiesText}</div>:
-                <ViewAllergiesAndReactions allergies={allergiesAndReactions} showTextAsAbnormal={appService.getAppDescriptor().getConfigValue("showTextAsAbnormal")} noKnownAllergyUuid={noKnownAllergyUuid}/>
+                <ViewAllergiesAndReactions allergies={allergiesAndReactions} showTextAsAbnormal={appService.getAppDescriptor().getConfigValue("showTextAsAbnormal")} expandAllergyNotesByDefault={appService.getAppDescriptor().getConfigValue("expandAllergyNotesByDefault")} noKnownAllergyUuid={noKnownAllergyUuid}/>
             }
           { showAddAllergyPanel && (
             <AddAllergy
