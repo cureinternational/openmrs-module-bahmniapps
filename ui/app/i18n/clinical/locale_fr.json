@@ -444,6 +444,9 @@
     "ADDITIONAL_INSTRUCTIONS": "Instructions supplémentaires",
     "AGO_LABEL": "il y a",
     "LMP_DATE_RECORDED": "Date enregistrée: ",
-
-    "VARIABLE_DOSAGE_HEADER": "Dosage Variable"
+    "VARIABLE_DOSAGE_HEADER": "Dosage Variable",
+    "INTRADAY_SLOT_MORNING": "Matin",
+    "INTRADAY_SLOT_AFTERNOON": "Après-midi",
+    "INTRADAY_SLOT_EVENING": "Soir",
+    "INTRADAY_SLOT_NIGHT": "Nuit"
 }

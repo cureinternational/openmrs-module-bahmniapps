@@ -405,6 +405,9 @@
     "LMP_WARNING_CONSULTATION_LABEL": "Días desde FUM - ",
     "LMP_WARNING_DAYS_UNIT": "días",
     "ADDITIONAL_INSTRUCTIONS": "Instrucciones adicionales",
-
-    "VARIABLE_DOSAGE_HEADER": "Dosificación Variable"
+    "VARIABLE_DOSAGE_HEADER": "Dosificación Variable",
+    "INTRADAY_SLOT_MORNING": "Mañana",
+    "INTRADAY_SLOT_AFTERNOON": "Tarde",
+    "INTRADAY_SLOT_EVENING": "Noche",
+    "INTRADAY_SLOT_NIGHT": "Madrugada"
 }

@@ -173,9 +173,7 @@ angular.module('bahmni.common.displaycontrol.drugOrdersSection')
                 };
 
                 $scope.hasActiveAlerts = function (alerts) {
-                    return alerts.some(function (alert) {
-                        return alert.isActive;
-                    });
+                    return Bahmni.Clinical.CdssAlertUtil.hasActiveAlerts(alerts);
                 };
 
                 var alertsPresent = function (orders) {
@@ -193,7 +191,7 @@ angular.module('bahmni.common.displaycontrol.drugOrdersSection')
                         var cdssAlerts = angular.copy($rootScope.cdssAlerts);
                         if (cdssAlerts) {
                             drugOrder.alerts = cdssAlerts.filter(function (cdssAlert) {
-                                return cdssAlert.referenceMedications.some(function (referenceMedication) {
+                                return !!drug && cdssAlert.referenceMedications.some(function (referenceMedication) {
                                     return referenceMedication.coding.some(function (coding) {
                                         return (
                                             drug.uuid === coding.code || drug.name === coding.display

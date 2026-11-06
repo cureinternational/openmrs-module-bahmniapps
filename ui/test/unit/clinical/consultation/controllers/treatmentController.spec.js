@@ -60,6 +60,30 @@ describe('TreatmentController', function () {
         });
     });
 
+    it('should assign an empty alerts array when the treatment drug is missing', function () {
+        $scope.consultation = {
+            newlyAddedTabTreatments: {
+                allMedicationTabConfig: {
+                    treatments: [{drug: undefined}],
+                    orderSetTreatments: [],
+                    newOrderSet: {}
+                }
+            }
+        };
+        cdssService.sortInteractionsByStatus.and.callFake(function (alerts) {
+            return alerts;
+        });
+        createController();
+        $rootScope.$digest();
+
+        $rootScope.cdssAlerts = [{
+            referenceMedications: [{coding: [{code: 'drug-uuid', display: 'Drug Name'}]}]
+        }];
+        $rootScope.$digest();
+
+        expect($scope.treatments[0].alerts).toEqual([]);
+    });
+
     it('should initialize the newlyAddedTabTreatments', function () {
         var controller = $controller('TreatmentController', {
             $scope: $scope,

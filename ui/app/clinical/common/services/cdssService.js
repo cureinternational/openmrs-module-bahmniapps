@@ -1,9 +1,10 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .service('cdssService', ['drugService', '$rootScope', function (drugService, $rootScope) {
+    .service('cdssService', ['drugService', '$rootScope', 'treatmentService', '$log', function (drugService, $rootScope, treatmentService, $log) {
         var createMedicationRequest = function (medication, patientUuid, conceptSource) {
-            return extractCodeInfo(medication, conceptSource).then(function (coding) {
+            return extractCodeInfo(medication, conceptSource).then(function (extracted) {
+                var coding = extracted.coding;
                 var medicationRequest = {
                     resourceType: 'MedicationRequest',
                     id: medication.uuid,
@@ -60,7 +61,8 @@ angular.module('bahmni.clinical')
 
                 };
                 return {
-                    resource: medicationRequest
+                    resource: medicationRequest,
+                    conceptSource: extracted.conceptSource
                 };
             });
         };
@@ -77,13 +79,32 @@ angular.module('bahmni.clinical')
             };
         };
 
+        var getReferenceTermCode = function (drugReferenceMap) {
+            var conceptReferenceTerm = drugReferenceMap && drugReferenceMap.conceptReferenceTerm;
+            if (!conceptReferenceTerm) {
+                return '';
+            }
+            if (conceptReferenceTerm.code) {
+                return String(conceptReferenceTerm.code).trim();
+            }
+            if (!conceptReferenceTerm.display) {
+                return '';
+            }
+            var parts = String(conceptReferenceTerm.display).split(':');
+            var code = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+            return code.split(/\s|\(/)[0].trim();
+        };
+
         var extractCodeInfo = function (medication, conceptSource) {
             if (!(medication.drug.drugReferenceMaps && medication.drug.drugReferenceMaps.length > 0)) {
-                return Promise.resolve([{
-                    code: medication.drug.uuid,
-                    display: medication.drug.name,
-                    system: 'https://fhir.openmrs.org'
-                }]);
+                return Promise.resolve({
+                    coding: [{
+                        code: medication.drug.uuid,
+                        display: medication.drug.name,
+                        system: 'https://fhir.openmrs.org'
+                    }],
+                    conceptSource: ''
+                });
             } else {
                 var drugReferenceMap = medication.drug.drugReferenceMaps[0];
                 if (!conceptSource) {
@@ -94,49 +115,75 @@ angular.module('bahmni.clinical')
                             return coding.system;
                         });
                         if (conceptCode) {
-                            localStorage.setItem("conceptSource", conceptCode.system);
-                            conceptSource = conceptCode.system;
-                            return [{
-                                system: conceptSource,
-                                code: drugReferenceMap.conceptReferenceTerm && drugReferenceMap.conceptReferenceTerm.display && drugReferenceMap.conceptReferenceTerm.display.split(':')[1].trim(),
-                                display: medication.drug.name
-                            }, {
-                                code: medication.drug.uuid,
-                                system: 'https://fhir.openmrs.org',
-                                display: medication.drug.name
-                            }];
+                            return {
+                                coding: [{
+                                    system: conceptCode.system,
+                                    code: getReferenceTermCode(drugReferenceMap),
+                                    display: medication.drug.name
+                                }, {
+                                    code: medication.drug.uuid,
+                                    system: 'https://fhir.openmrs.org',
+                                    display: medication.drug.name
+                                }],
+                                conceptSource: conceptCode.system
+                            };
                         } else {
-                            return [{
-                                code: medication.drug.uuid,
-                                display: medication.drug.name,
-                                system: 'https://fhir.openmrs.org'
-                            }];
+                            return {
+                                coding: [{
+                                    code: medication.drug.uuid,
+                                    display: medication.drug.name,
+                                    system: 'https://fhir.openmrs.org'
+                                }],
+                                conceptSource: ''
+                            };
                         }
                     });
                 } else {
-                    return Promise.resolve([{
-                        system: conceptSource,
-                        code: drugReferenceMap.conceptReferenceTerm && drugReferenceMap.conceptReferenceTerm.display && drugReferenceMap.conceptReferenceTerm.display.split(':')[1].trim(),
-                        display: medication.drug.name
-                    }, {
-                        code: medication.drug.uuid,
-                        system: 'https://fhir.openmrs.org',
-                        display: medication.drug.name
-                    }]);
+                    return Promise.resolve({
+                        coding: [{
+                            system: conceptSource,
+                            code: getReferenceTermCode(drugReferenceMap),
+                            display: medication.drug.name
+                        }, {
+                            code: medication.drug.uuid,
+                            system: 'https://fhir.openmrs.org',
+                            display: medication.drug.name
+                        }],
+                        conceptSource: conceptSource
+                    });
                 }
             }
         };
 
-        var createConditionResource = function (condition, patientUuid, isDiagnosis) {
+        var getMappedCode = function (codedAnswer) {
+            var mappings = codedAnswer && codedAnswer.mappings;
+            var mapping = mappings && mappings.filter(function (eachMapping) {
+                return eachMapping && eachMapping.code;
+            })[0];
+            return mapping ? String(mapping.code).trim() : '';
+        };
+
+        var createConditionResource = function (condition, patientUuid, isDiagnosis, conceptSource) {
             var conceptLimitIndex = isDiagnosis ? -1 : condition.concept.uuid.lastIndexOf('/');
             var conditionStatus = condition.status || condition.diagnosisStatus || condition.certainty;
             var activeConditions = ['CONFIRMED', 'PRESUMED', 'ACTIVE'];
             var status = (!conditionStatus || activeConditions.indexOf(conditionStatus) > -1) ? 'active' : 'inactive';
+            var conditionCodings = [];
+            var mappedCode = isDiagnosis ? getMappedCode(condition.codedAnswer) : '';
+            var mappedSystem = isDiagnosis ? (conceptSource || '') : '';
+            if (mappedCode && mappedSystem) {
+                conditionCodings.push({
+                    system: mappedSystem,
+                    code: mappedCode,
+                    display: condition.codedAnswer.name
+                });
+            }
             var conditionCoding = condition.concept ? extractConditionInfo(condition) : {
                 system: isDiagnosis ? condition.codedAnswer.conceptSystem : (conceptLimitIndex > -1 ? (condition.concept.uuid.substring(0, conceptLimitIndex) || '') : ''),
                 code: isDiagnosis ? condition.codedAnswer.uuid : (conceptLimitIndex > -1 ? condition.concept.uuid.substring(conceptLimitIndex + 1) : condition.concept.uuid),
                 display: isDiagnosis ? condition.codedAnswer.name : condition.concept.name
             };
+            conditionCodings.push(conditionCoding);
 
             var conditionResource = {
                 resourceType: 'Condition',
@@ -151,7 +198,7 @@ angular.module('bahmni.clinical')
                     ]
                 },
                 code: {
-                    coding: [ conditionCoding ],
+                    coding: conditionCodings,
                     text: isDiagnosis ? condition.codedAnswer.name : condition.concept.name
                 },
                 subject: {
@@ -180,24 +227,37 @@ angular.module('bahmni.clinical')
         }
 
         var createFhirBundle = function (patient, conditions, medications, diagnosis, conceptSource) {
-            var encounterResource = conditions.filter(function (condition) {
-                return !condition.uuid;
-            }).map(function (condition) {
-                return createConditionResource(condition, patient.uuid, false);
-            });
-            encounterResource = encounterResource.concat(diagnosis.map(function (condition) {
-                return createConditionResource(condition, patient.uuid, true);
-            }));
-
+            var resolvedConceptSource = conceptSource || '';
             medications = medications.filter(function (medication) {
-                return angular.isDefined(medication.include) && medication.include || medication.include === undefined;
+                var isCodedDrug = !!medication.drug;
+                var isIncluded = angular.isDefined(medication.include) && medication.include || medication.include === undefined;
+                return isCodedDrug && isIncluded;
             });
 
             return Promise.all(medications.map(function (medication) {
                 return createMedicationRequest(medication, patient.uuid, conceptSource).then(function (medicationResource) {
                     return medicationResource;
                 });
-            })).then(function (medicationResources) {
+            })).then(function (medicationResults) {
+                medicationResults.forEach(function (medicationResult) {
+                    if (!resolvedConceptSource && medicationResult.conceptSource) {
+                        resolvedConceptSource = medicationResult.conceptSource;
+                    }
+                });
+                var medicationResources = medicationResults.map(function (medicationResult) {
+                    return {
+                        resource: medicationResult.resource
+                    };
+                });
+                var encounterResource = conditions.filter(function (condition) {
+                    return !condition.uuid;
+                }).map(function (condition) {
+                    return createConditionResource(condition, patient.uuid, false, resolvedConceptSource);
+                });
+                encounterResource = encounterResource.concat(diagnosis.map(function (condition) {
+                    return createConditionResource(condition, patient.uuid, true, resolvedConceptSource);
+                }));
+
                 var bundleResource = {
                     resourceType: 'Bundle',
                     type: 'collection',
@@ -206,29 +266,115 @@ angular.module('bahmni.clinical')
                 if (medicationResources.length === 0 && encounterResource.length === 0) {
                     var patientResource = createPatientResource(patient);
                     bundleResource.entry = bundleResource.entry.concat(patientResource);
-                    return bundleResource;
+                    return {
+                        bundle: bundleResource,
+                        conceptSource: resolvedConceptSource
+                    };
                 }
                 bundleResource.entry = bundleResource.entry.concat(encounterResource, medicationResources);
-                return bundleResource;
+                return {
+                    bundle: bundleResource,
+                    conceptSource: resolvedConceptSource
+                };
             });
         };
 
-        var getAlerts = function (cdssEnabled, consultation, patient) {
-            if (cdssEnabled) {
-                var consultationData = angular.copy(consultation);
-                consultationData.patient = patient;
+        var getSavedOrdersForCdss = function (consultation, draftMedications) {
+            var draftUuids = draftMedications.map(function (medication) {
+                return medication.uuid;
+            });
+            return (consultation.activeAndScheduledDrugOrders || []).filter(function (order) {
+                return order.drug && order.uniformDosingType && !order.voided &&
+                    !order.isMarkedForDiscontinue && order.action !== 'DISCONTINUE' &&
+                    draftUuids.indexOf(order.uuid) === -1;
+            });
+        };
 
-                var orderSetTreatments = consultationData.newlyAddedTabTreatments ? consultationData.newlyAddedTabTreatments.allMedicationTabConfig.orderSetTreatments : [];
-                var drafts = consultationData.newlyAddedTabTreatments ? consultationData.newlyAddedTabTreatments.allMedicationTabConfig.treatments : [];
-                consultationData.draftDrug = drafts.concat(orderSetTreatments);
-                var params = createParams(consultationData);
-                createFhirBundle(params.patient, params.conditions, params.medications, params.diagnosis)
-                .then(function (bundle) {
-                    var cdssAlerts = drugService.sendDiagnosisDrugBundle(bundle);
-                    cdssAlerts.then(function (response) {
-                        var alerts = response.data;
-                        var existingAlerts = $rootScope.cdssAlerts || [];
-                        $rootScope.cdssAlerts = addNewAlerts(alerts, existingAlerts, bundle);
+        var isPatientOnlyBundle = function (bundle) {
+            if (!bundle.entry || bundle.entry.length === 0) {
+                return true;
+            }
+            return bundle.entry.every(function (entry) {
+                return entry.resource.resourceType === 'Patient';
+            });
+        };
+
+        // The medication tab populates activeAndScheduledDrugOrders; on other tabs (e.g. diagnosis)
+        // it is missing or empty, so fetch the active orders from the server.
+        var loadActiveOrders = function (consultation, patient) {
+            if (consultation.activeAndScheduledDrugOrders && consultation.activeAndScheduledDrugOrders.length > 0) {
+                return Promise.resolve(consultation.activeAndScheduledDrugOrders);
+            }
+            if (!patient || !patient.uuid) {
+                return Promise.resolve([]);
+            }
+            return Promise.resolve(treatmentService.getActiveDrugOrders(patient.uuid)).then(function (orders) {
+                return (orders || []).map(function (order) {
+                    return Bahmni.Clinical.DrugOrderViewModel.createFromContract(order);
+                });
+            }).catch(function (error) {
+                // null (not []) marks a failed fetch, so it is not mistaken for "no active orders"
+                $log.warn('CDSS: could not load active drug orders, skipping alert update', error);
+                return null;
+            });
+        };
+
+        // Saved orders carry only the drug uuid; the SNOMED reference maps are needed to build the MedicationRequest coding.
+        var addDrugReferenceMaps = function (orders) {
+            var lookups = orders.filter(function (order) {
+                return order.drug && order.drug.uuid && !(order.drug.drugReferenceMaps && order.drug.drugReferenceMaps.length > 0);
+            }).map(function (order) {
+                return Promise.resolve(drugService.getDrugById(order.drug.uuid)).then(function (drug) {
+                    if (drug && drug.drugReferenceMaps) {
+                        order.drug.drugReferenceMaps = drug.drugReferenceMaps;
+                    }
+                }).catch(function () {});
+            });
+            return Promise.all(lookups);
+        };
+
+        // afterSave: drafts are already cleared, so rebuild the Bundle from saved orders and
+        // never let an empty result wipe the alerts that were shown before saving.
+        var getAlerts = function (cdssEnabled, consultation, patient, afterSave) {
+            if (cdssEnabled) {
+                return loadActiveOrders(consultation, patient).then(function (activeOrders) {
+                    if (activeOrders === null) {
+                        return null;
+                    }
+                    var consultationData = angular.copy(consultation);
+                    consultationData.patient = patient;
+                    consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
+                    return addDrugReferenceMaps(consultationData.activeAndScheduledDrugOrders).then(function () {
+                        return consultationData;
+                    });
+                }).then(function (consultationData) {
+                    if (!consultationData) {
+                        return;
+                    }
+                    var newlyAdded = consultationData.newlyAddedTabTreatments;
+                    var orderSetTreatments = newlyAdded ? newlyAdded.allMedicationTabConfig.orderSetTreatments : [];
+                    var drafts = newlyAdded ? newlyAdded.allMedicationTabConfig.treatments : [];
+                    consultationData.draftDrug = drafts.concat(orderSetTreatments);
+                    consultationData.draftDrug = consultationData.draftDrug.concat(getSavedOrdersForCdss(consultationData, consultationData.draftDrug));
+                    // variable-dose orders have no uniform frequency; CDSS cannot compute a period for them
+                    consultationData.draftDrug = consultationData.draftDrug.filter(function (medication) {
+                        return medication.uniformDosingType && medication.uniformDosingType.frequency;
+                    });
+                    var params = createParams(consultationData);
+                    return createFhirBundle(params.patient, params.conditions, params.medications, params.diagnosis)
+                    .then(function (fhirResult) {
+                        var bundle = fhirResult.bundle;
+                        if (afterSave && isPatientOnlyBundle(bundle)) {
+                            return;
+                        }
+                        return drugService.sendDiagnosisDrugBundle(bundle).then(function (response) {
+                            var alerts = response.data;
+                            var existingAlerts = $rootScope.cdssAlerts || [];
+                            if (afterSave && (!alerts || alerts.length === 0)) {
+                                return;
+                            }
+                            $rootScope.cdssAlerts = addNewAlerts(alerts, existingAlerts, bundle, fhirResult.conceptSource);
+                        });
                     });
                 });
             }
@@ -236,10 +382,14 @@ angular.module('bahmni.clinical')
 
         var createParams = function (consultationData) {
             var patient = consultationData.patient;
-            var conditions = consultationData.condition && consultationData.condition.concept.uuid ? consultationData.conditions.concat(consultationData.condition) : consultationData.conditions;
-            var diagnosis = consultationData.newlyAddedDiagnoses && consultationData.newlyAddedDiagnoses.filter(function (diagnosis) {
+            var newDiagnoses = consultationData.newlyAddedDiagnoses && consultationData.newlyAddedDiagnoses.filter(function (diagnosis) {
                 return diagnosis.codedAnswer && diagnosis.codedAnswer.name;
             }) || [];
+            var savedDiagnoses = consultationData.savedDiagnosesFromCurrentEncounter && consultationData.savedDiagnosesFromCurrentEncounter.filter(function (diagnosis) {
+                return diagnosis.codedAnswer && diagnosis.codedAnswer.name;
+            }) || [];
+            var conditions = consultationData.condition && consultationData.condition.concept.uuid ? consultationData.conditions.concat(consultationData.condition) : consultationData.conditions;
+            var diagnosis = newDiagnoses.concat(savedDiagnoses);
             var medications = consultationData.draftDrug;
             return {
                 patient: patient,
@@ -263,12 +413,12 @@ angular.module('bahmni.clinical')
             return [];
         };
 
-        var getAlertConditionCodes = function (alert) {
+        var getAlertConditionCodes = function (alert, conceptSource) {
             if (alert.referenceConditions) {
                 var codeList = [];
                 alert.referenceConditions.forEach(function (med) {
                     var extractedCodes = med.coding.filter(function (cond) {
-                        return !localStorage.getItem("conceptSource") || cond.system.includes(localStorage.getItem("conceptSource"));
+                        return !conceptSource || cond.system.includes(conceptSource);
                     }).map(function (coding) {
                         return coding.code;
                     });
@@ -295,9 +445,9 @@ angular.module('bahmni.clinical')
             return entry.resource.resourceType === 'Condition';
         };
 
-        var checkAlertBundleMatch = function (alert, bundle) {
+        var checkAlertBundleMatch = function (alert, bundle, conceptSource) {
             var alertMedicationCodes = getAlertMedicationCodes(alert);
-            var alertConditionCodes = getAlertConditionCodes(alert);
+            var alertConditionCodes = getAlertConditionCodes(alert, conceptSource);
 
             var bundleMedicationCodes = bundle.entry
               .filter(isMedicationRequest)
@@ -317,9 +467,9 @@ angular.module('bahmni.clinical')
             );
         };
 
-        var addNewAlerts = function (newAlerts, currentAlerts, bundle) {
+        var addNewAlerts = function (newAlerts, currentAlerts, bundle, conceptSource) {
             var activeAlerts = newAlerts.map(function (item) {
-                var isAlertInBundle = checkAlertBundleMatch(item, bundle);
+                var isAlertInBundle = checkAlertBundleMatch(item, bundle, conceptSource);
                 if (isAlertInBundle) {
                     item.isActive = true;
                 }
@@ -336,7 +486,7 @@ angular.module('bahmni.clinical')
                 if (getAlert) {
                     if (alert.indicator !== getAlert.indicator || (alert.alertType === "High Dosage" && alert.summary.match(/\d+/g).sort().join('') !== getAlert.summary.match(/\d+/g).sort().join(''))) {
                         alert.isActive = true;
-                    } else if (!isSubset(getAlertConditionCodes(getAlert), getAlertConditionCodes(alert)) || !isSubset(getAlertMedicationCodes(getAlert), getAlertMedicationCodes(alert))) {
+                    } else if (!isSubset(getAlertConditionCodes(getAlert, conceptSource), getAlertConditionCodes(alert, conceptSource)) || !isSubset(getAlertMedicationCodes(getAlert), getAlertMedicationCodes(alert))) {
                         alert.isActive = true;
                     } else {
                         alert.isActive = getAlert.isActive;
@@ -353,6 +503,47 @@ angular.module('bahmni.clinical')
             });
         };
 
+        var alertReferencesDrug = function (alert, drug) {
+            if (!alert || !drug) {
+                return false;
+            }
+            return (alert.referenceMedications || []).some(function (referenceMedication) {
+                return (referenceMedication.coding || []).some(function (coding) {
+                    return drug.uuid === coding.code || drug.name === coding.display;
+                });
+            });
+        };
+
+        // Removing a drug resolves its alerts, so drop them from the shared state instead of
+        // re-running the CDSS request for every medication change.
+        var removeAlertsForDrug = function (drug) {
+            if (!drug || !$rootScope.cdssAlerts) {
+                return [];
+            }
+            var removedAlerts = [];
+            $rootScope.cdssAlerts = $rootScope.cdssAlerts.filter(function (alert) {
+                if (alertReferencesDrug(alert, drug)) {
+                    removedAlerts.push(alert);
+                    return false;
+                }
+                return true;
+            });
+            return removedAlerts;
+        };
+
+        var restoreAlerts = function (alerts) {
+            if (!alerts || alerts.length === 0) {
+                return;
+            }
+            var currentAlerts = $rootScope.cdssAlerts || [];
+            var alertsToRestore = alerts.filter(function (alert) {
+                return !currentAlerts.some(function (currentAlert) {
+                    return currentAlert === alert || (alert.uuid && currentAlert.uuid === alert.uuid);
+                });
+            });
+            $rootScope.cdssAlerts = currentAlerts.concat(alertsToRestore);
+        };
+
         var sortInteractionsByStatus = function (alerts) {
             var order = { "critical": 0, "warning": 1, "info": 2 };
             return alerts.sort(function (a, b) {
@@ -364,6 +555,8 @@ angular.module('bahmni.clinical')
             createFhirBundle: createFhirBundle,
             createParams: createParams,
             addNewAlerts: addNewAlerts,
+            removeAlertsForDrug: removeAlertsForDrug,
+            restoreAlerts: restoreAlerts,
             sortInteractionsByStatus: sortInteractionsByStatus,
             getAlerts: getAlerts
         };

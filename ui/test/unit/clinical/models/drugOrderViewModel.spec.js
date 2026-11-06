@@ -168,10 +168,11 @@ describe("drugOrderViewModel", function () {
         treatment.variableDosingType = {
             morningDose: 1.5,
             afternoonDose: 2.25,
-            eveningDose: 3.75
+            eveningDose: 3.75,
+            doseUnits: "Capsule"
         };
 
-        expect(treatment.getDescription()).toBe("1½-2¼-3¾, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("1½ Capsule Morning | 2¼ Capsule Afternoon | 3¾ Capsule Evening, Before Meals, Orally - 10 Days");
     });
 
     it("should not display mixed fraction variable dosages if doseFractions is absent", function () {
@@ -182,10 +183,11 @@ describe("drugOrderViewModel", function () {
         treatment.variableDosingType = {
             morningDose: 1.5,
             afternoonDose: 2.25,
-            eveningDose: 3.75
+            eveningDose: 3.75,
+            doseUnits: "Capsule"
         };
 
-        expect(treatment.getDescription()).toBe("1.5-2.25-3.75, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("1.5 Capsule Morning | 2.25 Capsule Afternoon | 3.75 Capsule Evening, Before Meals, Orally - 10 Days");
     });
 
     it("should display mixed fraction variable dosages if doseFractions is present and in the list", function () {
@@ -196,10 +198,11 @@ describe("drugOrderViewModel", function () {
         treatment.variableDosingType = {
             morningDose: 1.5,
             afternoonDose: 2,
-            eveningDose: 3.47
+            eveningDose: 3.47,
+            doseUnits: "Capsule"
         };
 
-        expect(treatment.getDescription()).toBe("1½-2-3.47, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("1½ Capsule Morning | 2 Capsule Afternoon | 3.47 Capsule Evening, Before Meals, Orally - 10 Days");
     });
 
     it("should get the text to be displayed in the treatment list with dosage instructions", function () {
@@ -210,10 +213,11 @@ describe("drugOrderViewModel", function () {
         treatment.variableDosingType = {
             morningDose: 1,
             afternoonDose: 1,
-            eveningDose: 1
+            eveningDose: 1,
+            doseUnits: "Tablet"
         };
 
-        expect(treatment.getDescription()).toBe("1-1-1, Before Meals, Orally - 10 Days")
+        expect(treatment.getDescription()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening, Before Meals, Orally - 10 Days")
     });
 
     it("should get the text to be displayed in the treatment list without dosage instructions if the instruction is as directed", function () {
@@ -225,10 +229,11 @@ describe("drugOrderViewModel", function () {
         treatment.variableDosingType = {
             morningDose: 1,
             afternoonDose: 1,
-            eveningDose: 1
+            eveningDose: 1,
+            doseUnits: "Tablet"
         };
 
-        expect(treatment.getDescription()).toBe("1-1-1, Orally - 10 Days")
+        expect(treatment.getDescription()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening, Orally - 10 Days")
     });
 
     it("should display 4-box intraday dose M-A-E-N when nightDose is defined", function () {
@@ -240,10 +245,11 @@ describe("drugOrderViewModel", function () {
             morningDose: 1,
             afternoonDose: 0,
             eveningDose: 2,
-            nightDose: 1
+            nightDose: 1,
+            doseUnits: "Tablet"
         };
 
-        expect(treatment.getDescription()).toBe("1-0-2-1, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("1 Tablet Morning | 0 Tablet Afternoon | 2 Tablet Evening | 1 Tablet Night, Before Meals, Orally - 10 Days");
     });
 
     it("should display 3-box intraday dose M-A-E when nightDose is absent (backward compat)", function () {
@@ -254,10 +260,11 @@ describe("drugOrderViewModel", function () {
         treatment.variableDosingType = {
             morningDose: 1,
             afternoonDose: 1,
-            eveningDose: 1
+            eveningDose: 1,
+            doseUnits: "Tablet"
         };
 
-        expect(treatment.getDescription()).toBe("1-1-1, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening, Before Meals, Orally - 10 Days");
     });
 
     it("should display 3-box format when nightDose is null (API returns null for legacy orders)", function () {
@@ -269,10 +276,11 @@ describe("drugOrderViewModel", function () {
             morningDose: 1,
             afternoonDose: 1,
             eveningDose: 1,
-            nightDose: null
+            nightDose: null,
+            doseUnits: "Tablet"
         };
 
-        expect(treatment.getDescription()).toBe("1-1-1, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening, Before Meals, Orally - 10 Days");
     });
 
     it("should include nightDose 0 in display when nightDose is explicitly 0", function () {
@@ -284,10 +292,72 @@ describe("drugOrderViewModel", function () {
             morningDose: 2,
             afternoonDose: 2,
             eveningDose: 2,
-            nightDose: 0
+            nightDose: 0,
+            doseUnits: "Tablet"
         };
 
-        expect(treatment.getDescription()).toBe("2-2-2-0, Before Meals, Orally - 10 Days");
+        expect(treatment.getDescription()).toBe("2 Tablet Morning | 2 Tablet Afternoon | 2 Tablet Evening | 0 Tablet Night, Before Meals, Orally - 10 Days");
+    });
+
+    describe("getDoseAndUnits for variable dosing type", function () {
+        it("should display 3-box intraday dose M-A-E when nightDose is absent (backward compat)", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 1,
+                afternoonDose: 1,
+                eveningDose: 1,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening");
+        });
+
+        it("should display 4-box intraday dose M-A-E-N when nightDose is defined", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 1,
+                afternoonDose: 0,
+                eveningDose: 2,
+                nightDose: 1,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("1 Tablet Morning | 0 Tablet Afternoon | 2 Tablet Evening | 1 Tablet Night");
+        });
+
+        it("should display 3-box format when nightDose is null (API returns null for legacy orders)", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 1,
+                afternoonDose: 1,
+                eveningDose: 1,
+                nightDose: null,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("1 Tablet Morning | 1 Tablet Afternoon | 1 Tablet Evening");
+        });
+
+        it("should include nightDose 0 in display when nightDose is explicitly 0", function () {
+            var treatment = sampleTreatment({}, null, Bahmni.Common.Util.DateUtil.now());
+            treatment.frequencyType = "variable";
+            treatment.doseUnits = "Tablet";
+            treatment.variableDosingType = {
+                morningDose: 2,
+                afternoonDose: 2,
+                eveningDose: 2,
+                nightDose: 0,
+                doseUnits: "Tablet"
+            };
+
+            expect(treatment.getDoseAndUnits()).toBe("2 Tablet Morning | 2 Tablet Afternoon | 2 Tablet Evening | 0 Tablet Night");
+        });
     });
 
     it("should get the text to be displayed in the treatment list without route", function () {

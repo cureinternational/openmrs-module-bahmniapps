@@ -336,7 +336,7 @@ describe("AddTreatmentController", function () {
             drugService.cdssAudit.and.returnValue(specUtil.respondWith(true));
             drugService.getDrugConceptSourceMapping.and.returnValue(specUtil.respondWithPromise($q, {entry: []}));
 
-            cdssService = jasmine.createSpyObj('cdssService', ['createFhirBundle', 'sendDiagnosisDrugBundle', 'createParams', 'addNewAlerts', 'sortInteractionsByStatus', 'getAlerts']);
+            cdssService = jasmine.createSpyObj('cdssService', ['createFhirBundle', 'sendDiagnosisDrugBundle', 'createParams', 'addNewAlerts', 'removeAlertsForDrug', 'restoreAlerts', 'sortInteractionsByStatus', 'getAlerts']);
             cdssService.getAlerts.and.returnValue(specUtil.respondWith(cdssResponse));
             cdssService.sortInteractionsByStatus.and.returnValue(specUtil.respondWith(cdssResponse));
             diagnosisService.getPatientDiagnosis.and.returnValue([]);
@@ -2065,6 +2065,41 @@ describe("AddTreatmentController", function () {
             rootScope.$broadcast("event:sectionUpdated", drugOrder);
             expect(scope.consultation.activeAndScheduledDrugOrders.length).toBe(length);
         });
+
+        it("should remove the drug alerts from cdss state", function () {
+            var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
+            scope.consultation.activeAndScheduledDrugOrders.push(drugOrder);
+            rootScope.$broadcast("event:sectionUpdated", drugOrder);
+            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
+            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("cdss alert state on medication changes", function () {
+        it("should remove alerts for a removed draft drug order", function () {
+            var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
+            scope.treatments.push(drugOrder);
+            rootScope.$broadcast("event:removeDrugOrder", 0);
+            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
+            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+        });
+
+        it("should remove alerts when a drug order is discontinued", function () {
+            var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
+            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+        });
+
+        it("should restore alerts when a discontinuation is undone", function () {
+            var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            var removedAlerts = [cdssResponse[0]];
+            cdssService.removeAlertsForDrug.and.returnValue(removedAlerts);
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
+            expect(cdssService.restoreAlerts).toHaveBeenCalledWith(removedAlerts);
+            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+        });
     });
 
     describe("saveTreatment()", function () {
@@ -2671,7 +2706,7 @@ describe("AddTreatmentController", function () {
                 drugService.getDrugConceptSourceMapping.and.returnValue(specUtil.respondWithPromise($q, { entry: [] }));
                 drugService.search.and.returnValue(specUtil.respondWithPromise($q, []));
 
-                cdssService = jasmine.createSpyObj('cdssService', ['createFhirBundle', 'sendDiagnosisDrugBundle', 'createParams', 'addNewAlerts', 'sortInteractionsByStatus', 'getAlerts']);
+                cdssService = jasmine.createSpyObj('cdssService', ['createFhirBundle', 'sendDiagnosisDrugBundle', 'createParams', 'addNewAlerts', 'removeAlertsForDrug', 'restoreAlerts', 'sortInteractionsByStatus', 'getAlerts']);
                 cdssService.getAlerts.and.returnValue(specUtil.respondWith([]));
                 cdssService.sortInteractionsByStatus.and.returnValue(specUtil.respondWith([]));
                 diagnosisService = jasmine.createSpyObj('diagnosisService', ['getPatientDiagnosis']);
