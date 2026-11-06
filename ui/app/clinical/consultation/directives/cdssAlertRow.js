@@ -9,33 +9,38 @@ angular.module('bahmni.clinical')
         });
     };
 
-    var matchAlertsForDrug = function (drug) {
-        var cdssAlerts = angular.copy($rootScope.cdssAlerts);
-        if (!cdssAlerts || !drug) return [];
-        var matchedAlerts = cdssAlerts.filter(function (cdssAlert) {
-            return Bahmni.Clinical.CdssAlertUtil.matchesMedication(cdssAlert, drug);
-        });
-        return sortInteractionsByStatus(matchedAlerts);
-    };
-
     var getPreviousDrugAlerts = function () {
         var drugOrderGroups = $scope.consultation ? $scope.consultation.drugOrderGroups : [];
-        if (drugOrderGroups && drugOrderGroups.length > 0) {
-            drugOrderGroups.forEach(function (order) {
-                var drugOrders = order.drugOrders;
-                drugOrders && drugOrders.forEach(function (drugOrder) {
-                    drugOrder.alerts = matchAlertsForDrug(drugOrder.drug);
-                });
-            });
-        }
+        if (!drugOrderGroups || (drugOrderGroups && !drugOrderGroups.length > 0)) return;
 
-        if ($scope.drugOrder && $scope.drugOrder.drug) {
-            $scope.alerts = matchAlertsForDrug($scope.drugOrder.drug);
-        }
+        drugOrderGroups.forEach(function (order) {
+            var drugOrders = order.drugOrders;
+            drugOrders && drugOrders.forEach(function (drugOrder) {
+                var drug = drugOrder.drug;
+                var cdssAlerts = angular.copy($rootScope.cdssAlerts);
+                if (cdssAlerts) {
+                    drugOrder.alerts = cdssAlerts.filter(function (cdssAlert) {
+                        return cdssAlert.referenceMedications.some(function (referenceMedication) {
+                            return referenceMedication.coding.some(function (coding) {
+                                return (
+                                    drug.uuid === coding.code || drug.name === coding.display
+                                );
+                            }
+                          );
+                        }
+                        );
+                    });
+
+                    drugOrder.alerts = sortInteractionsByStatus(drugOrder.alerts);
+                }
+            });
+        });
     };
 
     $scope.hasActiveAlerts = function (alerts) {
-        return Bahmni.Clinical.CdssAlertUtil.hasActiveAlerts(alerts);
+        return alerts.some(function (alert) {
+            return alert.isActive;
+        });
     };
 
     $scope.closeAlert = function (alert) {
@@ -83,8 +88,7 @@ angular.module('bahmni.clinical')
         templateUrl: './consultation/views/cdssAlertRow.html',
         scope: {
             alerts: '=',
-            consultation: '=',
-            drugOrder: '='
+            consultation: '='
         }
     };
 });

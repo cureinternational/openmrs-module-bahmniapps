@@ -1,7 +1,7 @@
 'use strict';
 angular.module('bahmni.common.services')
     .factory('drugService', ['$http', function ($http) {
-        var v = 'custom:(uuid,strength,drugReferenceMaps:(uuid,display,drug:ref,conceptMapType:ref,conceptReferenceTerm:(uuid,code,display)),name,dosageForm,concept:(uuid,name,names:(name)))';
+        var v = 'custom:(uuid,strength,drugReferenceMaps,name,dosageForm,concept:(uuid,name,names:(name)))';
         var search = function (drugName, conceptUuid) {
             var params = {
                 v: v,
@@ -15,15 +15,6 @@ angular.module('bahmni.common.services')
                 withCredentials: true
             }).then(function (response) {
                 return response.data.results;
-            });
-        };
-
-        var getDrugById = function (drugUuid) {
-            return $http.get(Bahmni.Common.Constants.drugUrl + "/" + drugUuid, {
-                params: {v: v},
-                withCredentials: true
-            }).then(function (response) {
-                return response.data;
             });
         };
 
@@ -96,7 +87,6 @@ angular.module('bahmni.common.services')
 
         return {
             search: search,
-            getDrugById: getDrugById,
             getRegimen: getRegimen,
             getSetMembersOfConcept: getSetMembersOfConcept,
             sendDiagnosisDrugBundle: sendDiagnosisDrugBundle,
