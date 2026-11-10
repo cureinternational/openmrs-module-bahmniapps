@@ -32,10 +32,13 @@ angular.module('bahmni.clinical')
                     $scope.variableDoseTreatments = $scope.consultation.variableDoseTreatments = $scope.consultation.variableDoseTreatments || [];
                 };
 
-                var getPreviousDrugAlerts = function () {
-                    var treatments = $scope.treatments;
+                var getDrugFromTreatment = function (drugOrder) {
+                    return drugOrder.drug;
+                };
+
+                var getPreviousDrugAlerts = function (treatments, getDrug) {
                     treatments && treatments.forEach(function (drugOrder) {
-                        var drug = drugOrder.drug;
+                        var drug = getDrug(drugOrder);
                         var cdssAlerts = angular.copy($rootScope.cdssAlerts);
                         if (!cdssAlerts) return;
                         drugOrder.alerts = cdssAlerts.filter(function (cdssAlert) {
@@ -59,7 +62,8 @@ angular.module('bahmni.clinical')
                 $scope.$watch('consultation.newlyAddedTabTreatments', initializeTreatments);
                 $rootScope.$watch('cdssAlerts', function () {
                     if (!$rootScope.cdssAlerts) return;
-                    getPreviousDrugAlerts();
+                    getPreviousDrugAlerts($scope.treatments, getDrugFromTreatment);
+                    getPreviousDrugAlerts($scope.variableDoseTreatments, getDrugFromTreatment);
                 }, true);
 
                 $scope.enrollment = $stateParams.enrollment;

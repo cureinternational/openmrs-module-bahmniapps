@@ -1006,12 +1006,34 @@ describe('cdssService', function () {
             });
         });
 
-        it('should not send variable-dose orders (no uniform frequency) to CDSS', function (done) {
+        it('should send variable-dose orders to CDSS with dosage check skipped', function (done) {
             drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
-            var variableOrder = angular.extend({}, savedOrder, {uuid: 'vdp_order', uniformDosingType: {}});
-            cdssService.getAlerts(true, consultationWithSavedOrder([variableOrder]), {uuid: 'p1'}).then(function () {
-                var bundle = drugService.sendDiagnosisDrugBundle.calls.count() ? drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0] : {entry: []};
-                expect(bundle.entry.some(function (e) { return e.resource.resourceType === 'MedicationRequest'; })).toBe(false);
+            var consultation = consultationWithSavedOrder([]);
+            consultation.variableDoseTreatments = [{
+                uuid: 'vdp_order',
+                drug: {uuid: 'drug_uuid_1', name: 'Drug Name 1'},
+                drugName: 'Drug Name 1',
+                startDate: '2023-10-03T08:00:00Z',
+                totalDays: 7,
+                route: 'Oral',
+                units: 'mg',
+                stages: [{
+                    stageName: 'Stage 1',
+                    dose: '1',
+                    unit: 'mg',
+                    frequency: 'Once daily',
+                    duration: 7,
+                    durationUnit: 'Day(s)'
+                }]
+            }];
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                var bundle = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0];
+                var request = bundle.entry.filter(function (e) { return e.resource.resourceType === 'MedicationRequest'; })[0].resource;
+                expect(request.id).toBe('vdp_order');
+                expect(request.extension[0]).toEqual({
+                    url: 'https://bahmni.org/fhir/StructureDefinition/skip-dosage-check',
+                    valueBoolean: true
+                });
                 done();
             });
         });
