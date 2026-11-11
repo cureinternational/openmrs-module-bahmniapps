@@ -1122,32 +1122,28 @@ describe('cdssService', function () {
             });
         });
 
-        it('should still replace alerts with an empty response before save', function (done) {
+        it('should clear resolved dosage alerts after re-evaluating the remaining order', function (done) {
+            rootScope.cdssAlerts = [angular.extend({}, existing[0], {alertType: 'High Dosage'})];
             drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
             cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}).then(function () {
+                var request = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry[0].resource;
+                expect(request.dosageInstruction[0].doseAndRate[0].doseQuantity.value).toBe(1);
                 expect(rootScope.cdssAlerts).toEqual([]);
                 done();
             });
         });
 
         it('should not let an older response replace a newer medication evaluation', function (done) {
-            var resolveOlder;
-            var markSent;
-            var sent = new Promise(function (resolve) { markSent = resolve; });
-            drugService.sendDiagnosisDrugBundle.and.callFake(function () {
-                markSent();
-                return new Promise(function (resolve) { resolveOlder = resolve; });
-            });
             var consultation = consultationWithSavedOrder([savedOrder]);
-            var older = cdssService.getAlerts(true, consultation, {uuid: 'p1'});
-
-            sent.then(function () {
-                drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
-                return cdssService.getAlerts(true, consultation, {uuid: 'p1'});
-            }).then(function () {
-                resolveOlder({data: [{uuid: 'old', detail: 'old', summary: 'old'}]});
-                return older;
-            }).then(function () {
+            drugService.sendDiagnosisDrugBundle.and.callFake(function () {
+                return new Promise(function (resolveOlder) {
+                    drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
+                    cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                        resolveOlder({data: [{uuid: 'old', detail: 'old', summary: 'old'}]});
+                    }).catch(done.fail);
+                });
+            });
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
                 expect(rootScope.cdssAlerts).toEqual([]);
                 done();
             }).catch(done.fail);
