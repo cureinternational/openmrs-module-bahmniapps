@@ -90,10 +90,16 @@
         <li ng-repeat="treatment in variableDoseTreatments">
             <div class="drug-details">
                 <div class="form">
-                    <div class="drug-dosage">
+                    <div class="drug-dosage" bm-pop-over autoclose="true">
                         <strong class="drug-name">
+                            <button ng-if="treatment.alerts && treatment.alerts.length > 0 && !hasActiveAlerts(treatment.alerts)" class="cdss-alert-icon" bm-pop-over-trigger>
+                                <i class="fa fa-exclamation-circle cdss-icon-medication"></i>
+                            </button>
                             {{treatment.drugName}}<span ng-if="treatment.drugForm"> ({{treatment.drugForm}})</span>
                         </strong>
+                        <div class="tooltip cdss-tooltip" bm-pop-over-target>
+                            <cdss-popover alerts="treatment.alerts"></cdss-popover>
+                        </div>
                         <div class="dosage-frequency">
                             Variable Dosage | {{treatment.hasLoadingDose ? 'Loading Dose + ' : ''}}{{treatment.stageCount}} {{treatment.stageCount == 1 ? 'Stage' : 'Stages'}} | {{treatment.totalDays}} Day(s)
                         </div>
@@ -122,6 +128,7 @@
             </div>
             <mfe-next-ui-variable-dose-protocol-table host-data="treatment">
             </mfe-next-ui-variable-dose-protocol-table>
+            <cdss-alert-row alerts="treatment.alerts" drug-order="treatment"></cdss-alert-row>
         </li>
     </ul>
 </section>
