@@ -335,16 +335,18 @@ angular.module('bahmni.clinical')
 
         // afterSave: drafts are already cleared, so rebuild the Bundle from saved orders and
         // never let an empty result wipe the alerts that were shown before saving.
+        var latestRequest = 0;
         var getAlerts = function (cdssEnabled, consultation, patient, afterSave) {
             if (cdssEnabled) {
+                var request = ++latestRequest;
                 return loadActiveOrders(consultation, patient).then(function (activeOrders) {
                     if (activeOrders === null) {
                         return null;
                     }
-                    var consultationData = angular.copy(consultation);
-                    consultationData.patient = patient;
-                    consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
-                    return addDrugReferenceMaps(consultationData.activeAndScheduledDrugOrders).then(function () {
+                    return addDrugReferenceMaps(activeOrders).then(function () {
+                        var consultationData = angular.copy(consultation);
+                        consultationData.patient = patient;
+                        consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
                         return consultationData;
                     });
                 }).then(function (consultationData) {
@@ -368,6 +370,7 @@ angular.module('bahmni.clinical')
                             return;
                         }
                         return drugService.sendDiagnosisDrugBundle(bundle).then(function (response) {
+                            if (request !== latestRequest) return;
                             var alerts = response.data;
                             var existingAlerts = $rootScope.cdssAlerts || [];
                             if (afterSave && (!alerts || alerts.length === 0)) {

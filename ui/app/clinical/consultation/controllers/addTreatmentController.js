@@ -306,19 +306,11 @@ angular.module('bahmni.clinical')
                 });
             };
 
-            $scope.consultation.alertsRemovedForDiscontinuedOrders =
-                $scope.consultation.alertsRemovedForDiscontinuedOrders || {};
-            var alertsRemovedForDiscontinuedOrders = $scope.consultation.alertsRemovedForDiscontinuedOrders;
-
-            var removeAlertsForDrugOrder = function (drugOrder) {
-                return cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug);
-            };
-
             $scope.$on("event:sectionUpdated", function (event, drugOrder) {
                 _.remove($scope.consultation.activeAndScheduledDrugOrders, function (activeOrder) {
                     return activeOrder.uuid === drugOrder.uuid;
                 });
-                removeAlertsForDrugOrder(drugOrder);
+                getAlerts();
             });
 
             $scope.$on("event:refillDrugOrders", function (event, drugOrders) {
@@ -337,7 +329,7 @@ angular.module('bahmni.clinical')
                 drugOrder.dateStopped = DateUtil.now();
                 $scope.consultation.discontinuedDrugs.push(drugOrder);
                 $scope.minDateStopped = DateUtil.getDateWithoutTime(drugOrder.effectiveStartDate < DateUtil.now() ? drugOrder.effectiveStartDate : DateUtil.now());
-                alertsRemovedForDiscontinuedOrders[drugOrder.uuid] = removeAlertsForDrugOrder(drugOrder);
+                getAlerts();
             });
 
             $scope.$on("event:undoDiscontinueDrugOrder", function (event, drugOrder) {
@@ -352,8 +344,7 @@ angular.module('bahmni.clinical')
                 drugOrder.orderReasonText = null;
                 drugOrder.isMarkedForDiscontinue = false;
                 drugOrder.isEditAllowed = true;
-                cdssService.restoreAlerts(alertsRemovedForDiscontinuedOrders[drugOrder.uuid]);
-                delete alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
+                getAlerts();
             });
 
             var selectDrugFromDropdown = function (drug_) {
@@ -627,9 +618,8 @@ angular.module('bahmni.clinical')
             });
 
             $scope.$on("event:removeDrugOrder", function (event, index) {
-                var drugOrder = $scope.treatments[index];
                 $scope.treatments.splice(index, 1);
-                removeAlertsForDrugOrder(drugOrder);
+                getAlerts();
             });
 
             $scope.incompleteDrugOrders = function () {

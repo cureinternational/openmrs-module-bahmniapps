@@ -11,6 +11,7 @@ describe("AddTreatmentController", function () {
             return key;
         });
         $provide.value('$translate', translate);
+        $provide.value('treatmentService', {getActiveDrugOrders: function () { return Promise.resolve([]); }});
     }));
     var DateUtil = Bahmni.Common.Util.DateUtil;
 
@@ -2066,39 +2067,147 @@ describe("AddTreatmentController", function () {
             expect(scope.consultation.activeAndScheduledDrugOrders.length).toBe(length);
         });
 
-        it("should remove the drug alerts from cdss state", function () {
+        it("should re-evaluate alerts after removing a saved order", function () {
             var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
             scope.consultation.activeAndScheduledDrugOrders.push(drugOrder);
             rootScope.$broadcast("event:sectionUpdated", drugOrder);
-            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
-            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+            expect(cdssService.getAlerts).toHaveBeenCalledWith(scope.cdssEnabled, scope.consultation, scope.patient);
         });
     });
 
     describe("cdss alert state on medication changes", function () {
-        it("should remove alerts for a removed draft drug order", function () {
+        it("should re-evaluate alerts for a removed draft drug order", function () {
             var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
             scope.treatments.push(drugOrder);
             rootScope.$broadcast("event:removeDrugOrder", 0);
-            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
-            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+            expect(cdssService.getAlerts).toHaveBeenCalledWith(scope.cdssEnabled, scope.consultation, scope.patient);
         });
 
-        it("should remove alerts when a drug order is discontinued", function () {
+        it("should re-evaluate alerts when a drug order is discontinued", function () {
             var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
             rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
-            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
-            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+            expect(cdssService.getAlerts).toHaveBeenCalledWith(scope.cdssEnabled, scope.consultation, scope.patient);
         });
 
-        it("should restore alerts when a discontinuation is undone", function () {
+        it("should re-evaluate rather than restore cached alerts when a discontinuation is undone", function () {
             var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
-            var removedAlerts = [cdssResponse[0]];
-            cdssService.removeAlertsForDrug.and.returnValue(removedAlerts);
             rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            cdssService.getAlerts.calls.reset();
             rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
-            expect(cdssService.restoreAlerts).toHaveBeenCalledWith(removedAlerts);
-            expect(cdssService.getAlerts).not.toHaveBeenCalled();
+            expect(cdssService.getAlerts).toHaveBeenCalledWith(scope.cdssEnabled, scope.consultation, scope.patient);
+            expect(cdssService.restoreAlerts).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("CDSS medication change regressions", function () {
+        var backend, evaluation, responseAlerts, firstOrder, secondOrder, partnerOrder, interaction;
+        var order = function (uuid, name, code) {
+            return {
+                uuid: uuid,
+                drug: {uuid: uuid, name: name, drugReferenceMaps: [{conceptReferenceTerm: {code: code}}]},
+                uniformDosingType: {frequency: 'Once daily', dose: 1},
+                effectiveStartDate: new Date(),
+                doseUnits: 'mg'
+            };
+        };
+        var submittedDrugs = function () {
+            return backend.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry.map(function (entry) {
+                return entry.resource.medicationCodeableConcept.id;
+            });
+        };
+        var change = function (event, drugOrder) {
+            rootScope.$broadcast(event, drugOrder);
+            return evaluation;
+        };
+
+        beforeEach(inject(function (_cdssService_, _drugService_) {
+            backend = _drugService_;
+            firstOrder = order('alb-200', 'Albendazole 200mg', '96119002');
+            secondOrder = order('alb-400', 'Albendazole 400mg', '96119002');
+            partnerOrder = order('amiodarone', 'Amiodarone', '12345');
+            interaction = {
+                uuid: 'interaction', detail: 'Interaction', summary: 'Interaction', indicator: 'warning',
+                referenceMedications: [
+                    {coding: [{code: '96119002', display: firstOrder.drug.name}]},
+                    {coding: [{code: partnerOrder.drug.uuid, display: partnerOrder.drug.name}]}
+                ]
+            };
+            rootScope.cdssAlerts = [angular.copy(interaction)];
+            responseAlerts = [];
+            scope.cdssEnabled = true;
+            scope.consultation.conditions = [];
+            scope.consultation.activeAndScheduledDrugOrders = [firstOrder, secondOrder, partnerOrder];
+            scope.consultation.newlyAddedTabTreatments = {
+                allMedicationTabConfig: {treatments: scope.treatments, orderSetTreatments: scope.orderSetTreatments}
+            };
+            spyOn(backend, 'getDrugById').and.returnValue(Promise.resolve(angular.copy(secondOrder.drug)));
+            spyOn(backend, 'getDrugConceptSourceMapping').and.returnValue(Promise.resolve({
+                data: {entry: [{resource: {code: {coding: [{system: 'http://snomed.info/sct'}]}}}]}
+            }));
+            spyOn(backend, 'sendDiagnosisDrugBundle').and.callFake(function () {
+                return Promise.resolve({data: angular.copy(responseAlerts)});
+            });
+            cdssService.getAlerts.and.callFake(function () {
+                evaluation = _cdssService_.getAlerts.apply(_cdssService_, arguments);
+                return evaluation;
+            });
+        }));
+
+        it("should retain the remaining saved formulation's alert even when its mappings were missing", function (done) {
+            delete secondOrder.drug.drugReferenceMaps;
+            scope.consultation.activeAndScheduledDrugOrders = [secondOrder, partnerOrder];
+            scope.treatments.push(firstOrder);
+            responseAlerts = [interaction];
+
+            change("event:removeDrugOrder", 0).then(function () {
+                expect(submittedDrugs()).toEqual(['alb-400', 'amiodarone']);
+                expect(Bahmni.Clinical.CdssAlertUtil.matchesMedication(rootScope.cdssAlerts[0], secondOrder.drug)).toBe(true);
+                done();
+            }).catch(done.fail);
+        });
+
+        it("should restore the interaction when both formulations were stopped and the first is resumed", function (done) {
+            responseAlerts = [interaction];
+            change("event:discontinueDrugOrder", firstOrder).then(function () {
+                responseAlerts = [];
+                return change("event:discontinueDrugOrder", secondOrder);
+            }).then(function () {
+                expect(rootScope.cdssAlerts).toEqual([]);
+                responseAlerts = [interaction];
+                return change("event:undoDiscontinueDrugOrder", firstOrder);
+            }).then(function () {
+                expect(submittedDrugs()).toEqual(['alb-200', 'amiodarone']);
+                expect(rootScope.cdssAlerts.length).toBe(1);
+                done();
+            }).catch(done.fail);
+        });
+
+        it("should not restore an interaction when its other drug remains discontinued", function (done) {
+            scope.consultation.activeAndScheduledDrugOrders = [firstOrder, partnerOrder];
+            change("event:discontinueDrugOrder", firstOrder).then(function () {
+                return change("event:discontinueDrugOrder", partnerOrder);
+            }).then(function () {
+                return change("event:undoDiscontinueDrugOrder", firstOrder);
+            }).then(function () {
+                expect(submittedDrugs()).toEqual(['alb-200']);
+                expect(rootScope.cdssAlerts).toEqual([]);
+                done();
+            }).catch(done.fail);
+        });
+
+        it("should re-evaluate the remaining dose after removing an excessive-dose formulation", function (done) {
+            firstOrder.uniformDosingType.dose = 100;
+            scope.treatments.push(firstOrder);
+            scope.consultation.activeAndScheduledDrugOrders = [secondOrder];
+            rootScope.cdssAlerts = [angular.extend({}, interaction, {alertType: 'High Dosage'})];
+
+            change("event:removeDrugOrder", 0).then(function () {
+                expect(submittedDrugs()).toEqual(['alb-400']);
+                var request = backend.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry[0].resource;
+                expect(request.dosageInstruction[0].doseAndRate[0].doseQuantity.value).toBe(1);
+                expect(rootScope.cdssAlerts).toEqual([]);
+                done();
+            }).catch(done.fail);
         });
     });
 
