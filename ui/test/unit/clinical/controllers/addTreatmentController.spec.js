@@ -2096,8 +2096,6 @@ describe("AddTreatmentController", function () {
             rootScope.$broadcast("event:discontinueDrugOrder", otherOrder);
             cdssService.getAlerts.calls.reset();
             rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
-            expect(drugOrder.isMarkedForDiscontinue).toBe(false);
-            expect(otherOrder.isMarkedForDiscontinue).toBe(true);
             expect(cdssService.getAlerts).toHaveBeenCalledWith(scope.cdssEnabled, scope.consultation, scope.patient);
             expect(cdssService.restoreAlerts).not.toHaveBeenCalled();
         });

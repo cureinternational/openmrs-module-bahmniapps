@@ -1122,18 +1122,8 @@ describe('cdssService', function () {
             });
         });
 
-        it('should clear resolved dosage alerts after re-evaluating the remaining order', function (done) {
+        it('should re-evaluate dosage alerts and ignore stale responses', function (done) {
             rootScope.cdssAlerts = [angular.extend({}, existing[0], {alertType: 'High Dosage'})];
-            drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
-            cdssService.getAlerts(true, consultationWithSavedOrder([savedOrder]), {uuid: 'p1'}).then(function () {
-                var request = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry[0].resource;
-                expect(request.dosageInstruction[0].doseAndRate[0].doseQuantity.value).toBe(1);
-                expect(rootScope.cdssAlerts).toEqual([]);
-                done();
-            });
-        });
-
-        it('should not let an older response replace a newer medication evaluation', function (done) {
             var consultation = consultationWithSavedOrder([savedOrder]);
             drugService.sendDiagnosisDrugBundle.and.callFake(function () {
                 return new Promise(function (resolveOlder) {
@@ -1144,6 +1134,8 @@ describe('cdssService', function () {
                 });
             });
             cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                var request = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry[0].resource;
+                expect(request.dosageInstruction[0].doseAndRate[0].doseQuantity.value).toBe(1);
                 expect(rootScope.cdssAlerts).toEqual([]);
                 done();
             }).catch(done.fail);

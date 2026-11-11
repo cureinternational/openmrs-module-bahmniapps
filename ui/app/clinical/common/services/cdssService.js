@@ -343,9 +343,9 @@ angular.module('bahmni.clinical')
                     if (activeOrders === null) {
                         return null;
                     }
+                    var consultationData = angular.copy(consultation);
+                    consultationData.patient = patient;
                     return addDrugReferenceMaps(activeOrders).then(function () {
-                        var consultationData = angular.copy(consultation);
-                        consultationData.patient = patient;
                         consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
                         return consultationData;
                     });
