@@ -1122,9 +1122,10 @@ describe('cdssService', function () {
             });
         });
 
-        it('should re-evaluate dosage alerts and ignore stale responses', function (done) {
+        it('should re-evaluate dosage alerts, invalidate old caches and ignore stale responses', function (done) {
             rootScope.cdssAlerts = [angular.extend({}, existing[0], {alertType: 'High Dosage'})];
             var consultation = consultationWithSavedOrder([savedOrder]);
+            consultation.alertsRemovedForDiscontinuedOrders = {old: existing};
             drugService.sendDiagnosisDrugBundle.and.callFake(function () {
                 return new Promise(function (resolveOlder) {
                     drugService.sendDiagnosisDrugBundle.and.returnValue(Promise.resolve({data: []}));
@@ -1137,6 +1138,7 @@ describe('cdssService', function () {
                 var request = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0].entry[0].resource;
                 expect(request.dosageInstruction[0].doseAndRate[0].doseQuantity.value).toBe(1);
                 expect(rootScope.cdssAlerts).toEqual([]);
+                expect(consultation.alertsRemovedForDiscontinuedOrders).toEqual({});
                 done();
             }).catch(done.fail);
         });
@@ -1177,6 +1179,34 @@ describe('cdssService', function () {
             cdssService.restoreAlerts(removed);
             cdssService.restoreAlerts(removed);
             expect(rootScope.cdssAlerts).toEqual([otherAlert, drugAlert]);
+        });
+
+        it('keeps shared formulation alerts and restores them only when all interacting drugs remain', function () {
+            var shared = angular.copy(drugAlert);
+            shared.referenceMedications[0].coding.push({code: '96119002'});
+            shared.referenceMedications.push(otherAlert.referenceMedications[0]);
+            var first = {uuid: 'drug_uuid_1', name: 'Drug Name 1'};
+            var sibling = {uuid: 'sibling', name: 'Sibling', drugReferenceMaps: [{conceptReferenceTerm: {code: '96119002'}}]};
+            var partner = {uuid: 'drug_uuid_2', name: 'Drug Name 2'};
+            rootScope.cdssAlerts = [shared];
+            expect(cdssService.removeAlertsForDrug(first, [sibling, partner])).toEqual([]);
+            expect(rootScope.cdssAlerts).toEqual([shared]);
+            var removed = cdssService.removeAlertsForDrug(sibling, [partner]);
+            expect(rootScope.cdssAlerts).toEqual([]);
+            cdssService.restoreAlerts(removed, [first]);
+            expect(rootScope.cdssAlerts).toEqual([]);
+            cdssService.restoreAlerts(removed, [first, partner]);
+            expect(rootScope.cdssAlerts).toEqual([shared]);
+        });
+
+        it('keeps dosage warnings pending server recalculation and never restores cached dosage warnings', function () {
+            var dosage = angular.extend({}, drugAlert, {alertType: 'High Dosage'});
+            rootScope.cdssAlerts = [dosage];
+            expect(cdssService.removeAlertsForDrug({uuid: 'drug_uuid_1'}, [])).toEqual([dosage]);
+            expect(rootScope.cdssAlerts).toEqual([dosage]);
+            rootScope.cdssAlerts = [];
+            cdssService.restoreAlerts([dosage], [{uuid: 'drug_uuid_1'}]);
+            expect(rootScope.cdssAlerts).toEqual([]);
         });
     });
 });

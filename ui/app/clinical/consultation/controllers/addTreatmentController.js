@@ -306,11 +306,28 @@ angular.module('bahmni.clinical')
                 });
             };
 
+            $scope.consultation.alertsRemovedForDiscontinuedOrders =
+                $scope.consultation.alertsRemovedForDiscontinuedOrders || {};
+            var alertsRemovedForDiscontinuedOrders = $scope.consultation.alertsRemovedForDiscontinuedOrders;
+
+            var currentDrugs = function () {
+                return $scope.treatments.concat($scope.orderSetTreatments,
+                    $scope.consultation.activeAndScheduledDrugOrders || []).filter(function (order) {
+                        return !order.voided && !order.isMarkedForDiscontinue && order.action !== 'DISCONTINUE' && order.include !== false;
+                    }).map(function (order) { return order.drug; });
+            };
+
+            var removeAlertsForDrugOrder = function (drugOrder) {
+                var alerts = cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug, currentDrugs());
+                if ((alerts || []).some(function (alert) { return alert.alertType === 'High Dosage'; })) getAlerts();
+                return alerts;
+            };
+
             $scope.$on("event:sectionUpdated", function (event, drugOrder) {
                 _.remove($scope.consultation.activeAndScheduledDrugOrders, function (activeOrder) {
                     return activeOrder.uuid === drugOrder.uuid;
                 });
-                getAlerts();
+                removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.$on("event:refillDrugOrders", function (event, drugOrders) {
@@ -329,7 +346,7 @@ angular.module('bahmni.clinical')
                 drugOrder.dateStopped = DateUtil.now();
                 $scope.consultation.discontinuedDrugs.push(drugOrder);
                 $scope.minDateStopped = DateUtil.getDateWithoutTime(drugOrder.effectiveStartDate < DateUtil.now() ? drugOrder.effectiveStartDate : DateUtil.now());
-                getAlerts();
+                alertsRemovedForDiscontinuedOrders[drugOrder.uuid] = removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.$on("event:undoDiscontinueDrugOrder", function (event, drugOrder) {
@@ -344,7 +361,12 @@ angular.module('bahmni.clinical')
                 drugOrder.orderReasonText = null;
                 drugOrder.isMarkedForDiscontinue = false;
                 drugOrder.isEditAllowed = true;
-                getAlerts();
+                var alerts = alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
+                if (!alerts || alerts.some(function (alert) { return alert.alertType === 'High Dosage'; })) {
+                    getAlerts();
+                } else {
+                    cdssService.restoreAlerts(_.uniq(_.flatten(_.values(alertsRemovedForDiscontinuedOrders))), currentDrugs());
+                }
             });
 
             var selectDrugFromDropdown = function (drug_) {
@@ -618,8 +640,9 @@ angular.module('bahmni.clinical')
             });
 
             $scope.$on("event:removeDrugOrder", function (event, index) {
+                var drugOrder = $scope.treatments[index];
                 $scope.treatments.splice(index, 1);
-                getAlerts();
+                removeAlertsForDrugOrder(drugOrder);
             });
 
             $scope.incompleteDrugOrders = function () {
