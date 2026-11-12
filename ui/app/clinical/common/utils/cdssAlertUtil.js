@@ -1,13 +1,5 @@
 'use strict';
 
-// CDSS returns one alert per SNOMED code, so sibling formulations sharing that code must match it too
-var hasReferenceCode = function (drug, code) {
-    return !!code && (drug.drugReferenceMaps || []).some(function (map) {
-        var term = map && map.conceptReferenceTerm;
-        return term && String(term.code).trim() === String(code).trim();
-    });
-};
-
 Bahmni.Clinical.CdssAlertUtil = {
     matchesMedication: function (cdssAlert, drug) {
         if (!cdssAlert.referenceMedications || !drug) {
@@ -21,7 +13,7 @@ Bahmni.Clinical.CdssAlertUtil = {
                 if (!coding) {
                     return false;
                 }
-                return drug.uuid === coding.code || drug.name === coding.display || hasReferenceCode(drug, coding.code);
+                return drug.uuid === coding.code || drug.name === coding.display;
             });
         });
     },
