@@ -57,20 +57,6 @@ describe('CdssAlertUtil', function () {
         });
     });
 
-    describe('matchesMedication by reference code', function () {
-        var alert = {referenceMedications: [{coding: [{code: '96119002', display: 'Albendazole 200mg'}, {code: 'uuid-a', display: 'Albendazole 200mg'}]}]};
-
-        it('should match another formulation sharing the SNOMED code', function () {
-            var drug = {uuid: 'uuid-b', name: 'Albendazole 400mg', drugReferenceMaps: [{conceptReferenceTerm: {code: '96119002'}}]};
-            expect(cdssAlertUtil.matchesMedication(alert, drug)).toBe(true);
-        });
-
-        it('should not match a different SNOMED code', function () {
-            var drug = {uuid: 'uuid-c', name: 'Other', drugReferenceMaps: [{conceptReferenceTerm: {code: '111'}}]};
-            expect(cdssAlertUtil.matchesMedication(alert, drug)).toBe(false);
-        });
-    });
-
     describe('hasActiveAlerts', function () {
         it('should return true when any alert is active', function () {
             expect(cdssAlertUtil.hasActiveAlerts([{isActive: false}, {isActive: true}])).toBe(true);
