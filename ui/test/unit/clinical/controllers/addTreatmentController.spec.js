@@ -2070,7 +2070,7 @@ describe("AddTreatmentController", function () {
             var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
             scope.consultation.activeAndScheduledDrugOrders.push(drugOrder);
             rootScope.$broadcast("event:sectionUpdated", drugOrder);
-            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
+            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug, jasmine.any(Array));
             expect(cdssService.getAlerts).not.toHaveBeenCalled();
         });
     });
@@ -2080,25 +2080,45 @@ describe("AddTreatmentController", function () {
             var drugOrder = Bahmni.Tests.drugOrderViewModelMother.build({}, []);
             scope.treatments.push(drugOrder);
             rootScope.$broadcast("event:removeDrugOrder", 0);
-            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
+            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug, jasmine.any(Array));
             expect(cdssService.getAlerts).not.toHaveBeenCalled();
         });
 
         it("should remove alerts when a drug order is discontinued", function () {
             var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
             rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
-            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug);
+            expect(cdssService.removeAlertsForDrug).toHaveBeenCalledWith(drugOrder.drug, jasmine.any(Array));
             expect(cdssService.getAlerts).not.toHaveBeenCalled();
         });
 
         it("should restore alerts when a discontinuation is undone", function () {
             var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            var otherOrder = angular.copy(drugOrder);
+            otherOrder.uuid = 'other-order';
             var removedAlerts = [cdssResponse[0]];
+            cdssService.removeAlertsForDrug.and.returnValue([]);
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
             cdssService.removeAlertsForDrug.and.returnValue(removedAlerts);
+            rootScope.$broadcast("event:discontinueDrugOrder", otherOrder);
+            rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
+            rootScope.$broadcast("event:undoDiscontinueDrugOrder", otherOrder);
             rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
             rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
-            expect(cdssService.restoreAlerts).toHaveBeenCalledWith(removedAlerts);
+            expect(cdssService.restoreAlerts).toHaveBeenCalledWith(removedAlerts, jasmine.any(Array));
+            expect(cdssService.restoreAlerts.calls.mostRecent().args[0]).toEqual(removedAlerts);
             expect(cdssService.getAlerts).not.toHaveBeenCalled();
+        });
+
+        it("should refresh CDSS only for dosage changes or an invalidated undo cache", function () {
+            var drugOrder = Bahmni.Clinical.DrugOrderViewModel.createFromContract(activeDrugOrder);
+            cdssService.removeAlertsForDrug.and.returnValue([{alertType: 'High Dosage'}]);
+            rootScope.$broadcast("event:discontinueDrugOrder", drugOrder);
+            rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
+            expect(cdssService.getAlerts.calls.count()).toBe(2);
+            expect(cdssService.restoreAlerts).not.toHaveBeenCalled();
+            delete scope.consultation.alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
+            rootScope.$broadcast("event:undoDiscontinueDrugOrder", drugOrder);
+            expect(cdssService.getAlerts.calls.count()).toBe(3);
         });
     });
 

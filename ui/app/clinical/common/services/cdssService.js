@@ -369,16 +369,18 @@ angular.module('bahmni.clinical')
 
         // afterSave: drafts are already cleared, so rebuild the Bundle from saved orders and
         // never let an empty result wipe the alerts that were shown before saving.
+        var latestRequest = 0;
         var getAlerts = function (cdssEnabled, consultation, patient, afterSave) {
             if (cdssEnabled) {
+                var request = ++latestRequest;
                 return loadActiveOrders(consultation, patient).then(function (activeOrders) {
                     if (activeOrders === null) {
                         return null;
                     }
                     var consultationData = angular.copy(consultation);
                     consultationData.patient = patient;
-                    consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
-                    return addDrugReferenceMaps(consultationData.activeAndScheduledDrugOrders).then(function () {
+                    return addDrugReferenceMaps(activeOrders).then(function () {
+                        consultationData.activeAndScheduledDrugOrders = angular.copy(activeOrders);
                         return consultationData;
                     });
                 }).then(function (consultationData) {
@@ -402,12 +404,16 @@ angular.module('bahmni.clinical')
                             return;
                         }
                         return drugService.sendDiagnosisDrugBundle(bundle).then(function (response) {
+                            if (request !== latestRequest) return;
                             var alerts = response.data;
                             var existingAlerts = $rootScope.cdssAlerts || [];
                             if (afterSave && (!alerts || alerts.length === 0)) {
                                 return;
                             }
                             $rootScope.cdssAlerts = addNewAlerts(alerts, existingAlerts, bundle, fhirResult.conceptSource);
+                            angular.forEach(consultation.alertsRemovedForDiscontinuedOrders, function (value, key) {
+                                delete consultation.alertsRemovedForDiscontinuedOrders[key];
+                            });
                         });
                     });
                 });
@@ -538,40 +544,41 @@ angular.module('bahmni.clinical')
         };
 
         var alertReferencesDrug = function (alert, drug) {
-            if (!alert || !drug) {
-                return false;
-            }
-            return (alert.referenceMedications || []).some(function (referenceMedication) {
-                return (referenceMedication.coding || []).some(function (coding) {
-                    return drug.uuid === coding.code || drug.name === coding.display;
+            return !!alert && Bahmni.Clinical.CdssAlertUtil.matchesMedication(alert, drug);
+        };
+
+        var hasRequiredDrugs = function (alert, drugs) {
+            return (alert.referenceMedications || []).every(function (referenceMedication) {
+                return drugs.some(function (drug) {
+                    return alertReferencesDrug({referenceMedications: [referenceMedication]}, drug);
                 });
             });
         };
 
-        // Removing a drug resolves its alerts, so drop them from the shared state instead of
-        // re-running the CDSS request for every medication change.
-        var removeAlertsForDrug = function (drug) {
+        var removeAlertsForDrug = function (drug, remainingDrugs) {
             if (!drug || !$rootScope.cdssAlerts) {
                 return [];
             }
             var removedAlerts = [];
             $rootScope.cdssAlerts = $rootScope.cdssAlerts.filter(function (alert) {
-                if (alertReferencesDrug(alert, drug)) {
+                var isDosageAlert = alert && alert.alertType === 'High Dosage';
+                if (alertReferencesDrug(alert, drug) && (isDosageAlert || !hasRequiredDrugs(alert, remainingDrugs || []))) {
                     removedAlerts.push(alert);
-                    return false;
+                    // Keep the warning until CDSS confirms the remaining total dose.
+                    return isDosageAlert;
                 }
                 return true;
             });
             return removedAlerts;
         };
 
-        var restoreAlerts = function (alerts) {
+        var restoreAlerts = function (alerts, remainingDrugs) {
             if (!alerts || alerts.length === 0) {
                 return;
             }
             var currentAlerts = $rootScope.cdssAlerts || [];
             var alertsToRestore = alerts.filter(function (alert) {
-                return !currentAlerts.some(function (currentAlert) {
+                return alert.alertType !== 'High Dosage' && (!remainingDrugs || hasRequiredDrugs(alert, remainingDrugs)) && !currentAlerts.some(function (currentAlert) {
                     return currentAlert === alert || (alert.uuid && currentAlert.uuid === alert.uuid);
                 });
             });

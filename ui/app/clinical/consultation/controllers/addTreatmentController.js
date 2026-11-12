@@ -310,8 +310,17 @@ angular.module('bahmni.clinical')
                 $scope.consultation.alertsRemovedForDiscontinuedOrders || {};
             var alertsRemovedForDiscontinuedOrders = $scope.consultation.alertsRemovedForDiscontinuedOrders;
 
+            var currentDrugs = function () {
+                return $scope.treatments.concat($scope.orderSetTreatments,
+                    $scope.consultation.activeAndScheduledDrugOrders || []).filter(function (order) {
+                        return !order.voided && !order.isMarkedForDiscontinue && order.action !== 'DISCONTINUE' && order.include !== false;
+                    }).map(function (order) { return order.drug; });
+            };
+
             var removeAlertsForDrugOrder = function (drugOrder) {
-                return cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug);
+                var alerts = cdssService.removeAlertsForDrug(drugOrder && drugOrder.drug, currentDrugs());
+                if ((alerts || []).some(function (alert) { return alert.alertType === 'High Dosage'; })) getAlerts();
+                return alerts;
             };
 
             $scope.$on("event:sectionUpdated", function (event, drugOrder) {
@@ -352,8 +361,12 @@ angular.module('bahmni.clinical')
                 drugOrder.orderReasonText = null;
                 drugOrder.isMarkedForDiscontinue = false;
                 drugOrder.isEditAllowed = true;
-                cdssService.restoreAlerts(alertsRemovedForDiscontinuedOrders[drugOrder.uuid]);
-                delete alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
+                var alerts = alertsRemovedForDiscontinuedOrders[drugOrder.uuid];
+                if (!alerts || alerts.some(function (alert) { return alert.alertType === 'High Dosage'; })) {
+                    getAlerts();
+                } else {
+                    cdssService.restoreAlerts(_.uniq(_.flatten(_.values(alertsRemovedForDiscontinuedOrders))), currentDrugs());
+                }
             });
 
             var selectDrugFromDropdown = function (drug_) {
