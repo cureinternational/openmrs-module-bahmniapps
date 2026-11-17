@@ -24,6 +24,11 @@ Bahmni.Common = Bahmni.Common || {};
             clientMessage: "One or more drugs you are trying to order are already active. Please change the start date of the conflicting drug or remove them from the new prescription."
         },
         {
+            // FormObsConflictException in bahmni-core: a save built from stale form state. Keep the text identical.
+            serverMessage: "Form data is out of date. Please reload the form and re-apply your changes.",
+            clientMessage: "{{'CLINICAL_FORM_STALE_MESSAGE_KEY' | translate}}"
+        },
+        {
             serverMessage: "[Order.cannot.have.more.than.one]",
             clientMessage: "One or more drugs you are trying to order are already active. Please change the start date of the conflicting drug or remove them from the new prescription."
         }
