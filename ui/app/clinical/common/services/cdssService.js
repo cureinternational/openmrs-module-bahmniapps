@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('bahmni.clinical')
-    .service('cdssService', ['drugService', '$rootScope', 'treatmentService', '$log', function (drugService, $rootScope, treatmentService, $log) {
+    .service('cdssService', ['drugService', '$rootScope', 'treatmentService', '$log', 'messagingService', function (drugService, $rootScope, treatmentService, $log, messagingService) {
         var SKIP_DOSAGE_CHECK_EXTENSION_URL = 'https://bahmni.org/fhir/StructureDefinition/skip-dosage-check';
 
         var isVdpTreatment = function (medication) {
@@ -371,6 +371,15 @@ angular.module('bahmni.clinical')
         // never let an empty result wipe the alerts that were shown before saving.
         var getAlerts = function (cdssEnabled, consultation, patient, afterSave) {
             if (cdssEnabled) {
+                var newlyAdded = consultation.newlyAddedTabTreatments;
+                var medicationTab = newlyAdded && newlyAdded.allMedicationTabConfig;
+                var newMedications = medicationTab ? medicationTab.treatments.concat(medicationTab.orderSetTreatments) : [];
+                newMedications = newMedications.concat(consultation.variableDoseTreatments || []);
+                if (newMedications.some(function (medication) {
+                    return medication.drug && !medication.route;
+                })) {
+                    messagingService.showMessage('error', 'Route not selected. Route-dependent safety checks were skipped. Select a route to ensure full safety verification.');
+                }
                 return loadActiveOrders(consultation, patient).then(function (activeOrders) {
                     if (activeOrders === null) {
                         return null;
