@@ -1021,7 +1021,7 @@ describe('cdssService', function () {
             var alertsPromise = cdssService.getAlerts(true, consultation, {uuid: 'p1'});
             expect(messagingService.showMessage).toHaveBeenCalledWith(
                 'error',
-                'Route not selected. Route-dependent safety checks were skipped. Select a route to ensure full safety verification.'
+                'CDSS_ROUTE_NOT_SELECTED'
             );
             alertsPromise.then(function () {
                 done();

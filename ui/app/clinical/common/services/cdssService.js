@@ -378,7 +378,7 @@ angular.module('bahmni.clinical')
                 if (newMedications.some(function (medication) {
                     return medication.drug && !medication.route;
                 })) {
-                    messagingService.showMessage('error', 'Route not selected. Route-dependent safety checks were skipped. Select a route to ensure full safety verification.');
+                    messagingService.showMessage('error', 'CDSS_ROUTE_NOT_SELECTED');
                 }
                 return loadActiveOrders(consultation, patient).then(function (activeOrders) {
                     if (activeOrders === null) {
