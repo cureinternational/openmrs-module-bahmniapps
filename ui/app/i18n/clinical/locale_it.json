@@ -1,4 +1,5 @@
 {
+    "CDSS_ROUTE_NOT_SELECTED": "Via di somministrazione non selezionata. I controlli di sicurezza che dipendono dalla via di somministrazione sono stati saltati. Selezionare una via di somministrazione per garantire una verifica completa della sicurezza.",
     "CONSULTATION_TAB_KEY": "<u>C</u>onsulti",
     "CONSULTATION_SHORTCUT_KEY": "c",
     "NO_ACTIVE_PASSIVE_PROGRAMS_MESSAGE": "Nessun programma attivo/inattivo per questo paziente",

@@ -1,4 +1,5 @@
 {
+  "CDSS_ROUTE_NOT_SELECTED": "Route not selected. Route-dependent safety checks were skipped. Select a route to ensure full safety verification.",
   "CONSULTATION_TAB_KEY": "<u>C</u>onsultation",
   "CONSULTATION_SHORTCUT_KEY": "c",
   "NO_ACTIVE_PASSIVE_PROGRAMS_MESSAGE": "No active/inactive programs for this patient.",

@@ -1,4 +1,5 @@
 {
+    "CDSS_ROUTE_NOT_SELECTED": "Via de administração não selecionada. As verificações de segurança que dependem da via de administração foram ignoradas. Selecione uma via de administração para garantir uma verificação completa de segurança.",
     "CONSULTATION_TAB_KEY": "<u>C</u>onsultas",
     "CONSULTATION_SHORTCUT_KEY": "c",
     "NO_ACTIVE_PASSIVE_PROGRAMS_MESSAGE": "Nenhum programa ativo/inativo para este paciente.",

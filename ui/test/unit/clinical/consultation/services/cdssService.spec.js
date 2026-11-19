@@ -81,7 +81,7 @@ describe('cdssService', function () {
         ]
     };
 
-    var cdssService;
+    var cdssService, messagingService;
     var sentBundles = [];
     var treatmentService = jasmine.createSpyObj('treatmentService', ['getActiveDrugOrders']);
     treatmentService.getActiveDrugOrders.and.returnValue(Promise.resolve([]));
@@ -124,9 +124,11 @@ describe('cdssService', function () {
             $provide.value('treatmentService', treatmentService);
         });
 
-        inject(['cdssService', '$rootScope', function (cdssServiceInjected, $rootScopeInjected) {
+        inject(['cdssService', '$rootScope', 'messagingService', function (cdssServiceInjected, $rootScopeInjected, messagingServiceInjected) {
             cdssService = cdssServiceInjected;
             rootScope = $rootScopeInjected;
+            messagingService = messagingServiceInjected;
+            spyOn(messagingService, 'showMessage');
         }]);
     });
 
@@ -1002,6 +1004,42 @@ describe('cdssService', function () {
                 var bundle = drugService.sendDiagnosisDrugBundle.calls.mostRecent().args[0];
                 var request = bundle.entry.filter(function (e) { return e.resource.resourceType === 'MedicationRequest'; })[0].resource;
                 expect(request.medicationCodeableConcept.coding[0]).toEqual({system: 'http://snomed.info/sct', code: '12345', display: 'Drug Name 1'});
+                done();
+            });
+        });
+
+        it('should warn when a newly added medication has no route', function (done) {
+            var consultation = consultationWithSavedOrder([]);
+            consultation.newlyAddedTabTreatments.allMedicationTabConfig.treatments = [{
+                drug: {uuid: 'drug_uuid_1', name: 'Drug Name 1'},
+                drugNameDisplay: 'Drug Name 1',
+                route: '',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                uniformDosingType: {frequency: 'Once daily', dose: 1},
+                doseUnits: 'mg'
+            }];
+            var alertsPromise = cdssService.getAlerts(true, consultation, {uuid: 'p1'});
+            expect(messagingService.showMessage).toHaveBeenCalledWith(
+                'error',
+                'CDSS_ROUTE_NOT_SELECTED'
+            );
+            alertsPromise.then(function () {
+                done();
+            });
+        });
+
+        it('should not warn when a newly added medication has a route', function (done) {
+            var consultation = consultationWithSavedOrder([]);
+            consultation.newlyAddedTabTreatments.allMedicationTabConfig.treatments = [{
+                drug: {uuid: 'drug_uuid_1', name: 'Drug Name 1'},
+                drugNameDisplay: 'Drug Name 1',
+                route: 'Oral',
+                effectiveStartDate: '2023-10-03T08:00:00Z',
+                uniformDosingType: {frequency: 'Once daily', dose: 1},
+                doseUnits: 'mg'
+            }];
+            cdssService.getAlerts(true, consultation, {uuid: 'p1'}).then(function () {
+                expect(messagingService.showMessage).not.toHaveBeenCalled();
                 done();
             });
         });
