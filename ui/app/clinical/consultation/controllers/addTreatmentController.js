@@ -505,6 +505,7 @@ angular.module('bahmni.clinical')
                         var stop = vdp.totalDays > 0 ? new Date(start.getTime() + vdp.totalDays * 86400000) : null;
                         return {
                             getDisplayName: function () { return vdpDisplayNameFor(vdp.drugName, vdp.drugForm); },
+                            drug: vdp.drug,
                             effectiveStartDate: start,
                             effectiveStopDate: stop,
                             careSetting: vdp.careSetting,
@@ -516,6 +517,13 @@ angular.module('bahmni.clinical')
                             }
                         };
                     });
+            };
+
+            // Coded drugs match by uuid: display names ("name (form)") can differ between a new and a saved order.
+            var isSameDrug = function (a, b) {
+                var uuidA = a.drug && a.drug.uuid;
+                var uuidB = b.drug && b.drug.uuid;
+                return uuidA && uuidB ? uuidA === uuidB : a.getDisplayName() === b.getDisplayName();
             };
 
             var getConflictingDrugOrder = function (newDrugOrder, vdpExcludeIndex) {
@@ -536,13 +544,13 @@ angular.module('bahmni.clinical')
                 existingDrugOrders = existingDrugOrders.concat(buildVdpOrdersForConflictCheck($scope.consultation.variableDoseTreatments, vdpExcludeIndex));
 
                 var potentiallyOverlappingOrders = existingDrugOrders.filter(function (drugOrder) {
-                    return (drugOrder.getDisplayName() === newDrugOrder.getDisplayName() && drugOrder.overlappingScheduledWith(newDrugOrder) && newDrugOrder.careSetting === drugOrder.careSetting);
+                    return (isSameDrug(drugOrder, newDrugOrder) && drugOrder.overlappingScheduledWith(newDrugOrder) && newDrugOrder.careSetting === drugOrder.careSetting);
                 });
 
                 setEffectiveDates(newDrugOrder, potentiallyOverlappingOrders);
 
                 var alreadyActiveSimilarOrders = existingDrugOrders.filter(function (drugOrder) {
-                    return (drugOrder.getDisplayName() === newDrugOrder.getDisplayName() && drugOrder.overlappingScheduledWith(newDrugOrder) && newDrugOrder.careSetting === drugOrder.careSetting);
+                    return (isSameDrug(drugOrder, newDrugOrder) && drugOrder.overlappingScheduledWith(newDrugOrder) && newDrugOrder.careSetting === drugOrder.careSetting);
                 });
 
                 if (alreadyActiveSimilarOrders.length > 0) {
@@ -1146,6 +1154,7 @@ angular.module('bahmni.clinical')
                         var totalDays = vdpTotalDaysFor(data);
                         return {
                             getDisplayName: function () { return vdpDisplayNameFor(extractDrugName(data), vdpDrugFormFor(data)); },
+                            drug: data.drug,
                             careSetting: vdpCareSettingFor(data),
                             effectiveStartDate: start,
                             effectiveStopDate: totalDays > 0 ? new Date(start.getTime() + totalDays * Bahmni.Clinical.Constants.millisecondsPerDay) : null,
