@@ -1221,6 +1221,51 @@ describe("AddTreatmentController", function () {
                 scope.treatments = []
             })
 
+            it("should show the conflict popup for the same drug uuid with different display names", function () {
+                var existing = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
+                    drug: { name: "Saved drug name", uuid: "same-drug", form: "Tablet" },
+                    effectiveStartDate: encounterDate,
+                    effectiveStopDate: DateUtil.parse("2014-12-04"),
+                    durationInDays: 2
+                }, encounterDate);
+                scope.consultation.activeAndScheduledDrugOrders = [existing];
+                scope.treatment = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
+                    drug: { name: "Search drug name", uuid: "same-drug" },
+                    effectiveStartDate: encounterDate,
+                    durationInDays: 2
+                }, encounterDate);
+
+                scope.add();
+
+                expect(scope.treatments.length).toBe(0);
+                expect(scope.alreadyActiveSimilarOrder).toBe(existing);
+                expect(ngDialog.open).toHaveBeenCalledWith({
+                    template: 'consultation/views/treatmentSections/conflictingDrugOrderModal.html',
+                    scope: scope
+                });
+            });
+
+            it("should not conflict for different coded drug uuids with identical display names", function () {
+                scope.consultation.activeAndScheduledDrugOrders = [
+                    Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
+                        drug: { name: "Same name", uuid: "first-drug" },
+                        effectiveStartDate: encounterDate,
+                        effectiveStopDate: DateUtil.parse("2014-12-04"),
+                        durationInDays: 2
+                    }, encounterDate)
+                ];
+                scope.treatment = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
+                    drug: { name: "Same name", uuid: "second-drug" },
+                    effectiveStartDate: encounterDate,
+                    durationInDays: 2
+                }, encounterDate);
+
+                scope.add();
+
+                expect(scope.treatments.length).toBe(1);
+                expect(ngDialog.open).not.toHaveBeenCalled();
+            });
+
             it("new orders for dates 2-4 and 3-6", function () {
 
                 var dec2_dec4order = Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
@@ -2291,7 +2336,7 @@ describe("AddTreatmentController", function () {
         it('should reset include flag for all orderSetTreatments if any of them is conflicting with active or scheduled drug', function () {
             scope.newOrderSet.date = moment("2015-03-02").toDate();
             scope.consultation.activeAndScheduledDrugOrders = [Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
-                drug: { name: "Paracetamol 500mg" },
+                drug: { name: "Paracetamol 500mg", uuid: "d9c230a5-89d8-4e4d-b08b-2af3b1234c80" },
                 effectiveStartDate: "2015-03-01",
                 durationInDays: 2,
                 effectiveStopDate: "2015-03-05",
@@ -2327,7 +2372,7 @@ describe("AddTreatmentController", function () {
     describe('include orderSetMember checkbox', function () {
         it("should include orderSetMember to save list only if it is not conflicting with active/scheduled drugs", function () {
             scope.consultation.activeAndScheduledDrugOrders = [Bahmni.Tests.drugOrderViewModelMother.buildWith({}, {
-                drug: { name: "Paracetamol 500mg" },
+                drug: { name: "Paracetamol 500mg", uuid: "d9c230a5-89d8-4e4d-b08b-2af3b1234c80" },
                 effectiveStartDate: "2015-03-01",
                 durationInDays: 2,
                 effectiveStopDate: "2015-03-05",
@@ -2899,6 +2944,35 @@ describe("AddTreatmentController", function () {
 
                 expect(ngDialog.open).toHaveBeenCalled();
                 expect(scope.consultation.variableDoseTreatments.length).toBe(0);
+            });
+
+            it("should match a saved VDP conflict by drug uuid when the display name differs", function () {
+                scope.consultation.activeAndScheduledDrugOrders = [
+                    savedOrderFor({ drug: { uuid: 'drug-uuid', name: 'Previous name', form: 'Tablet' } })
+                ];
+
+                var conflict = scope.variableDoseHostApi.checkVdpConflict(buildSaveData());
+                scope.variableDoseHostApi.onSave(buildSaveData(), false);
+
+                expect(conflict).not.toBeNull();
+                expect(ngDialog.open).toHaveBeenCalledWith({
+                    template: 'consultation/views/treatmentSections/conflictingDrugOrderModal.html',
+                    scope: scope
+                });
+                expect(scope.consultation.variableDoseTreatments.length).toBe(0);
+            });
+
+            it("should match an unsaved VDP conflict by drug uuid when the display name differs", function () {
+                scope.consultation.variableDoseTreatments = [{
+                    drug: { uuid: 'drug-uuid', name: 'Previous name' },
+                    drugName: 'Previous name',
+                    drugForm: 'Tablet',
+                    careSetting: Bahmni.Clinical.Constants.careSetting.outPatient,
+                    startDate: new Date('2026-08-08'),
+                    totalDays: 1
+                }];
+
+                expect(scope.variableDoseHostApi.checkVdpConflict(buildSaveData())).not.toBeNull();
             });
 
             it("should still allow revising a saved VDP order when activeAndScheduledDrugOrders is missing but treatmentDrugs is present (post-save consultation)", function () {
